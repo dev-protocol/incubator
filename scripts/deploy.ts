@@ -7,8 +7,8 @@ const deployContracts = async (_wallet: ethers.Wallet): Promise<void> => {}
 
 const getDeployer = (
 	deployMnemonic?: string,
-	deployNetwork = 'local',
-	deployLocalUrl = 'http://127.0.0.1:8545'
+	infura = '',
+	network = ''
 ): ethers.Wallet => {
 	if (!deployMnemonic) {
 		throw new Error(
@@ -17,19 +17,18 @@ const getDeployer = (
 	}
 
 	// Connect provider
-	const provider: Provider =
-		deployNetwork === 'local'
-			? new ethers.providers.JsonRpcProvider(deployLocalUrl)
-			: ethers.getDefaultProvider(deployNetwork)
+	const provider: Provider = ethers.getDefaultProvider(network, {
+		infura,
+	})
 
 	return ethers.Wallet.fromMnemonic(deployMnemonic).connect(provider)
 }
 
 const deploy = async (): Promise<void> => {
 	const mnemonic = process.env.DEPLOY_MNEMONIC
+	const infuraId = process.env.DEPLOY_INFURA_ID
 	const network = process.env.DEPLOY_NETWORK
-	const deployLocalUrl = process.env.DEPLOY_LOCAL_URL
-	const wallet = getDeployer(mnemonic, network, deployLocalUrl)
+	const wallet = getDeployer(mnemonic, infuraId, network)
 
 	console.log(`Deploying to network [${network ?? 'local'}] in 5 seconds!`)
 	await deployContracts(wallet)
