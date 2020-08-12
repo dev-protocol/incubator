@@ -5,19 +5,19 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-contract Reward is Ownable {
+contract Vesting is Ownable {
 	using SafeMath for uint256;
 
-	uint256 public rewardPerBlock;
+	uint256 public unitPerBlock;
 	address public token;
 	mapping(address => uint256) private amounts;
 	mapping(address => uint256) private pendings;
 	mapping(address => uint256) private beginningBlocks;
 	mapping(address => uint256) private lastValues;
 
-	constructor(address _token, uint256 _rewardPerBlock) public {
+	constructor(address _token, uint256 _unitPerBlock) public {
 		token = _token;
-		rewardPerBlock = _rewardPerBlock;
+		unitPerBlock = _unitPerBlock;
 	}
 
 	function tap() public {
@@ -40,7 +40,7 @@ contract Reward is Ownable {
 	{
 		uint256 total = amounts[_user];
 		uint256 blocks = block.number.sub(beginningBlocks[_user]);
-		uint256 max = blocks.mul(rewardPerBlock);
+		uint256 max = blocks.mul(unitPerBlock);
 		uint256 maxReward = (total > max ? max : total).add(pendings[_user]);
 		uint256 withdrawable = maxReward.sub(lastValues[_user]);
 		return (withdrawable, maxReward, total);
@@ -53,8 +53,8 @@ contract Reward is Ownable {
 		amounts[_user] = _value;
 	}
 
-	function _setRewardPerBlock(uint256 _value) public onlyOwner {
-		rewardPerBlock = _value;
+	function _setUnitPerBlock(uint256 _value) public onlyOwner {
+		unitPerBlock = _value;
 	}
 
 	function _close() public onlyOwner {
