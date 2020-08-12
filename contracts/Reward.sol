@@ -20,7 +20,7 @@ contract Reward is Ownable {
 	}
 
 	function tap() public {
-		(uint256 withdrawable, uint256 cumulative, ) = getAmounts();
+		(uint256 withdrawable, uint256 cumulative, ) = getAmounts(msg.sender);
 		require(
 			IERC20(token).transfer(msg.sender, withdrawable),
 			"fail to transfer"
@@ -28,7 +28,7 @@ contract Reward is Ownable {
 		lastValues[msg.sender] = cumulative;
 	}
 
-	function getAmounts()
+	function getAmounts(address _user)
 		public
 		view
 		returns (
@@ -37,11 +37,11 @@ contract Reward is Ownable {
 			uint256 _total
 		)
 	{
-		uint256 total = amounts[msg.sender];
-		uint256 blocks = block.number.sub(beginningBlocks[msg.sender]);
+		uint256 total = amounts[_user];
+		uint256 blocks = block.number.sub(beginningBlocks[_user]);
 		uint256 max = blocks.mul(rewardPerBlock);
 		uint256 maxReward = total > max ? max : total;
-		uint256 withdrawable = maxReward.sub(lastValues[msg.sender]);
+		uint256 withdrawable = maxReward.sub(lastValues[_user]);
 		return (withdrawable, maxReward, total);
 	}
 

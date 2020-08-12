@@ -38,7 +38,7 @@ describe('LockedupReward', () => {
 		it('Set a reward amount for a user', async () => {
 			const lockedupReward = await createReward()
 			await lockedupReward._setAmounts(user.address, 100)
-			const [, , amount] = await lockedupReward.connect(user).getAmounts()
+			const [, , amount] = await lockedupReward.getAmounts(user.address)
 			expect(amount.toNumber()).to.be.equal(100)
 		})
 		it('Should fail to call when from the non-owner account', async () => {
@@ -47,7 +47,7 @@ describe('LockedupReward', () => {
 				.connect(user)
 				._setAmounts(user.address, 100)
 				.catch(err)
-			const [, , amount] = await lockedupReward.connect(user).getAmounts()
+			const [, , amount] = await lockedupReward.getAmounts(user.address)
 			expect(res).to.be.instanceOf(Error)
 			expect(amount.toNumber()).to.be.equal(0)
 		})
@@ -111,50 +111,32 @@ describe('LockedupReward', () => {
 			})
 
 			it('0 block has passed', async () => {
-				const withdrawable = await reward
-					.connect(user)
-					.getAmounts()
-					.then(amount)
+				const withdrawable = await reward.getAmounts(user.address).then(amount)
 				expect(withdrawable).to.be.equal(0)
 			})
 			it('5 block has passed', async () => {
 				await mine(provider, 5)
-				const withdrawable = await reward
-					.connect(user)
-					.getAmounts()
-					.then(amount)
+				const withdrawable = await reward.getAmounts(user.address).then(amount)
 				expect(withdrawable).to.be.equal(25)
 			})
 			it('10 block has passed', async () => {
 				await mine(provider, 5)
-				const withdrawable = await reward
-					.connect(user)
-					.getAmounts()
-					.then(amount)
+				const withdrawable = await reward.getAmounts(user.address).then(amount)
 				expect(withdrawable).to.be.equal(50)
 			})
 			it('20 block has passed', async () => {
 				await mine(provider, 10)
-				const withdrawable = await reward
-					.connect(user)
-					.getAmounts()
-					.then(amount)
+				const withdrawable = await reward.getAmounts(user.address).then(amount)
 				expect(withdrawable).to.be.equal(100)
 			})
 			it('21 block has passed', async () => {
 				await mine(provider, 1)
-				const withdrawable = await reward
-					.connect(user)
-					.getAmounts()
-					.then(amount)
+				const withdrawable = await reward.getAmounts(user.address).then(amount)
 				expect(withdrawable).to.be.equal(100)
 			})
 			it('31 block has passed', async () => {
 				await mine(provider, 10)
-				const withdrawable = await reward
-					.connect(user)
-					.getAmounts()
-					.then(amount)
+				const withdrawable = await reward.getAmounts(user.address).then(amount)
 				expect(withdrawable).to.be.equal(100)
 			})
 		})
@@ -165,8 +147,7 @@ describe('LockedupReward', () => {
 			await reward._setAmounts(user.address, 100)
 			await mine(provider, 5)
 			const total = await reward
-				.connect(user)
-				.getAmounts()
+				.getAmounts(user.address)
 				.then((x: any) => x[1].toNumber())
 			expect(total).to.be.equal(25)
 		})
@@ -175,8 +156,7 @@ describe('LockedupReward', () => {
 			await token.transfer(reward.address, 1000)
 			await reward._setAmounts(user.address, 100)
 			const total = await reward
-				.connect(user)
-				.getAmounts()
+				.getAmounts(user.address)
 				.then((x: any) => x[2].toNumber())
 			expect(total).to.be.equal(100)
 		})
@@ -195,7 +175,7 @@ describe('LockedupReward', () => {
 		it('Withdraw amount the same value of `getAmounts`', async () => {
 			const before = await token.balanceOf(user.address)
 			await mine(provider, 10)
-			const expected = await reward.connect(user).getAmounts().then(amount)
+			const expected = await reward.getAmounts(user.address).then(amount)
 			await reward.connect(user).tap()
 			const after = await token.balanceOf(user.address)
 			expect(after.toNumber() - before.toNumber()).to.be.equal(expected + 5)
@@ -204,7 +184,7 @@ describe('LockedupReward', () => {
 		it('Withdraw amount is always the difference', async () => {
 			const before = await token.balanceOf(user.address)
 			await mine(provider, 20)
-			const expected = await reward.connect(user).getAmounts().then(amount)
+			const expected = await reward.getAmounts(user.address).then(amount)
 			await reward.connect(user).tap()
 			const after = await token.balanceOf(user.address)
 			expect(after.toNumber() - before.toNumber()).to.be.equal(expected)
