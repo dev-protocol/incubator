@@ -11,6 +11,7 @@ contract Reward is Ownable {
 	uint256 public rewardPerBlock;
 	address public token;
 	mapping(address => uint256) private amounts;
+	mapping(address => uint256) private pendings;
 	mapping(address => uint256) private beginningBlocks;
 	mapping(address => uint256) private lastValues;
 
@@ -40,16 +41,16 @@ contract Reward is Ownable {
 		uint256 total = amounts[_user];
 		uint256 blocks = block.number.sub(beginningBlocks[_user]);
 		uint256 max = blocks.mul(rewardPerBlock);
-		uint256 maxReward = total > max ? max : total;
+		uint256 maxReward = (total > max ? max : total).add(pendings[_user]);
 		uint256 withdrawable = maxReward.sub(lastValues[_user]);
 		return (withdrawable, maxReward, total);
 	}
 
 	function _setAmounts(address _user, uint256 _value) public onlyOwner {
+		(uint256 withdrawable, , ) = getAmounts(_user);
+		pendings[_user] = withdrawable;
+		beginningBlocks[_user] = block.number;
 		amounts[_user] = _value;
-		if (beginningBlocks[_user] == 0) {
-			beginningBlocks[_user] = block.number;
-		}
 	}
 
 	function _setRewardPerBlock(uint256 _value) public onlyOwner {

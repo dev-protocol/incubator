@@ -139,6 +139,36 @@ describe('LockedupReward', () => {
 				const withdrawable = await reward.getAmounts(user.address).then(amount)
 				expect(withdrawable).to.be.equal(100)
 			})
+			it('restarted: 0 block has passed', async () => {
+				await reward._setAmounts(user.address, 100)
+				const withdrawable = await reward.getAmounts(user.address).then(amount)
+				expect(withdrawable).to.be.equal(100)
+			})
+			it('restarted: 5 block has passed', async () => {
+				await mine(provider, 5)
+				const withdrawable = await reward.getAmounts(user.address).then(amount)
+				expect(withdrawable).to.be.equal(125)
+			})
+			it('restarted: 10 block has passed', async () => {
+				await mine(provider, 5)
+				const withdrawable = await reward.getAmounts(user.address).then(amount)
+				expect(withdrawable).to.be.equal(150)
+			})
+			it('restarted: 20 block has passed', async () => {
+				await mine(provider, 10)
+				const withdrawable = await reward.getAmounts(user.address).then(amount)
+				expect(withdrawable).to.be.equal(200)
+			})
+			it('restarted: 21 block has passed', async () => {
+				await mine(provider, 1)
+				const withdrawable = await reward.getAmounts(user.address).then(amount)
+				expect(withdrawable).to.be.equal(200)
+			})
+			it('restarted: 31 block has passed', async () => {
+				await mine(provider, 10)
+				const withdrawable = await reward.getAmounts(user.address).then(amount)
+				expect(withdrawable).to.be.equal(200)
+			})
 		})
 
 		it('Returns the cumulative withdrawable reward amount', async () => {
