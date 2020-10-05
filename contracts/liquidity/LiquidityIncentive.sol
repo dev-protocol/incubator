@@ -6,14 +6,17 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {Pausable} from "@openzeppelin/contracts/utils/Pausable.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {ILinkExternalSystem} from "contracts/liquidity/interface/ILinkExternalSystem.sol";
-import {ILiquidityIncentive} from "contracts/liquidity/interface/ILiquidityIncentive.sol";
-
+import {
+	ILinkExternalSystem
+} from "contracts/liquidity/interface/ILinkExternalSystem.sol";
+import {
+	ILiquidityIncentive
+} from "contracts/liquidity/interface/ILiquidityIncentive.sol";
 
 // TODO EternaiStorage　対応するかどうか、した方がいいと思うけど
 // TODO Ownableで止める関数を決める
 contract LiquidityIncentive is Ownable, ILiquidityIncentive {
-	using SafeMath  for uint256;
+	using SafeMath for uint256;
 
 	mapping(address => uint256) private startBlockOfStaking;
 	mapping(address => uint256) private stakingValue;
@@ -28,10 +31,13 @@ contract LiquidityIncentive is Ownable, ILiquidityIncentive {
 	address private uniswapV2PairAddress = 0x4168CEF0fCa0774176632d86bA26553E3B9cF59d;
 	address private devToken = 0x5cAf454Ba92e6F2c929DF14667Ee360eD9fD5b26;
 
-
 	event LiquidityProvider(address _provider);
 
-	constructor(address _linkExternalSystem, address _uniswapV2PairAddress, address _devToken) public {
+	constructor(
+		address _linkExternalSystem,
+		address _uniswapV2PairAddress,
+		address _devToken
+	) public {
 		link = ILinkExternalSystem(_linkExternalSystem);
 		if (_uniswapV2PairAddress != address(0)) {
 			uniswapV2PairAddress = _uniswapV2PairAddress;
@@ -50,27 +56,33 @@ contract LiquidityIncentive is Ownable, ILiquidityIncentive {
 		// TODO event追加する
 		uint256 uniV2Balance = uniswapV2Pair.balanceOf(msg.sender);
 		require(uniV2Balance != 0, "Uniswap V2 balance is 0");
-		bool result = uniswapV2Pair.transferFrom(msg.sender, address(this), uniV2Balance);
+		bool result = uniswapV2Pair.transferFrom(
+			msg.sender,
+			address(this),
+			uniV2Balance
+		);
 		stakingUniV2Value[msg.sender] = uniV2Balance;
 		require(result, "failed Uniswap V2 trasnferFrom");
 		uint256 devBalanceOfUniswapV2Pair = dev.balanceOf(uniswapV2PairAddress);
 		uint256 liquidity = uniswapV2Pair.balanceOf(uniswapV2PairAddress);
-		uint256 provision = liquidity.mul(devBalanceOfUniswapV2Pair).div(uniswapV2Pair.totalSupply());
+		uint256 provision = liquidity.mul(devBalanceOfUniswapV2Pair).div(
+			uniswapV2Pair.totalSupply()
+		);
 		result = dev.transfer(msg.sender, provision);
 		require(result, "failed dev transfer");
 		// TODO CIどうしよう、別に管理する？
 		startBlockOfStaking[msg.sender] = block.number;
 		stakingValue[msg.sender] = provision;
-		(uint cReward,) = link.lockupDry();
+		(uint256 cReward, ) = link.lockupDry();
 		lastCReward[msg.sender] = cReward;
-		(uint cLockup,,) = link.lockupGetCumulativeLockedUp(address(0));
+		(uint256 cLockup, , ) = link.lockupGetCumulativeLockedUp(address(0));
 		lastCLockup[msg.sender] = cLockup;
 		emit LiquidityProvider(msg.sender);
 	}
 
-	function getReword() public view returns (uint256){
-		(uint256 cReward,) = link.lockupDry();
-		(uint256 cLockup,,) = link.lockupGetCumulativeLockedUp(address(0));
+	function getReword() public view returns (uint256) {
+		(uint256 cReward, ) = link.lockupDry();
+		(uint256 cLockup, , ) = link.lockupGetCumulativeLockedUp(address(0));
 		uint256 gapCReward = cReward - lastCReward[msg.sender];
 		uint256 gapCLockup = cLockup - lastCLockup[msg.sender];
 		uint256 apy = gapCReward / gapCLockup;
@@ -101,7 +113,11 @@ contract LiquidityIncentive is Ownable, ILiquidityIncentive {
 		withdrawn[msg.sender] = 0;
 	}
 
-	function getStartBlockNumber(address _provider) external view returns (uint256) {
+	function getStartBlockNumber(address _provider)
+		external
+		view
+		returns (uint256)
+	{
 		return startBlockOfStaking[_provider];
 	}
 
@@ -113,4 +129,3 @@ contract LiquidityIncentive is Ownable, ILiquidityIncentive {
 		withdrawn[msg.sender] = withdrawn[msg.sender] + value;
 	}
 }
-
