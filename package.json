@@ -51,5 +51,9 @@
 		"hooks": {
 			"pre-commit": "yarn lint"
 		}
+	},
+	"dependencies": {
+		"@chainlink/contracts": "0.0.10",
+		"@uniswap/v2-periphery": "^1.1.0-beta.0"
 	}
 }
