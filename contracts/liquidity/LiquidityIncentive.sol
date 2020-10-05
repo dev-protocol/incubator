@@ -28,7 +28,7 @@ contract LiquidityIncentive is Ownable, ILiquidityIncentive {
 	IERC20 private uniswapV2Pair;
 	IERC20 private dev;
 	ILinkExternalSystem private link;
-	address private uniswapV2PairAddress = 0x4168CEF0fCa0774176632d86bA26553E3B9cF59d;
+	address private uniswapV2Pair = 0x4168CEF0fCa0774176632d86bA26553E3B9cF59d;
 	address private devToken = 0x5cAf454Ba92e6F2c929DF14667Ee360eD9fD5b26;
 
 	event LiquidityProvider(address _provider);
@@ -40,9 +40,9 @@ contract LiquidityIncentive is Ownable, ILiquidityIncentive {
 	) public {
 		link = ILinkExternalSystem(_linkExternalSystem);
 		if (_uniswapV2PairAddress != address(0)) {
-			uniswapV2PairAddress = _uniswapV2PairAddress;
+			uniswapV2Pair = _uniswapV2PairAddress;
 		}
-		uniswapV2Pair = IERC20(uniswapV2PairAddress);
+		uniswapV2Pair = IERC20(uniswapV2Pair);
 
 		if (_devToken != address(0)) {
 			devToken = _devToken;
@@ -63,8 +63,8 @@ contract LiquidityIncentive is Ownable, ILiquidityIncentive {
 		);
 		stakingUniV2Value[msg.sender] = uniV2Balance;
 		require(result, "failed Uniswap V2 trasnferFrom");
-		uint256 devBalanceOfUniswapV2Pair = dev.balanceOf(uniswapV2PairAddress);
-		uint256 liquidity = uniswapV2Pair.balanceOf(uniswapV2PairAddress);
+		uint256 devBalanceOfUniswapV2Pair = dev.balanceOf(uniswapV2Pair);
+		uint256 liquidity = uniswapV2Pair.balanceOf(uniswapV2Pair);
 		uint256 provision = liquidity.mul(devBalanceOfUniswapV2Pair).div(
 			uniswapV2Pair.totalSupply()
 		);
