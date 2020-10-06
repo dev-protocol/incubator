@@ -4,21 +4,31 @@ pragma solidity 0.6.12;
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {Pausable} from "@openzeppelin/contracts/utils/Pausable.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {LiquidityIncentiveStorage} from "contracts/liquidity/LiquidityIncentiveStorage.sol";
+import {
+	LiquidityIncentiveStorage
+} from "contracts/liquidity/LiquidityIncentiveStorage.sol";
 import {
 	IRegistryAdapter
 } from "contracts/liquidity/interface/IRegistryAdapter.sol";
-import {
-	IAddressConfig
-} from "contracts/liquidity/interface/IAddressConfig.sol";
+import {IAddressConfig} from "contracts/liquidity/interface/IAddressConfig.sol";
 
 contract LiquidityIncentive is Pausable, LiquidityIncentiveStorage {
 	using SafeMath for uint256;
 
 	address private config;
 
-	event IncentiveBase(address _provider, uint256 _blockNumber, uint256 _cReward, uint256 _cLockup);
-	event StakedUniV2(address _provider, uint256 _blockNumber, uint256 _stakedUniV2, uint256 _provision);
+	event IncentiveBase(
+		address _provider,
+		uint256 _blockNumber,
+		uint256 _cReward,
+		uint256 _cLockup
+	);
+	event StakedUniV2(
+		address _provider,
+		uint256 _blockNumber,
+		uint256 _stakedUniV2,
+		uint256 _provision
+	);
 	event Withdraw(address _provider, uint256 _blockNumber, uint256 _value);
 
 	constructor(address _config) public {
@@ -29,14 +39,21 @@ contract LiquidityIncentive is Pausable, LiquidityIncentiveStorage {
 		address uniswapPairAddress = IAddressConfig(config).uniswapV2Pair();
 		IERC20 uniswapV2Pair = IERC20(uniswapPairAddress);
 		uint256 stakedUniV2 = stakeUniV2(uniswapV2Pair);
-		uint256 provision = transferIncentive(uniswapV2Pair, uniswapPairAddress);
+		uint256 provision = transferIncentive(
+			uniswapV2Pair,
+			uniswapPairAddress
+		);
 		// first time
-		if(getStartBlockOfStaking(msg.sender) == 0) {
+		if (getStartBlockOfStaking(msg.sender) == 0) {
 			setStartBlockOfStaking(msg.sender, block.number);
-			IRegistryAdapter adapter = IRegistryAdapter(IAddressConfig(config).registryAdapter());
+			IRegistryAdapter adapter = IRegistryAdapter(
+				IAddressConfig(config).registryAdapter()
+			);
 			(uint256 cReward, ) = adapter.lockupDry();
 			setLastCReward(msg.sender, cReward);
-			(uint256 cLockup, , ) = adapter.lockupGetCumulativeLockedUp(address(0));
+			(uint256 cLockup, , ) = adapter.lockupGetCumulativeLockedUp(
+				address(0)
+			);
 			setLastCLockup(msg.sender, cLockup);
 			emit IncentiveBase(msg.sender, block.number, cReward, cLockup);
 		}
@@ -68,7 +85,9 @@ contract LiquidityIncentive is Pausable, LiquidityIncentiveStorage {
 		if (lastBlock == 0) {
 			return 0;
 		}
-		IRegistryAdapter adapter = IRegistryAdapter(IAddressConfig(config).registryAdapter());
+		IRegistryAdapter adapter = IRegistryAdapter(
+			IAddressConfig(config).registryAdapter()
+		);
 		(uint256 cReward, ) = adapter.lockupDry();
 		(uint256 cLockup, , ) = adapter.lockupGetCumulativeLockedUp(address(0));
 		uint256 gapCReward = cReward.sub(getLastCReward(msg.sender));
@@ -90,7 +109,10 @@ contract LiquidityIncentive is Pausable, LiquidityIncentiveStorage {
 		emit Withdraw(msg.sender, block.number, value);
 	}
 
-	function transferIncentive(IERC20 uniswapV2Pair, address uniswapPairAddress) private returns (uint256){
+	function transferIncentive(IERC20 uniswapV2Pair, address uniswapPairAddress)
+		private
+		returns (uint256)
+	{
 		IERC20 dev = IERC20(IAddressConfig(config).dev());
 		uint256 devBalanceOfUniswapV2Pair = dev.balanceOf(uniswapPairAddress);
 		uint256 liquidity = uniswapV2Pair.balanceOf(uniswapPairAddress);
@@ -100,11 +122,14 @@ contract LiquidityIncentive is Pausable, LiquidityIncentiveStorage {
 		require(provision != 0, "provision is 0");
 		bool result = dev.transfer(msg.sender, provision);
 		require(result, "failed dev transfer");
-		setProvisionValue(msg.sender, getProvisionValue(msg.sender) + provision);
+		setProvisionValue(
+			msg.sender,
+			getProvisionValue(msg.sender) + provision
+		);
 		return provision;
 	}
 
-	function stakeUniV2(IERC20 uniswapV2Pair) private returns (uint256){
+	function stakeUniV2(IERC20 uniswapV2Pair) private returns (uint256) {
 		uint256 uniV2Balance = uniswapV2Pair.balanceOf(msg.sender);
 		require(uniV2Balance != 0, "Uniswap V2 balance is 0");
 		bool result = uniswapV2Pair.transferFrom(
@@ -112,7 +137,10 @@ contract LiquidityIncentive is Pausable, LiquidityIncentiveStorage {
 			address(this),
 			uniV2Balance
 		);
-		setStakingUniV2Value(msg.sender, getStakingUniV2Value(msg.sender) + uniV2Balance);
+		setStakingUniV2Value(
+			msg.sender,
+			getStakingUniV2Value(msg.sender) + uniV2Balance
+		);
 		require(result, "failed Uniswap V2 trasnferFrom");
 		return uniV2Balance;
 	}

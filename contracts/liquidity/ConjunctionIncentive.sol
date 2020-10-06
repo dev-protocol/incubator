@@ -24,8 +24,8 @@ import {
 // 外部から実行されたくない関数にvalidateをしこむ
 // 必要なイベントをしこむ
 // コメントをかく、監査対応のため
-	// TODO event追加する
-	// TODO Pausableで止める関数を決める
+// TODO event追加する
+// TODO Pausableで止める関数を決める
 contract ConjunctionIncentive is Ownable {
 	using SafeMath for uint256;
 	// https://docs.chain.link/docs/get-the-latest-price
