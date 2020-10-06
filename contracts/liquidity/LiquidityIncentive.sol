@@ -109,15 +109,15 @@ contract LiquidityIncentive is Pausable, LiquidityIncentiveStorage {
 		emit Withdraw(msg.sender, block.number, value);
 	}
 
-	function transferIncentive(IERC20 uniswapV2Pair, address uniswapPairAddress)
+	function transferIncentive(IERC20 _uniswapV2Pair, address _uniswapPairAddress)
 		private
 		returns (uint256)
 	{
 		IERC20 dev = IERC20(IAddressConfig(config).dev());
-		uint256 devBalanceOfUniswapV2Pair = dev.balanceOf(uniswapPairAddress);
-		uint256 liquidity = uniswapV2Pair.balanceOf(uniswapPairAddress);
+		uint256 devBalanceOfUniswapV2Pair = dev.balanceOf(_uniswapPairAddress);
+		uint256 liquidity = _uniswapV2Pair.balanceOf(_uniswapPairAddress);
 		uint256 provision = liquidity.mul(devBalanceOfUniswapV2Pair).div(
-			uniswapV2Pair.totalSupply()
+			_uniswapV2Pair.totalSupply()
 		);
 		require(provision != 0, "provision is 0");
 		bool result = dev.transfer(msg.sender, provision);
@@ -129,10 +129,10 @@ contract LiquidityIncentive is Pausable, LiquidityIncentiveStorage {
 		return provision;
 	}
 
-	function stakeUniV2(IERC20 uniswapV2Pair) private returns (uint256) {
-		uint256 uniV2Balance = uniswapV2Pair.balanceOf(msg.sender);
+	function stakeUniV2(IERC20 _uniswapV2Pair) private returns (uint256) {
+		uint256 uniV2Balance = _uniswapV2Pair.balanceOf(msg.sender);
 		require(uniV2Balance != 0, "Uniswap V2 balance is 0");
-		bool result = uniswapV2Pair.transferFrom(
+		bool result = _uniswapV2Pair.transferFrom(
 			msg.sender,
 			address(this),
 			uniV2Balance

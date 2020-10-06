@@ -9,7 +9,9 @@ contract AddressConfig is Ownable, IAddressConfig {
 	address private pairAddress = 0x4168CEF0fCa0774176632d86bA26553E3B9cF59d;
 	address private factoryAddress = 0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f;
 	address private wethAddress = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
+	address private aggregatorAddress = 0x9326BFA02ADD2366b30bacB125260Af641031331;
 	address private registryAdapterAddress;
+	address private operatorAddress;
 
 	/* SET */
 	/**
@@ -52,6 +54,22 @@ contract AddressConfig is Ownable, IAddressConfig {
 		registryAdapterAddress = _addr;
 	}
 
+	/**
+	 * Set the latest aggregator contract address.
+	 * Only the owner can execute this function.
+	 */
+	function setAggregator(address _addr) external override onlyOwner {
+		aggregatorAddress = _addr;
+	}
+
+	/**
+	 * Set the latest operator address.
+	 * Only the owner can execute this function.
+	 */
+	function setOperator(address _addr) external override onlyOwner {
+		operatorAddress = _addr;
+	}
+
 	/* GET */
 	/**
 	 * Get the latest Dev contract address.
@@ -87,4 +105,19 @@ contract AddressConfig is Ownable, IAddressConfig {
 	function registryAdapter() external override view returns (address) {
 		return registryAdapterAddress;
 	}
+
+	/**
+	 * Get the latest aggregator contract address.
+	 */
+	function aggregator() external override view returns (address) {
+		return aggregatorAddress;
+	}
+
+	/**
+	 * Get the latest operator address.
+	 */
+	function operator() external override view returns (address) {
+		return operatorAddress;
+	}
+
 }

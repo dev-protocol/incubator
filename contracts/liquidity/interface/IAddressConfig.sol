@@ -12,6 +12,10 @@ interface IAddressConfig {
 
 	function setRegistryAdapter(address _addr) external;
 
+	function setAggregator(address _addr) external;
+
+	function setOperator(address _addr) external;
+
 	function dev() external view returns (address);
 
 	function uniswapV2Pair() external view returns (address);
@@ -21,4 +25,8 @@ interface IAddressConfig {
 	function weth() external view returns (address);
 
 	function registryAdapter() external view returns (address);
+
+	function aggregator() external view returns (address);
+
+	function operator() external view returns (address);
 }
