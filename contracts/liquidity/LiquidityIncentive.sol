@@ -32,9 +32,18 @@ contract LiquidityIncentive is Pausable, LiquidityIncentiveStorage {
 		uint256 _stakedUniV2,
 		uint256 _provision
 	);
-	event LiquidityIncentive(address _provider, uint256 _blockNumber, uint256 _value);
-	event ConjunctionIncentive(address _provider, uint256 _blockNumber, uint256 _value);
+	event LiquidityIncentive(
+		address _provider,
+		uint256 _blockNumber,
+		uint256 _value
+	);
+	event ConjunctionIncentive(
+		address _provider,
+		uint256 _blockNumber,
+		uint256 _value
+	);
 	event Cancel(address _provider, uint256 _blockNumber);
+
 	constructor(address _config) public {
 		config = _config;
 		price = new Price(_config);
@@ -69,11 +78,11 @@ contract LiquidityIncentive is Pausable, LiquidityIncentiveStorage {
 		uint256 startBlockNumber = getStartBlockOfStaking(msg.sender);
 		require(startBlockNumber != 0, "you are not staking");
 		uint256 incentive = getLiquidityIncentiveReword();
-		if(incentive != 0) {
+		if (incentive != 0) {
 			withdrawLiquidityIncentive();
 		}
 		incentive = getConjunctionIncentiveReword();
-		if(incentive != 0) {
+		if (incentive != 0) {
 			withdrawConjunctionIncentive();
 		}
 		uint256 uniValue = getStakingUniV2Value(msg.sender);
@@ -114,7 +123,9 @@ contract LiquidityIncentive is Pausable, LiquidityIncentiveStorage {
 		uint256 apy = gapCReward.div(gapCLockup);
 		uint256 provision = getProvisionValue(msg.sender);
 		uint256 cStaking = provision.mul((block.number.sub(lastBlock)));
-		uint256 reward = cStaking.mul(apy).sub(getLiquidityIncentiveWithdrawn(msg.sender));
+		uint256 reward = cStaking.mul(apy).sub(
+			getLiquidityIncentiveWithdrawn(msg.sender)
+		);
 		return reward;
 	}
 
@@ -124,12 +135,15 @@ contract LiquidityIncentive is Pausable, LiquidityIncentiveStorage {
 			return 0;
 		}
 		// TODO 計算があっているか確認、絶対間違ってる
-		uint256 incentive = (price.getDevPricePerEther()
-			.mul(price.getEthPrice())
-			.mul(getStakingValue(msg.sender))
-			.mul((block.number - lastBlock))
-			.mul(3))
-		.div(1000000000);
+		uint256 incentive = (
+			price
+				.getDevPricePerEther()
+				.mul(price.getEthPrice())
+				.mul(getStakingValue(msg.sender))
+				.mul((block.number - lastBlock))
+				.mul(3)
+		)
+			.div(1000000000);
 		return incentive - getConjunctionIncentiveWithdrawn(msg.sender);
 	}
 
@@ -139,7 +153,10 @@ contract LiquidityIncentive is Pausable, LiquidityIncentiveStorage {
 		IERC20 dev = IERC20(IAddressConfig(config).dev());
 		bool result = dev.transfer(msg.sender, incentive);
 		require(result, "failed dev transfer");
-		setLiquidityIncentiveWithdrawn(msg.sender, getLiquidityIncentiveWithdrawn(msg.sender) + incentive);
+		setLiquidityIncentiveWithdrawn(
+			msg.sender,
+			getLiquidityIncentiveWithdrawn(msg.sender) + incentive
+		);
 		emit LiquidityIncentive(msg.sender, block.number, incentive);
 	}
 
@@ -150,7 +167,10 @@ contract LiquidityIncentive is Pausable, LiquidityIncentiveStorage {
 		IERC20 dev = IERC20(IAddressConfig(config).dev());
 		bool result = dev.transfer(msg.sender, incentive);
 		require(result, "failed dev transfer");
-		setConjunctionIncentiveWithdrawn(msg.sender, getConjunctionIncentiveWithdrawn(msg.sender).add(incentive));
+		setConjunctionIncentiveWithdrawn(
+			msg.sender,
+			getConjunctionIncentiveWithdrawn(msg.sender).add(incentive)
+		);
 		emit ConjunctionIncentive(msg.sender, block.number, incentive);
 	}
 
