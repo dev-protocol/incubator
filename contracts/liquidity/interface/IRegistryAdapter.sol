@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.6.12;
 
-interface ILinkExternalSystem {
+interface IRegistryAdapter {
 	function lockupDry()
 		external
 		view

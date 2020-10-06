@@ -7,8 +7,8 @@ import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {Pausable} from "@openzeppelin/contracts/utils/Pausable.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {
-	ILinkExternalSystem
-} from "contracts/liquidity/interface/ILinkExternalSystem.sol";
+	IRegistryAdapter
+} from "contracts/liquidity/interface/IRegistryAdapter.sol";
 import {
 	AggregatorV3Interface
 } from "@chainlink/contracts/src/v0.6/interfaces/AggregatorV3Interface.sol";
@@ -23,6 +23,9 @@ import {
 // TODO Ownableで止める関数を決める
 // 外部から実行されたくない関数にvalidateをしこむ
 // 必要なイベントをしこむ
+// コメントをかく、監査対応のため
+	// TODO event追加する
+	// TODO Pausableで止める関数を決める
 contract ConjunctionIncentive is Ownable {
 	using SafeMath for uint256;
 	// https://docs.chain.link/docs/get-the-latest-price
@@ -32,7 +35,7 @@ contract ConjunctionIncentive is Ownable {
 	address private factory = 0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f;
 	address private dev = 0x5cAf454Ba92e6F2c929DF14667Ee360eD9fD5b26;
 	address private weth = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
-	address private liquidityIncentive;
+	address private registryAdapter;
 
 	mapping(address => uint256) private stakingValue;
 	mapping(address => uint256) private startBlock;
@@ -44,7 +47,7 @@ contract ConjunctionIncentive is Ownable {
 		address _dev,
 		address _weth,
 		address _aggregator,
-		address _liquidityIncentive
+		address _registryAdapter
 	) {
 		if (_factory != address(0)) {
 			factory = _factory;
@@ -58,7 +61,7 @@ contract ConjunctionIncentive is Ownable {
 		if (_aggregator != address(0)) {
 			aggregator = AggregatorV3Interface(_aggregator);
 		}
-		liquidityIncentive = _liquidityIncentive;
+		registryAdapter = _registryAdapter;
 	}
 
 	function start(address _provier) external {
@@ -84,7 +87,7 @@ contract ConjunctionIncentive is Ownable {
 	}
 
 	function getIncentiveValue() public view returns (uint256) {
-		uint256 blockNumber = ILiquidityIncentive(liquidityIncentive)
+		uint256 blockNumber = IRegistryAdapter(liquidityIncentive)
 			.getStartBlockNumber(msg.sender);
 		if (blockNumber == 0) {
 			return 0;

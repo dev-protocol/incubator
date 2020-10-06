@@ -1,59 +1,110 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.6.12;
 
-// TODO いらないやつは後で消す
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {Pausable} from "@openzeppelin/contracts/utils/Pausable.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {LiquidityIncentiveStorage} from "contracts/liquidity/LiquidityIncentiveStorage.sol";
 import {
-	ILinkExternalSystem
-} from "contracts/liquidity/interface/ILinkExternalSystem.sol";
+	IRegistryAdapter
+} from "contracts/liquidity/interface/IRegistryAdapter.sol";
 import {
-	ILiquidityIncentive
-} from "contracts/liquidity/interface/ILiquidityIncentive.sol";
+	IAddressConfig
+} from "contracts/liquidity/interface/IAddressConfig.sol";
 
-// TODO EternaiStorage　対応するかどうか、した方がいいと思うけど
-// TODO Ownableで止める関数を決める
-contract LiquidityIncentive is Ownable, ILiquidityIncentive {
+contract LiquidityIncentive is Pausable, LiquidityIncentiveStorage {
 	using SafeMath for uint256;
 
-	mapping(address => uint256) private startBlockOfStaking;
-	mapping(address => uint256) private stakingValue;
-	mapping(address => uint256) private stakingUniV2Value;
-	mapping(address => uint256) private lastCReward;
-	mapping(address => uint256) private lastCLockup;
-	mapping(address => uint256) private withdrawn;
+	address private config;
 
-	IERC20 private uniswapV2Pair;
-	IERC20 private dev;
-	ILinkExternalSystem private link;
-	address private uniswapV2Pair = 0x4168CEF0fCa0774176632d86bA26553E3B9cF59d;
-	address private devToken = 0x5cAf454Ba92e6F2c929DF14667Ee360eD9fD5b26;
+	event IncentiveBase(address _provider, uint256 _blockNumber, uint256 _cReward, uint256 _cLockup);
+	event StakedUniV2(address _provider, uint256 _blockNumber, uint256 _stakedUniV2, uint256 _provision);
+	event Withdraw(address _provider, uint256 _blockNumber, uint256 _value);
 
-	event LiquidityProvider(address _provider);
-
-	constructor(
-		address _linkExternalSystem,
-		address _uniswapV2PairAddress,
-		address _devToken
-	) public {
-		link = ILinkExternalSystem(_linkExternalSystem);
-		if (_uniswapV2PairAddress != address(0)) {
-			uniswapV2Pair = _uniswapV2PairAddress;
-		}
-		uniswapV2Pair = IERC20(uniswapV2Pair);
-
-		if (_devToken != address(0)) {
-			devToken = _devToken;
-		}
-		dev = IERC20(devToken);
+	constructor(address _config) public {
+		config = _config;
 	}
 
-	// 複数回実行されてもいいようにする
-	// 流動性撤退されている場合はどう動くか確認する
-	function getIncentive() external {
-		// TODO event追加する
+	function lockupUniV2() external whenNotPaused {
+		address uniswapPairAddress = IAddressConfig(config).uniswapV2Pair();
+		IERC20 uniswapV2Pair = IERC20(uniswapPairAddress);
+		uint256 stakedUniV2 = stakeUniV2(uniswapV2Pair);
+		uint256 provision = transferIncentive(uniswapV2Pair, uniswapPairAddress);
+		// first time
+		if(getStartBlockOfStaking(msg.sender) == 0) {
+			setStartBlockOfStaking(msg.sender, block.number);
+			IRegistryAdapter adapter = IRegistryAdapter(IAddressConfig(config).registryAdapter());
+			(uint256 cReward, ) = adapter.lockupDry();
+			setLastCReward(msg.sender, cReward);
+			(uint256 cLockup, , ) = adapter.lockupGetCumulativeLockedUp(address(0));
+			setLastCLockup(msg.sender, cLockup);
+			emit IncentiveBase(msg.sender, block.number, cReward, cLockup);
+		}
+		emit StakedUniV2(msg.sender, block.number, stakedUniV2, provision);
+	}
+
+	function withdraw() external whenNotPaused {
+		withdrawDev();
+	}
+
+	function cancel() external whenNotPaused {
+		uint256 startBlockNumber = getStartBlockOfStaking(msg.sender);
+		require(startBlockNumber != 0, "you are not staking");
+		withdrawDev();
+		uint256 uniValue = getStakingUniV2Value(msg.sender);
+		IERC20 uniswapV2Pair = IERC20(IAddressConfig(config).uniswapV2Pair());
+		bool result = uniswapV2Pair.transfer(msg.sender, uniValue);
+		require(result, "failed Uniswap V2 trasnfer");
+		setStartBlockOfStaking(msg.sender, 0);
+		setProvisionValue(msg.sender, 0);
+		setStakingUniV2Value(msg.sender, 0);
+		setLastCReward(msg.sender, 0);
+		setLastCLockup(msg.sender, 0);
+		setWithdrawn(msg.sender, 0);
+	}
+
+	function getReword() public view returns (uint256) {
+		uint256 lastBlock = getStartBlockOfStaking(msg.sender);
+		if (lastBlock == 0) {
+			return 0;
+		}
+		IRegistryAdapter adapter = IRegistryAdapter(IAddressConfig(config).registryAdapter());
+		(uint256 cReward, ) = adapter.lockupDry();
+		(uint256 cLockup, , ) = adapter.lockupGetCumulativeLockedUp(address(0));
+		uint256 gapCReward = cReward.sub(getLastCReward(msg.sender));
+		uint256 gapCLockup = cLockup.sub(getLastCLockup(msg.sender));
+		uint256 apy = gapCReward.div(gapCLockup);
+		uint256 provision = getProvisionValue(msg.sender);
+		uint256 cStaking = provision.mul((block.number.sub(lastBlock)));
+		uint256 reward = cStaking.mul(apy).sub(getWithdrawn(msg.sender));
+		return reward;
+	}
+
+	function withdrawDev() private {
+		uint256 value = getReword();
+		require(value != 0, "reword is 0");
+		IERC20 dev = IERC20(IAddressConfig(config).dev());
+		bool result = dev.transfer(msg.sender, value);
+		require(result, "failed dev transfer");
+		setWithdrawn(msg.sender, getWithdrawn(msg.sender) + value);
+		emit Withdraw(msg.sender, block.number, value);
+	}
+
+	function transferIncentive(IERC20 uniswapV2Pair, address uniswapPairAddress) private returns (uint256){
+		IERC20 dev = IERC20(IAddressConfig(config).dev());
+		uint256 devBalanceOfUniswapV2Pair = dev.balanceOf(uniswapPairAddress);
+		uint256 liquidity = uniswapV2Pair.balanceOf(uniswapPairAddress);
+		uint256 provision = liquidity.mul(devBalanceOfUniswapV2Pair).div(
+			uniswapV2Pair.totalSupply()
+		);
+		require(provision != 0, "provision is 0");
+		bool result = dev.transfer(msg.sender, provision);
+		require(result, "failed dev transfer");
+		setProvisionValue(msg.sender, getProvisionValue(msg.sender) + provision);
+		return provision;
+	}
+
+	function stakeUniV2(IERC20 uniswapV2Pair) private returns (uint256){
 		uint256 uniV2Balance = uniswapV2Pair.balanceOf(msg.sender);
 		require(uniV2Balance != 0, "Uniswap V2 balance is 0");
 		bool result = uniswapV2Pair.transferFrom(
@@ -61,71 +112,8 @@ contract LiquidityIncentive is Ownable, ILiquidityIncentive {
 			address(this),
 			uniV2Balance
 		);
-		stakingUniV2Value[msg.sender] = uniV2Balance;
+		setStakingUniV2Value(msg.sender, getStakingUniV2Value(msg.sender) + uniV2Balance);
 		require(result, "failed Uniswap V2 trasnferFrom");
-		uint256 devBalanceOfUniswapV2Pair = dev.balanceOf(uniswapV2Pair);
-		uint256 liquidity = uniswapV2Pair.balanceOf(uniswapV2Pair);
-		uint256 provision = liquidity.mul(devBalanceOfUniswapV2Pair).div(
-			uniswapV2Pair.totalSupply()
-		);
-		result = dev.transfer(msg.sender, provision);
-		require(result, "failed dev transfer");
-		// TODO CIどうしよう、別に管理する？
-		startBlockOfStaking[msg.sender] = block.number;
-		stakingValue[msg.sender] = provision;
-		(uint256 cReward, ) = link.lockupDry();
-		lastCReward[msg.sender] = cReward;
-		(uint256 cLockup, , ) = link.lockupGetCumulativeLockedUp(address(0));
-		lastCLockup[msg.sender] = cLockup;
-		emit LiquidityProvider(msg.sender);
-	}
-
-	function getReword() public view returns (uint256) {
-		(uint256 cReward, ) = link.lockupDry();
-		(uint256 cLockup, , ) = link.lockupGetCumulativeLockedUp(address(0));
-		uint256 gapCReward = cReward - lastCReward[msg.sender];
-		uint256 gapCLockup = cLockup - lastCLockup[msg.sender];
-		uint256 apy = gapCReward / gapCLockup;
-		uint256 provision = stakingValue[msg.sender];
-		uint256 lastBlock = startBlockOfStaking[msg.sender];
-		uint256 cStaking = provision * (block.number - lastBlock);
-		uint256 reward = cStaking * apy - withdrawn[msg.sender];
-		return reward;
-	}
-
-	function withdraw() external {
-		withdrawDev();
-	}
-
-	function cancel() external {
-		uint256 startBlockNumber = startBlockOfStaking[msg.sender];
-		require(startBlockNumber != 0, "you are not staking");
-		withdrawDev();
-		uint256 uniValue = stakingUniV2Value[msg.sender];
-		bool result = uniswapV2Pair.transfer(msg.sender, uniValue);
-		require(result, "failed Uniswap V2 trasnfer");
-		// TODO やりすぎかな。。。
-		startBlockOfStaking[msg.sender] = 0;
-		stakingValue[msg.sender] = 0;
-		stakingUniV2Value[msg.sender] = 0;
-		lastCReward[msg.sender] = 0;
-		lastCLockup[msg.sender] = 0;
-		withdrawn[msg.sender] = 0;
-	}
-
-	function getStartBlockNumber(address _provider)
-		external
-		view
-		returns (uint256)
-	{
-		return startBlockOfStaking[_provider];
-	}
-
-	function withdrawDev() private {
-		uint256 value = getReword();
-		require(value != 0, "reword is 0");
-		bool result = dev.transfer(msg.sender, value);
-		require(result, "failed dev transfer");
-		withdrawn[msg.sender] = withdrawn[msg.sender] + value;
+		return uniV2Balance;
 	}
 }
