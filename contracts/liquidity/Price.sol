@@ -10,7 +10,6 @@ import {
 } from "@unisawap/contracts/libraries/UniswapV2Library.sol";
 import {IAddressConfig} from "contracts/liquidity/interface/IAddressConfig.sol";
 
-// コメントをかく、監査対応のため
 contract Price {
 	using SafeMath for uint256;
 
@@ -25,7 +24,7 @@ contract Price {
 	 *
 	 * @returns price of DEV tokens per ether.
 	 */
-	function getDevPricePerEther() private view returns (uint256) {
+	function getDevPricePerEther() external view returns (uint256) {
 		// TODO 確認する
 		IAddressConfig addressConfig = IAddressConfig(config);
 		(uint256 reserveA, uint256 reserveB) = UniswapV2Library.getReserves(
@@ -37,11 +36,15 @@ contract Price {
 	}
 
 	/**
-	 * Get the price of DEV tokens per ether.
+	 * Get the price of 1ether in dollar terms.
+	 *
+	 * @returns price of 1ether in dollar terms.
 	 */
-	function getEthPrice() private view returns (uint256) {
+	function getEthPrice() external view returns (uint256) {
 		// https://docs.chain.link/docs/get-the-latest-price
-		(, uint256 price, , uint256 timeStamp, , ) = AggregatorV3Interface(IAddressConfig(config).aggregator())
+		(, uint256 price, , uint256 timeStamp, , ) = AggregatorV3Interface(
+			IAddressConfig(config).aggregator()
+		)
 			.latestRoundData();
 		// If the round is not complete yet, timestamp is 0
 		require(timeStamp > 0, "Round not complete");

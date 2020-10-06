@@ -5,13 +5,13 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {IAddressConfig} from "contracts/liquidity/interface/IAddressConfig.sol";
 
 contract AddressConfig is Ownable, IAddressConfig {
-	address private devAddress = 0x5cAf454Ba92e6F2c929DF14667Ee360eD9fD5b26;
-	address private pairAddress = 0x4168CEF0fCa0774176632d86bA26553E3B9cF59d;
-	address private factoryAddress = 0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f;
-	address private wethAddress = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
-	address private aggregatorAddress = 0x9326BFA02ADD2366b30bacB125260Af641031331;
-	address private registryAdapterAddress;
-	address private operatorAddress;
+	address private _dev = 0x5cAf454Ba92e6F2c929DF14667Ee360eD9fD5b26;
+	address private _pair = 0x4168CEF0fCa0774176632d86bA26553E3B9cF59d;
+	address private _factory = 0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f;
+	address private _weth = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
+	address private _aggregator = 0x9326BFA02ADD2366b30bacB125260Af641031331;
+	address private _registryAdapter;
+	address private _operator;
 
 	/* SET */
 	/**
@@ -19,7 +19,7 @@ contract AddressConfig is Ownable, IAddressConfig {
 	 * Only the owner can execute this function.
 	 */
 	function setDev(address _addr) external override onlyOwner {
-		devAddress = _addr;
+		_dev = _addr;
 	}
 
 	/**
@@ -27,7 +27,7 @@ contract AddressConfig is Ownable, IAddressConfig {
 	 * Only the owner can execute this function.
 	 */
 	function setUniswapV2Pair(address _addr) external override onlyOwner {
-		pairAddress = _addr;
+		_pair = _addr;
 	}
 
 	/**
@@ -35,7 +35,7 @@ contract AddressConfig is Ownable, IAddressConfig {
 	 * Only the owner can execute this function.
 	 */
 	function setUniswapV2Factory(address _addr) external override onlyOwner {
-		factoryAddress = _addr;
+		_factory = _addr;
 	}
 
 	/**
@@ -43,7 +43,7 @@ contract AddressConfig is Ownable, IAddressConfig {
 	 * Only the owner can execute this function.
 	 */
 	function setWeth(address _addr) external override onlyOwner {
-		wethAddress = _addr;
+		_weth = _addr;
 	}
 
 	/**
@@ -51,7 +51,7 @@ contract AddressConfig is Ownable, IAddressConfig {
 	 * Only the owner can execute this function.
 	 */
 	function setRegistryAdapter(address _addr) external override onlyOwner {
-		registryAdapterAddress = _addr;
+		_registryAdapter = _addr;
 	}
 
 	/**
@@ -59,7 +59,7 @@ contract AddressConfig is Ownable, IAddressConfig {
 	 * Only the owner can execute this function.
 	 */
 	function setAggregator(address _addr) external override onlyOwner {
-		aggregatorAddress = _addr;
+		_aggregator = _addr;
 	}
 
 	/**
@@ -67,7 +67,7 @@ contract AddressConfig is Ownable, IAddressConfig {
 	 * Only the owner can execute this function.
 	 */
 	function setOperator(address _addr) external override onlyOwner {
-		operatorAddress = _addr;
+		_operator = _addr;
 	}
 
 	/* GET */
@@ -75,49 +75,48 @@ contract AddressConfig is Ownable, IAddressConfig {
 	 * Get the latest Dev contract address.
 	 */
 	function dev() external override view returns (address) {
-		return devAddress;
+		return _dev;
 	}
 
 	/**
 	 * Get the latest Uniswap V2 pair contract address.
 	 */
 	function uniswapV2Pair() external override view returns (address) {
-		return pairAddress;
+		return _pair;
 	}
 
 	/**
 	 * Get the latest Uniswap V2 factory contract address.
 	 */
 	function uniswapV2Factory() external override view returns (address) {
-		return factoryAddress;
+		return _factory;
 	}
 
 	/**
 	 * Get the latest weth contract address.
 	 */
 	function weth() external override view returns (address) {
-		return wethAddress;
+		return _weth;
 	}
 
 	/**
 	 * Get the latest registry adapter contract address.
 	 */
 	function registryAdapter() external override view returns (address) {
-		return registryAdapterAddress;
+		return _registryAdapter;
 	}
 
 	/**
 	 * Get the latest aggregator contract address.
 	 */
 	function aggregator() external override view returns (address) {
-		return aggregatorAddress;
+		return _aggregator;
 	}
 
 	/**
 	 * Get the latest operator address.
 	 */
 	function operator() external override view returns (address) {
-		return operatorAddress;
+		return _operator;
 	}
-
 }
