@@ -85,6 +85,3 @@ contract GitHubMarketIncubatorStorage is UsingStorage {
 		return keccak256(abi.encodePacked("_accountAddress", _property));
 	}
 }
-
-proceed
-progress

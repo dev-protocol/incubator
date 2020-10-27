@@ -20,7 +20,6 @@ contract GitHubMarketIncubator is Ownable, GitHubMarketIncubatorStorage {
 	uint256 constant maxProceedBlockNumber = 518400;
 	uint256 constant stakeTokenValue = 10000;
 
-
 	event Authenticate(
 		address indexed _sender,
 		address market,
@@ -84,7 +83,10 @@ contract GitHubMarketIncubator is Ownable, GitHubMarketIncubatorStorage {
 		require(id == _githubRepository, "illegal metrics.");
 
 		require(
-			IERC20(ILink(link).getTokenAddress()).transfer(account, getRewordValue(_githubRepository)),
+			IERC20(ILink(link).getTokenAddress()).transfer(
+				account,
+				getRewordValue(_githubRepository)
+			),
 			"failed to transfer reword."
 		);
 		IProperty propertyInstance = IProperty(property);
@@ -124,9 +126,14 @@ contract GitHubMarketIncubator is Ownable, GitHubMarketIncubatorStorage {
 		link = _link;
 	}
 
-	function getProceedBlockNumber(string _githubRepository) private view returns (uint256) {
-		uint256 proceedBlockNumber = block.number - getStartBlockNumber(_githubRepository);
-		if (proceedBlockNumber >= maxProceedBlockNumber){
+	function getProceedBlockNumber(string _githubRepository)
+		private
+		view
+		returns (uint256)
+	{
+		uint256 proceedBlockNumber = block.number -
+			getStartBlockNumber(_githubRepository);
+		if (proceedBlockNumber >= maxProceedBlockNumber) {
 			return maxProceedBlockNumber;
 		}
 		return proceedBlockNumber;
