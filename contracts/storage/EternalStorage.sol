@@ -89,10 +89,7 @@ contract EternalStorage {
 	 * Maps a value of `string` type to a given key.
 	 * Only the owner can execute this function.
 	 */
-	function setString(bytes32 _key, string _value)
-		external
-		onlyCurrentOwner
-	{
+	function setString(bytes32 _key, string _value) external onlyCurrentOwner {
 		stringStorage[_key] = _value;
 	}
 
