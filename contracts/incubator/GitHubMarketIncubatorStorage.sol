@@ -17,7 +17,8 @@ contract GitHubMarketIncubatorStorage is UsingStorage {
 		view
 		returns (uint256)
 	{
-		return eternalStorage().getUint(getStartBlockNumberKey(_githubRepository));
+		return
+			eternalStorage().getUint(getStartBlockNumberKey(_githubRepository));
 	}
 
 	function getStartBlockNumberKey(string memory _githubRepository)
@@ -30,9 +31,10 @@ contract GitHubMarketIncubatorStorage is UsingStorage {
 	}
 
 	// PropertyAddress
-	function setPropertyAddress(string memory _githubRepository, address _property)
-		internal
-	{
+	function setPropertyAddress(
+		string memory _githubRepository,
+		address _property
+	) internal {
 		eternalStorage().setAddress(
 			getPropertyAddressKey(_githubRepository),
 			_property
@@ -61,10 +63,7 @@ contract GitHubMarketIncubatorStorage is UsingStorage {
 
 	// PropertyAddress
 	function setAccountAddress(address _property, address _account) internal {
-		eternalStorage().setAddress(
-			getAccountAddressKey(_property),
-			_account
-		);
+		eternalStorage().setAddress(getAccountAddressKey(_property), _account);
 	}
 
 	function getAccountAddress(address _property)
@@ -72,10 +71,7 @@ contract GitHubMarketIncubatorStorage is UsingStorage {
 		view
 		returns (address)
 	{
-		return
-			eternalStorage().getAddress(
-				getAccountAddressKey(_property)
-			);
+		return eternalStorage().getAddress(getAccountAddressKey(_property));
 	}
 
 	function getAccountAddressKey(address _property)

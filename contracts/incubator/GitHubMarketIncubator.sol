@@ -48,9 +48,10 @@ contract GitHubMarketIncubator is Ownable, GitHubMarketIncubatorStorage {
 		setAccountAddress(_property, address(0));
 	}
 
-	function authenticate(string memory _githubRepository, string memory _publicSignature)
-		external
-	{
+	function authenticate(
+		string memory _githubRepository,
+		string memory _publicSignature
+	) external {
 		address property = getPropertyAddress(_githubRepository);
 		require(property != address(0), "illegal user.");
 		address account = getAccountAddress(property);
@@ -77,13 +78,19 @@ contract GitHubMarketIncubator is Ownable, GitHubMarketIncubatorStorage {
 		);
 	}
 
-	function finish(string memory _githubRepository, address _metrics) external {
+	function finish(string memory _githubRepository, address _metrics)
+		external
+	{
 		address property = getPropertyAddress(_githubRepository);
 		require(property != address(0), "illegal repository.");
 		address account = getAccountAddress(property);
 		require(account != address(0), "no authenticate yet.");
 		string memory id = IMarketBehavior(marketBehavior).getId(_metrics);
-		require(keccak256(abi.encodePacked(id)) == keccak256(abi.encodePacked(_githubRepository)), "illegal metrics.");
+		require(
+			keccak256(abi.encodePacked(id)) ==
+				keccak256(abi.encodePacked(_githubRepository)),
+			"illegal metrics."
+		);
 
 		// transfer reword
 		address devToken = ILink(link).getTokenAddress();
@@ -125,7 +132,8 @@ contract GitHubMarketIncubator is Ownable, GitHubMarketIncubatorStorage {
 	{
 		// TODO 本当にあっているか確認
 		address lockup = ILink(link).getLockupAddress();
-		uint256 price = ILockup(lockup).getStorageLastCumulativeInterestPriceLink();
+		uint256 price = ILockup(lockup)
+			.getStorageLastCumulativeInterestPriceLink();
 		uint256 proceedBlockNumber = getProceedBlockNumber(_githubRepository);
 		return price * stakeTokenValue * proceedBlockNumber;
 	}
