@@ -82,17 +82,41 @@ contract GitHubMarketIncubator is Ownable, GitHubMarketIncubatorStorage {
 		string id = IMarketBehavior(marketBehavior).getId(_metrics);
 		require(id == _githubRepository, "illegal metrics.");
 
+		// transfer reword
+		ILink devProtocol = ILink(link);
+		IERC20 dev = IERC20(devProtocol.getTokenAddress());
 		require(
-			IERC20(ILink(link).getTokenAddress()).transfer(
+			dev.transfer(
 				account,
 				getRewordValue(_githubRepository)
 			),
 			"failed to transfer reword."
 		);
+
+		// change property author
 		IProperty propertyInstance = IProperty(property);
 		propertyInstance.changeAuthor(account);
 		uint256 balance = propertyInstance.balanceOf(address(this));
 		propertyInstance.transfer(account, balance);
+
+		// lockup
+		dev.approve(property, stakeTokenValue);
+		devProtocol.depositFrom(address(this), property, stakeTokenValue);
+	}
+
+	function cancelLockup(address _property) external onlyOperator {
+		ILink devProtocol = ILink(link);
+		devProtocol.cancel(_property);
+	}
+
+	function cancelWithdraw(address _property) external onlyOperator {
+		ILink devProtocol = ILink(link);
+		devProtocol.withdraw(_property);
+	}
+
+	function rescue(address _to, uint256 _amount) external onlyOwner {
+		IERC20 dev = IERC20(devProtocol.getTokenAddress());
+		dev.transfer(_to, _amount);
 	}
 
 	function getRewordValue(string _githubRepository)
