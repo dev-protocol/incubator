@@ -84,34 +84,7 @@ contract GitHubMarketIncubatorStorage is UsingStorage {
 	{
 		return keccak256(abi.encodePacked("_accountAddress", _property));
 	}
-
-	// FinishedRepository
-	function setFinishedRepository(address _githubRepository) internal {
-		eternalStorage().setBool(
-			getFinishedRepositoryKey(_githubRepository),
-			true
-		);
-	}
-
-	function getFinishedRepository(address _githubRepository)
-		public
-		view
-		returns (bool)
-	{
-		return
-			eternalStorage().getBool(
-				getFinishedRepositoryKey(_githubRepository)
-			);
-	}
-
-	function getFinishedRepositoryKey(string _githubRepository)
-		private
-		pure
-		returns (bytes32)
-	{
-		return
-			keccak256(
-				abi.encodePacked("_finishedRepository", _githubRepository)
-			);
-	}
 }
+
+proceed
+progress

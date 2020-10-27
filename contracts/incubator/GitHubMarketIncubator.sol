@@ -7,15 +7,19 @@ import {
 	IMarketBehavior
 } from "contracts/incubator/interface/IMarketBehavior.sol";
 import {IProperty} from "contracts/incubator/interface/IProperty.sol";
+import {ILink} from "contracts/incubator/interface/ILink.sol";
 import {
 	GitHubMarketIncubatorStorage
 } from "contracts/incubator/GitHubMarketIncubatorStorage.sol";
 
 contract GitHubMarketIncubator is Ownable, GitHubMarketIncubatorStorage {
 	address private market;
-	address private operator;
-	address private reword;
 	address private marketBehavior;
+	address private operator;
+	address private link;
+	uint256 constant maxProceedBlockNumber = 518400;
+	uint256 constant stakeTokenValue = 10000;
+
 
 	event Authenticate(
 		address indexed _sender,
@@ -38,20 +42,20 @@ contract GitHubMarketIncubator is Ownable, GitHubMarketIncubatorStorage {
 		setStartBlockNumber(_githubRepository);
 	}
 
-	function getRewordValue(string _githubRepository)
-		external
-		view
-		returns (uint256)
-	{
-		// TODO 例のロックアップのやつ
+	function clearAccountAddress() external onlyOperator {
+		setAccountAddress(property, address(0));
 	}
 
 	function authenticate(string _githubRepository, string _publicSignature)
 		external
 	{
-		// TODO ロックかける
 		address property = getPropertyAddress(_githubRepository);
 		require(property != address(0), "illegal user.");
+		address account = getAccountAddress(property);
+		if (account != address(0)) {
+			require(account == msg.sender, "authentication processed.");
+		}
+
 		bool result = IMarket(market).authenticate(
 			property,
 			_githubRepository,
@@ -80,18 +84,24 @@ contract GitHubMarketIncubator is Ownable, GitHubMarketIncubatorStorage {
 		require(id == _githubRepository, "illegal metrics.");
 
 		require(
-			IERC20(reword).transfer(account, getRewordValue(_githubRepository)),
+			IERC20(ILink(link).getTokenAddress()).transfer(account, getRewordValue(_githubRepository)),
 			"failed to transfer reword."
 		);
 		IProperty propertyInstance = IProperty(property);
 		propertyInstance.changeAuthor(account);
 		uint256 balance = propertyInstance.balanceOf(address(this));
 		propertyInstance.transfer(account, balance);
-		setFinishedRepository(_githubRepository);
 	}
 
-	function isFinished(_githubRepository) external returns (bool) {
-		return getFinishedRepository(_githubRepository);
+	function getRewordValue(string _githubRepository)
+		external
+		view
+		returns (uint256)
+	{
+		// TODO 本当にあっているか確認
+		uint256 price = ILink(link).getStorageLastCumulativeInterestPrice();
+		uint256 proceedBlockNumber = getProceedBlockNumber(_githubRepository);
+		return price * stakeTokenValue * proceedBlockNumber;
 	}
 
 	//setter
@@ -110,9 +120,15 @@ contract GitHubMarketIncubator is Ownable, GitHubMarketIncubatorStorage {
 		operator = _operator;
 	}
 
-	function setRewordTokenAddress(address _reword) external onlyOwner {
-		reword = _reword;
+	function setLinkAddress(address _link) external onlyOwner {
+		link = _link;
+	}
+
+	function getProceedBlockNumber(string _githubRepository) private view returns (uint256) {
+		uint256 proceedBlockNumber = block.number - getStartBlockNumber(_githubRepository);
+		if (proceedBlockNumber >= maxProceedBlockNumber){
+			return maxProceedBlockNumber;
+		}
+		return proceedBlockNumber;
 	}
 }
-
-// addPublicSignatureeを誰かが実行するようにする
