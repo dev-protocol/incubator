@@ -1,25 +1,26 @@
+// SPDX-License-Identifier: MPL-2.0
 pragma solidity 0.6.12;
 
 import {UsingStorage} from "contracts/storage/UsingStorage.sol";
 
 contract GitHubMarketIncubatorStorage is UsingStorage {
 	// StartBlockNumber
-	function setStartBlockNumber(string _githubRepository) internal {
+	function setStartBlockNumber(string memory _githubRepository) internal {
 		eternalStorage().setUint(
-			getStartBlockNumberKey(_account),
+			getStartBlockNumberKey(_githubRepository),
 			block.number
 		);
 	}
 
-	function getStartBlockNumber(string _githubRepository)
+	function getStartBlockNumber(string memory _githubRepository)
 		public
 		view
 		returns (uint256)
 	{
-		return eternalStorage().getUint(getStartBlockNumberKey(_account));
+		return eternalStorage().getUint(getStartBlockNumberKey(_githubRepository));
 	}
 
-	function getStartBlockNumberKey(string _githubRepository)
+	function getStartBlockNumberKey(string memory _githubRepository)
 		private
 		pure
 		returns (bytes32)
@@ -29,27 +30,27 @@ contract GitHubMarketIncubatorStorage is UsingStorage {
 	}
 
 	// PropertyAddress
-	function setPropertyAddress(string _githubRepository, address _property)
+	function setPropertyAddress(string memory _githubRepository, address _property)
 		internal
 	{
-		eternalStorage().setString(
+		eternalStorage().setAddress(
 			getPropertyAddressKey(_githubRepository),
 			_property
 		);
 	}
 
-	function getPropertyAddress(string _githubRepository)
+	function getPropertyAddress(string memory _githubRepository)
 		public
 		view
 		returns (address)
 	{
 		return
-			eternalStorage().getString(
+			eternalStorage().getAddress(
 				getPropertyAddressKey(_githubRepository)
 			);
 	}
 
-	function getPropertyAddressKey(string _githubRepository)
+	function getPropertyAddressKey(string memory _githubRepository)
 		private
 		pure
 		returns (bytes32)
@@ -61,8 +62,8 @@ contract GitHubMarketIncubatorStorage is UsingStorage {
 	// PropertyAddress
 	function setAccountAddress(address _property, address _account) internal {
 		eternalStorage().setAddress(
-			getAccountAddressKey(_githubRepository),
-			_property
+			getAccountAddressKey(_property),
+			_account
 		);
 	}
 
@@ -73,11 +74,11 @@ contract GitHubMarketIncubatorStorage is UsingStorage {
 	{
 		return
 			eternalStorage().getAddress(
-				getAccountAddressKey(_githubRepository)
+				getAccountAddressKey(_property)
 			);
 	}
 
-	function getAccountAddressKey(string _property)
+	function getAccountAddressKey(address _property)
 		private
 		pure
 		returns (bytes32)

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MPL-2.0
+
 pragma solidity 0.6.12;
 
 /**
@@ -89,7 +91,7 @@ contract EternalStorage {
 	 * Maps a value of `string` type to a given key.
 	 * Only the owner can execute this function.
 	 */
-	function setString(bytes32 _key, string _value) external onlyCurrentOwner {
+	function setString(bytes32 _key, string calldata _value) external onlyCurrentOwner {
 		stringStorage[_key] = _value;
 	}
 
