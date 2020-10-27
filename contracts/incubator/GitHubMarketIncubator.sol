@@ -86,10 +86,7 @@ contract GitHubMarketIncubator is Ownable, GitHubMarketIncubatorStorage {
 		ILink devProtocol = ILink(link);
 		IERC20 dev = IERC20(devProtocol.getTokenAddress());
 		require(
-			dev.transfer(
-				account,
-				getRewordValue(_githubRepository)
-			),
+			dev.transfer(account, getRewordValue(_githubRepository)),
 			"failed to transfer reword."
 		);
 
