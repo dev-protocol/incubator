@@ -17,8 +17,8 @@ import {
 } from "contracts/incubator/GitHubMarketIncubatorStorage.sol";
 
 contract GitHubMarketIncubator is Ownable, GitHubMarketIncubatorStorage {
-	uint256 constant private stakeTokenValueDefault = 10000;
-	uint256 constant private maxProceedBlockNumberDefault = 518400;
+	uint256 private constant stakeTokenValueDefault = 10000;
+	uint256 private constant maxProceedBlockNumberDefault = 518400;
 
 	event Authenticate(
 		address indexed _sender,
@@ -28,12 +28,21 @@ contract GitHubMarketIncubator is Ownable, GitHubMarketIncubatorStorage {
 		string _publicSignature
 	);
 
-	constructor(address _market, address _marketBehavior, address _operator, address _link, uint256 _maxProceedBlockNumber, uint256 _stakeTokenValue) public {
+	constructor(
+		address _market,
+		address _marketBehavior,
+		address _operator,
+		address _link,
+		uint256 _maxProceedBlockNumber,
+		uint256 _stakeTokenValue
+	) public {
 		setMarketAddress(_market);
 		setMarketBehaviorAddress(_marketBehavior);
 		setOperatorAddress(_operator);
 		setLinkAddress(_link);
-		uint256 tmp = _maxProceedBlockNumber == 0 ? maxProceedBlockNumberDefault : _maxProceedBlockNumber;
+		uint256 tmp = _maxProceedBlockNumber == 0
+			? maxProceedBlockNumberDefault
+			: _maxProceedBlockNumber;
 		setMaxProceedBlockNumber(tmp);
 		tmp = _stakeTokenValue == 0 ? stakeTokenValueDefault : _stakeTokenValue;
 		setStakeTokenValue(tmp);
@@ -93,7 +102,9 @@ contract GitHubMarketIncubator is Ownable, GitHubMarketIncubatorStorage {
 		require(property != address(0), "illegal repository.");
 		address account = getAccountAddress(property);
 		require(account != address(0), "no authenticate yet.");
-		string memory id = IMarketBehavior(getMarketBehaviorAddress()).getId(_metrics);
+		string memory id = IMarketBehavior(getMarketBehaviorAddress()).getId(
+			_metrics
+		);
 		require(
 			keccak256(abi.encodePacked(id)) ==
 				keccak256(abi.encodePacked(_githubRepository)),
@@ -115,7 +126,7 @@ contract GitHubMarketIncubator is Ownable, GitHubMarketIncubatorStorage {
 		propertyInstance.transfer(account, balance);
 
 		// lockup
-		uint256 decimals = dev.decimals() ** 10;
+		uint256 decimals = dev.decimals()**10;
 		IDev(devToken).deposit(property, getStakeTokenValue() * decimals);
 	}
 
@@ -146,7 +157,7 @@ contract GitHubMarketIncubator is Ownable, GitHubMarketIncubatorStorage {
 		uint256 proceedBlockNumber = getProceedBlockNumber(_githubRepository);
 		address devToken = ILink(getLinkAddress()).getTokenAddress();
 		ERC20 dev = ERC20(devToken);
-		uint256 decimals = dev.decimals() ** 10;
+		uint256 decimals = dev.decimals()**10;
 		return price * getStakeTokenValue() * decimals * proceedBlockNumber;
 	}
 
@@ -155,10 +166,7 @@ contract GitHubMarketIncubator is Ownable, GitHubMarketIncubatorStorage {
 		setMarketAddress(_market);
 	}
 
-	function setMarketBehavior(address _marketBehavior)
-		external
-		onlyOwner
-	{
+	function setMarketBehavior(address _marketBehavior) external onlyOwner {
 		setMarketBehaviorAddress(_marketBehavior);
 	}
 
@@ -170,7 +178,10 @@ contract GitHubMarketIncubator is Ownable, GitHubMarketIncubatorStorage {
 		setLinkAddress(_link);
 	}
 
-	function setMaxProceedBlock(uint256 _maxProceedBlockNumber) external onlyOwner {
+	function setMaxProceedBlock(uint256 _maxProceedBlockNumber)
+		external
+		onlyOwner
+	{
 		setMaxProceedBlockNumber(_maxProceedBlockNumber);
 	}
 
