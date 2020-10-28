@@ -61,7 +61,7 @@ contract GitHubMarketIncubatorStorage is UsingStorage {
 			keccak256(abi.encodePacked("_propertyAddress", _githubRepository));
 	}
 
-	// PropertyAddress
+	// AccountAddress
 	function setAccountAddress(address _property, address _account) internal {
 		eternalStorage().setAddress(getAccountAddressKey(_property), _account);
 	}
@@ -80,5 +80,131 @@ contract GitHubMarketIncubatorStorage is UsingStorage {
 		returns (bytes32)
 	{
 		return keccak256(abi.encodePacked("_accountAddress", _property));
+	}
+
+	// Market
+	function setMarketAddress(address _market) internal {
+		eternalStorage().setAddress(getMarketAddressKey(), _market);
+	}
+
+	function getMarketAddress()
+		public
+		view
+		returns (address)
+	{
+		return eternalStorage().getAddress(getMarketAddressKey());
+	}
+
+	function getMarketAddressKey()
+		private
+		pure
+		returns (bytes32)
+	{
+		return keccak256(abi.encodePacked("_marketAddress"));
+	}
+
+	// MarketBehavior
+	function setMarketBehaviorAddress(address _marketBehavior) internal {
+		eternalStorage().setAddress(getMarketBehaviorAddressKey(), _marketBehavior);
+	}
+
+	function getMarketBehaviorAddress()
+		public
+		view
+		returns (address)
+	{
+		return eternalStorage().getAddress(getMarketBehaviorAddressKey());
+	}
+
+	function getMarketBehaviorAddressKey()
+		private
+		pure
+		returns (bytes32)
+	{
+		return keccak256(abi.encodePacked("_marketBehaviorAddress"));
+	}
+
+	// Operator
+	function setOperatorAddress(address _operator) internal {
+		eternalStorage().setAddress(getOperatorAddressKey(), _operator);
+	}
+
+	function getOperatorAddress()
+		public
+		view
+		returns (address)
+	{
+		return eternalStorage().getAddress(getOperatorAddressKey());
+	}
+
+	function getOperatorAddressKey()
+		private
+		pure
+		returns (bytes32)
+	{
+		return keccak256(abi.encodePacked("_operatorAddress"));
+	}
+
+	// Link
+	function setLinkAddress(address _link) internal {
+		eternalStorage().setAddress(getLinkAddressKey(), _link);
+	}
+
+	function getLinkAddress()
+		public
+		view
+		returns (address)
+	{
+		return eternalStorage().getAddress(getLinkAddressKey());
+	}
+
+	function getLinkAddressKey()
+		private
+		pure
+		returns (bytes32)
+	{
+		return keccak256(abi.encodePacked("_linkAddress"));
+	}
+
+	// MaxProceedBlockNumber
+	function setMaxProceedBlockNumber(uint256 _maxProceedBlockNumber) internal {
+		eternalStorage().setUint(getMaxProceedBlockNumberKey(), _maxProceedBlockNumber);
+	}
+
+	function getMaxProceedBlockNumber()
+		public
+		view
+		returns (uint256)
+	{
+		return eternalStorage().getUint(getMaxProceedBlockNumberKey());
+	}
+
+	function getMaxProceedBlockNumberKey()
+		private
+		pure
+		returns (bytes32)
+	{
+		return keccak256(abi.encodePacked("_maxProceedBlockNumber"));
+	}
+
+	// StakeTokenValue
+	function setStakeTokenValue(uint256 _stakeTokenValue) internal {
+		eternalStorage().setUint(getStakeTokenValueKey(), _stakeTokenValue);
+	}
+
+	function getStakeTokenValue()
+		public
+		view
+		returns (uint256)
+	{
+		return eternalStorage().getUint(getStakeTokenValueKey());
+	}
+
+	function getStakeTokenValueKey()
+		private
+		pure
+		returns (bytes32)
+	{
+		return keccak256(abi.encodePacked("_stakeTokenValue"));
 	}
 }
