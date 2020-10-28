@@ -10,7 +10,6 @@ import {EternalStorage} from "contracts/storage/EternalStorage.sol";
  */
 contract UsingStorage is Ownable {
 	address private _storage;
-	event Create(address indexed _from, address _market);
 
 	/**
 	 * Modifier to verify that EternalStorage is set.
