@@ -1,10 +1,15 @@
 // SPDX-License-Identifier: MPL-2.0
 pragma solidity 0.6.12;
 
-import {GitHubMarketIncubatorStorage} from "contracts/incubator/GitHubMarketIncubatorStorage.sol";
+import {
+	GitHubMarketIncubatorStorage
+} from "contracts/incubator/GitHubMarketIncubatorStorage.sol";
 
 contract GitHubMarketIncubatorStorageTest is GitHubMarketIncubatorStorage {
-	function setStartBlockNumberTest(string memory _githubRepository, uint256 _blockNUmber) external {
+	function setStartBlockNumberTest(
+		string memory _githubRepository,
+		uint256 _blockNUmber
+	) external {
 		setStartBlockNumber(_githubRepository, _blockNUmber);
 	}
 
@@ -15,7 +20,9 @@ contract GitHubMarketIncubatorStorageTest is GitHubMarketIncubatorStorage {
 		setPropertyAddress(_githubRepository, _property);
 	}
 
-	function setAccountAddressTest(address _property, address _account) external {
+	function setAccountAddressTest(address _property, address _account)
+		external
+	{
 		setAccountAddress(_property, _account);
 	}
 
@@ -35,7 +42,9 @@ contract GitHubMarketIncubatorStorageTest is GitHubMarketIncubatorStorage {
 		setLinkAddress(_link);
 	}
 
-	function setMaxProceedBlockNumberTest(uint256 _maxProceedBlockNumber) external {
+	function setMaxProceedBlockNumberTest(uint256 _maxProceedBlockNumber)
+		external
+	{
 		setMaxProceedBlockNumber(_maxProceedBlockNumber);
 	}
 
