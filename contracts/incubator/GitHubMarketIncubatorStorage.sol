@@ -5,10 +5,10 @@ import {UsingStorage} from "contracts/storage/UsingStorage.sol";
 
 contract GitHubMarketIncubatorStorage is UsingStorage {
 	// StartBlockNumber
-	function setStartBlockNumber(string memory _githubRepository) internal {
+	function setStartBlockNumber(string memory _githubRepository, uint256 _blockNymber) internal {
 		eternalStorage().setUint(
 			getStartBlockNumberKey(_githubRepository),
-			block.number
+			_blockNymber
 		);
 	}
 

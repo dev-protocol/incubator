@@ -58,7 +58,7 @@ contract GitHubMarketIncubator is Ownable, GitHubMarketIncubatorStorage {
 		onlyOperator
 	{
 		setPropertyAddress(_githubRepository, _property);
-		setStartBlockNumber(_githubRepository);
+		setStartBlockNumber(_githubRepository, block.number);
 	}
 
 	function clearAccountAddress(address _property) external onlyOperator {

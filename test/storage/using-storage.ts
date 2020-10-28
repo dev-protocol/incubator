@@ -5,7 +5,7 @@ import UsingStorageTest from '../../build/UsingStorageTest.json'
 
 use(solidity)
 
-describe('contract', () => {
+describe('UsingStorage', () => {
 	const provider = new MockProvider()
 	const [deployer] = provider.getWallets()
 

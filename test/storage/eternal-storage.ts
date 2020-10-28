@@ -5,7 +5,7 @@ import EternalStorage from '../../build/EternalStorage.json'
 
 use(solidity)
 
-describe('contract', () => {
+describe('EternalStorage', () => {
 	const provider = new MockProvider()
 	const [deployer, user, test] = provider.getWallets()
 	let eternalStorage: Contract
