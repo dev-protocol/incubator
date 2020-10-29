@@ -4,6 +4,7 @@ import {deployContract, MockProvider, solidity} from 'ethereum-waffle'
 import GitHubMarketIncubator from '../../build/GitHubMarketIncubator.json'
 import MockMarket from '../../build/MockMarket.json'
 import MockLink from '../../build/MockLink.json'
+import MockMarketBehavior from '../../build/MockMarketBehavior.json'
 
 use(solidity)
 
@@ -12,7 +13,10 @@ describe.only('GitHubMarketIncubatorStorage', () => {
 	const [deployer, operator, property, test] = provider.getWallets()
 	let incubator: Contract
 	before(async () => {
-		const market = await deployContract(deployer, MockMarket, ['0x00'])
+		const marketBehavior = await deployContract(deployer, MockMarketBehavior)
+		const market = await deployContract(deployer, MockMarket, [
+			marketBehavior.address,
+		])
 		const link = await deployContract(deployer, MockLink, ['0x00', '0x00'])
 		incubator = await deployContract(deployer, GitHubMarketIncubator, [
 			market.address,
