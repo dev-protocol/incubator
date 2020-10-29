@@ -60,17 +60,6 @@ describe.only('GitHubMarketIncubatorStorage', () => {
 			expect(result).to.be.equal(test.address)
 		})
 	})
-	describe('setMarketBehaviorAddress, getMarketBehaviorAddress', () => {
-		it('Initial value is 0x0000........', async () => {
-			const result = await storageTest.getMarketBehaviorAddress()
-			expect(result).to.be.equal(constants.AddressZero)
-		})
-		it('The set value can be taken as it is.', async () => {
-			await storageTest.setMarketBehaviorAddressTest(test.address)
-			const result = await storageTest.getMarketBehaviorAddress()
-			expect(result).to.be.equal(test.address)
-		})
-	})
 	describe('setOperatorAddress, getOperatorAddress', () => {
 		it('Initial value is 0x0000........', async () => {
 			const result = await storageTest.getOperatorAddress()

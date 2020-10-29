@@ -30,10 +30,6 @@ contract GitHubMarketIncubatorStorageTest is GitHubMarketIncubatorStorage {
 		setMarketAddress(_market);
 	}
 
-	function setMarketBehaviorAddressTest(address _marketBehavior) external {
-		setMarketBehaviorAddress(_marketBehavior);
-	}
-
 	function setOperatorAddressTest(address _operator) external {
 		setOperatorAddress(_operator);
 	}

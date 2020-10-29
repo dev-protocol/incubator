@@ -98,21 +98,21 @@ contract GitHubMarketIncubatorStorage is UsingStorage {
 		return keccak256(abi.encodePacked("_marketAddress"));
 	}
 
-	// MarketBehavior
-	function setMarketBehaviorAddress(address _marketBehavior) internal {
-		eternalStorage().setAddress(
-			getMarketBehaviorAddressKey(),
-			_marketBehavior
-		);
-	}
+	// // MarketBehavior
+	// function setMarketBehaviorAddress(address _marketBehavior) internal {
+	// 	eternalStorage().setAddress(
+	// 		getMarketBehaviorAddressKey(),
+	// 		_marketBehavior
+	// 	);
+	// }
 
-	function getMarketBehaviorAddress() public view returns (address) {
-		return eternalStorage().getAddress(getMarketBehaviorAddressKey());
-	}
+	// function getMarketBehaviorAddress() public view returns (address) {
+	// 	return eternalStorage().getAddress(getMarketBehaviorAddressKey());
+	// }
 
-	function getMarketBehaviorAddressKey() private pure returns (bytes32) {
-		return keccak256(abi.encodePacked("_marketBehaviorAddress"));
-	}
+	// function getMarketBehaviorAddressKey() private pure returns (bytes32) {
+	// 	return keccak256(abi.encodePacked("_marketBehaviorAddress"));
+	// }
 
 	// Operator
 	function setOperatorAddress(address _operator) internal {

@@ -30,14 +30,12 @@ contract GitHubMarketIncubator is Ownable, GitHubMarketIncubatorStorage {
 
 	constructor(
 		address _market,
-		address _marketBehavior,
 		address _operator,
 		address _link,
 		uint256 _maxProceedBlockNumber,
 		uint256 _stakeTokenValue
 	) public {
 		setMarketAddress(_market);
-		setMarketBehaviorAddress(_marketBehavior);
 		setOperatorAddress(_operator);
 		setLinkAddress(_link);
 		uint256 tmp = _maxProceedBlockNumber == 0
@@ -102,7 +100,8 @@ contract GitHubMarketIncubator is Ownable, GitHubMarketIncubatorStorage {
 		require(property != address(0), "illegal repository.");
 		address account = getAccountAddress(property);
 		require(account != address(0), "no authenticate yet.");
-		string memory id = IMarketBehavior(getMarketBehaviorAddress()).getId(
+		address marketBehavior = IMarket(getMarketAddress()).behavior();
+		string memory id = IMarketBehavior(marketBehavior).getId(
 			_metrics
 		);
 		require(
@@ -164,10 +163,6 @@ contract GitHubMarketIncubator is Ownable, GitHubMarketIncubatorStorage {
 	//setter
 	function setMarket(address _market) external onlyOwner {
 		setMarketAddress(_market);
-	}
-
-	function setMarketBehavior(address _marketBehavior) external onlyOwner {
-		setMarketBehaviorAddress(_marketBehavior);
 	}
 
 	function setOperator(address _operator) external onlyOwner {
