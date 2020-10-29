@@ -101,9 +101,7 @@ contract GitHubMarketIncubator is Ownable, GitHubMarketIncubatorStorage {
 		address account = getAccountAddress(property);
 		require(account != address(0), "no authenticate yet.");
 		address marketBehavior = IMarket(getMarketAddress()).behavior();
-		string memory id = IMarketBehavior(marketBehavior).getId(
-			_metrics
-		);
+		string memory id = IMarketBehavior(marketBehavior).getId(_metrics);
 		require(
 			keccak256(abi.encodePacked(id)) ==
 				keccak256(abi.encodePacked(_githubRepository)),
