@@ -34,8 +34,8 @@ contract GitHubMarketIncubatorStorageTest is GitHubMarketIncubatorStorage {
 		setOperatorAddress(_operator);
 	}
 
-	function setLinkAddressTest(address _link) external {
-		setLinkAddress(_link);
+	function setAddressConfigAddressTest(address _link) external {
+		setAddressConfigAddress(_link);
 	}
 
 	function setMaxProceedBlockNumberTest(uint256 _maxProceedBlockNumber)

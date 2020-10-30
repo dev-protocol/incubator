@@ -7,7 +7,7 @@ interface ILockup {
 
 	function withdraw(address _property) external;
 
-	function getStorageLastCumulativeInterestPriceLink()
+	function getStorageLastCumulativeInterestPrice()
 		external
 		view
 		returns (uint256);

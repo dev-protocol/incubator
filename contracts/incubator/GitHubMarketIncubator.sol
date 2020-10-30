@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 pragma solidity 0.6.12;
 
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {IMarket} from "contracts/incubator/interface/IMarket.sol";
@@ -9,16 +8,14 @@ import {
 	IMarketBehavior
 } from "contracts/incubator/interface/IMarketBehavior.sol";
 import {IProperty} from "contracts/incubator/interface/IProperty.sol";
-import {ILink} from "contracts/incubator/interface/ILink.sol";
+import {IAddressConfig} from "contracts/incubator/interface/IAddressConfig.sol";
 import {IDev} from "contracts/incubator/interface/IDev.sol";
 import {ILockup} from "contracts/incubator/interface/ILockup.sol";
 import {
 	GitHubMarketIncubatorStorage
 } from "contracts/incubator/GitHubMarketIncubatorStorage.sol";
 
-contract GitHubMarketIncubator is Ownable, GitHubMarketIncubatorStorage {
-	uint256 private constant stakeTokenValueDefault = 10000;
-	uint256 private constant maxProceedBlockNumberDefault = 518400;
+contract GitHubMarketIncubator is GitHubMarketIncubatorStorage {
 
 	event Authenticate(
 		address indexed _sender,
@@ -27,24 +24,6 @@ contract GitHubMarketIncubator is Ownable, GitHubMarketIncubatorStorage {
 		string _githubRepository,
 		string _publicSignature
 	);
-
-	constructor(
-		address _market,
-		address _operator,
-		address _link,
-		uint256 _maxProceedBlockNumber,
-		uint256 _stakeTokenValue
-	) public {
-		setMarketAddress(_market);
-		setOperatorAddress(_operator);
-		setLinkAddress(_link);
-		uint256 tmp = _maxProceedBlockNumber == 0
-			? maxProceedBlockNumberDefault
-			: _maxProceedBlockNumber;
-		setMaxProceedBlockNumber(tmp);
-		tmp = _stakeTokenValue == 0 ? stakeTokenValueDefault : _stakeTokenValue;
-		setStakeTokenValue(tmp);
-	}
 
 	modifier onlyOperator {
 		require(msg.sender == getOperatorAddress(), "sender is not operator.");
@@ -109,7 +88,7 @@ contract GitHubMarketIncubator is Ownable, GitHubMarketIncubatorStorage {
 		);
 
 		// transfer reword
-		address devToken = ILink(getLinkAddress()).getTokenAddress();
+		address devToken = IAddressConfig(getAddressConfigAddress()).token();
 		ERC20 dev = ERC20(devToken);
 		require(
 			dev.transfer(account, getRewordValue(_githubRepository)),
@@ -128,17 +107,17 @@ contract GitHubMarketIncubator is Ownable, GitHubMarketIncubatorStorage {
 	}
 
 	function cancelLockup(address _property) external onlyOperator {
-		address lockup = ILink(getLinkAddress()).getLockupAddress();
+		address lockup = IAddressConfig(getAddressConfigAddress()).lockup();
 		ILockup(lockup).cancel(_property);
 	}
 
 	function withdrawLockup(address _property) external onlyOperator {
-		address lockup = ILink(getLinkAddress()).getLockupAddress();
+		address lockup = IAddressConfig(getAddressConfigAddress()).lockup();
 		ILockup(lockup).withdraw(_property);
 	}
 
 	function rescue(address _to, uint256 _amount) external onlyOwner {
-		IERC20 dev = IERC20(ILink(getLinkAddress()).getTokenAddress());
+		IERC20 dev = IERC20(IAddressConfig(getAddressConfigAddress()).token());
 		dev.transfer(_to, _amount);
 	}
 
@@ -148,11 +127,15 @@ contract GitHubMarketIncubator is Ownable, GitHubMarketIncubatorStorage {
 		returns (uint256)
 	{
 		// TODO 本当にあっているか確認
-		address lockup = ILink(getLinkAddress()).getLockupAddress();
+		// Lockupのアドレスを取得
+		address lockup = IAddressConfig(getAddressConfigAddress()).lockup();
+		// getStorageLastCumulativeInterestPriceの結果を取得
 		uint256 price = ILockup(lockup)
-			.getStorageLastCumulativeInterestPriceLink();
+			.getStorageLastCumulativeInterestPrice();
+		// startした時のブロック番号を取得
 		uint256 proceedBlockNumber = getProceedBlockNumber(_githubRepository);
-		address devToken = ILink(getLinkAddress()).getTokenAddress();
+		/// DEVコントラクトのアドレスを取得
+		address devToken = IAddressConfig(getAddressConfigAddress()).token();
 		ERC20 dev = ERC20(devToken);
 		uint256 decimals = dev.decimals()**10;
 		return price * getStakeTokenValue() * decimals * proceedBlockNumber;
@@ -167,8 +150,8 @@ contract GitHubMarketIncubator is Ownable, GitHubMarketIncubatorStorage {
 		setOperatorAddress(_operator);
 	}
 
-	function setLink(address _link) external onlyOwner {
-		setLinkAddress(_link);
+	function setAddressConfig(address _addressConfig) external onlyOwner {
+		setAddressConfigAddress(_addressConfig);
 	}
 
 	function setMaxProceedBlock(uint256 _maxProceedBlockNumber)

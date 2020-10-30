@@ -5,7 +5,7 @@ import GitHubMarketIncubatorStorageTest from '../../build/GitHubMarketIncubatorS
 
 use(solidity)
 
-describe.only('GitHubMarketIncubatorStorage', () => {
+describe('GitHubMarketIncubatorStorage', () => {
 	const provider = new MockProvider()
 	const [deployer, user, property, test] = provider.getWallets()
 	let storageTest: Contract
@@ -71,14 +71,14 @@ describe.only('GitHubMarketIncubatorStorage', () => {
 			expect(result).to.be.equal(test.address)
 		})
 	})
-	describe('setLinkAddress, getLinkAddress', () => {
+	describe('setAddressConfigAddress, getAddressConfigAddress', () => {
 		it('Initial value is 0x0000........', async () => {
-			const result = await storageTest.getLinkAddress()
+			const result = await storageTest.getAddressConfigAddress()
 			expect(result).to.be.equal(constants.AddressZero)
 		})
 		it('The set value can be taken as it is.', async () => {
-			await storageTest.setLinkAddressTest(test.address)
-			const result = await storageTest.getLinkAddress()
+			await storageTest.setAddressConfigAddressTest(test.address)
+			const result = await storageTest.getAddressConfigAddress()
 			expect(result).to.be.equal(test.address)
 		})
 	})

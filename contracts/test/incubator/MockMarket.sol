@@ -33,6 +33,7 @@ contract MockMarket is IMarket {
 		)
 	{
 		auth[_prop] = true;
+		return true;
 	}
 
 	function authenticateFromPropertyFactory(
