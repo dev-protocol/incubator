@@ -6,9 +6,7 @@ contract MockAddressConfig {
 	address public token;
 	address public lockup;
 
-	constructor(address _token, address _lockup)
-		public
-	{
+	constructor(address _token, address _lockup) public {
 		token = _token;
 		lockup = _lockup;
 	}

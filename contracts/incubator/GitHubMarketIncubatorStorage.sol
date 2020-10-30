@@ -113,7 +113,10 @@ contract GitHubMarketIncubatorStorage is UsingStorage {
 
 	// AddressConfig
 	function setAddressConfigAddress(address _addressConfig) internal {
-		eternalStorage().setAddress(getAddressConfigAddressKey(), _addressConfig);
+		eternalStorage().setAddress(
+			getAddressConfigAddressKey(),
+			_addressConfig
+		);
 	}
 
 	function getAddressConfigAddress() public view returns (address) {

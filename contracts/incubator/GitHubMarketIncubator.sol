@@ -16,7 +16,6 @@ import {
 } from "contracts/incubator/GitHubMarketIncubatorStorage.sol";
 
 contract GitHubMarketIncubator is GitHubMarketIncubatorStorage {
-
 	event Authenticate(
 		address indexed _sender,
 		address market,
@@ -130,8 +129,7 @@ contract GitHubMarketIncubator is GitHubMarketIncubatorStorage {
 		// Lockupのアドレスを取得
 		address lockup = IAddressConfig(getAddressConfigAddress()).lockup();
 		// getStorageLastCumulativeInterestPriceの結果を取得
-		uint256 price = ILockup(lockup)
-			.getStorageLastCumulativeInterestPrice();
+		uint256 price = ILockup(lockup).getStorageLastCumulativeInterestPrice();
 		// startした時のブロック番号を取得
 		uint256 proceedBlockNumber = getProceedBlockNumber(_githubRepository);
 		/// DEVコントラクトのアドレスを取得

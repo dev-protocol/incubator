@@ -15,7 +15,11 @@ contract MockLockup {
 		withdrawStorage[_property] = true;
 	}
 
-	function getStorageLastCumulativeInterestPrice() public view returns (uint256){
+	function getStorageLastCumulativeInterestPrice()
+		public
+		view
+		returns (uint256)
+	{
 		return value;
 	}
 }
