@@ -32,7 +32,7 @@ contract MockMarketBehavior is IMarketBehavior {
 
 	function schema() external view override returns (string memory) {
 		return
-			"[\"GitHub Repository (e.g, your/awesome-repos)\", \"Khaos Public Signature\"]";
+			'["GitHub Repository (e.g, your/awesome-repos)", "Khaos Public Signature"]';
 	}
 
 	function getId(address _metrics)

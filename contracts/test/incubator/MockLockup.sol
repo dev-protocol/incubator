@@ -22,7 +22,8 @@ contract MockLockup {
 			uint256 _reward,
 			uint256 _holders,
 			uint256 _interest
-		){
+		)
+	{
 		return (0, 0, value);
 	}
 }
