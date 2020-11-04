@@ -129,7 +129,7 @@ contract GitHubMarketIncubator is GitHubMarketIncubatorStorage {
 		// Lockupのアドレスを取得
 		address lockup = IAddressConfig(getAddressConfigAddress()).lockup();
 		// getStorageLastCumulativeInterestPriceの結果を取得
-		uint256 price = ILockup(lockup).getStorageLastCumulativeInterestPrice();
+		// (, , uint256 latestPrice) = ILockup(lockup).calculateCumulativeRewardPrices();
 		// startした時のブロック番号を取得
 		uint256 proceedBlockNumber = getProceedBlockNumber(_githubRepository);
 		/// DEVコントラクトのアドレスを取得
@@ -177,3 +177,7 @@ contract GitHubMarketIncubator is GitHubMarketIncubatorStorage {
 		return proceedBlockNumber;
 	}
 }
+
+// TODO 3ヶ月経った頃にチームが stop 関数のようなものを実行する
+// 複数の捜査権限を保持させる
+// https://docs.openzeppelin.com/contracts/3.x/api/access#AccessControl
