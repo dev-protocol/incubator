@@ -16,6 +16,7 @@ contract UsingStorage is Admin {
 
 	constructor() public {
 		_setRoleAdmin(STORAGE_OWNER_ROLE, DEFAULT_ADMIN_ROLE);
+		grantRole(STORAGE_OWNER_ROLE, msg.sender);
 	}
 
 	modifier onlyStoargeOwner() {
@@ -23,16 +24,26 @@ contract UsingStorage is Admin {
 		_;
 	}
 
-	function addStorageOwner(address _storageOwner) external {
+	function addStorageOwner(address _storageOwner) external onlyAdmin {
 		grantRole(STORAGE_OWNER_ROLE, _storageOwner);
 	}
 
-	function deleteStorageOwner(address _storageOwner) external {
+	function deleteStorageOwner(address _storageOwner) external onlyAdmin {
 		revokeRole(STORAGE_OWNER_ROLE, _storageOwner);
 	}
 
-	function isStorageOwner(address account) private view returns (bool) {
+	function isStorageOwner(address account) public view returns (bool) {
 		return hasRole(STORAGE_OWNER_ROLE, account);
+	}
+
+	function addAdmin(address admin) external override onlyAdmin {
+		grantRole(DEFAULT_ADMIN_ROLE, admin);
+		grantRole(STORAGE_OWNER_ROLE, admin);
+	}
+
+	function deleteAdmin(address admin) external override onlyAdmin {
+		revokeRole(DEFAULT_ADMIN_ROLE, admin);
+		revokeRole(STORAGE_OWNER_ROLE, admin);
 	}
 
 	/**

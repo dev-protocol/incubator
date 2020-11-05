@@ -4,9 +4,6 @@ pragma solidity 0.6.12;
 
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 
-/**
- * Module for contrast handling EternalStorage.
- */
 abstract contract Admin is AccessControl {
 	constructor() public {
 		_setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
@@ -25,7 +22,7 @@ abstract contract Admin is AccessControl {
 		revokeRole(DEFAULT_ADMIN_ROLE, admin);
 	}
 
-	function isAdmin(address account) private view returns (bool) {
+	function isAdmin(address account) public view returns (bool) {
 		return hasRole(DEFAULT_ADMIN_ROLE, account);
 	}
 }

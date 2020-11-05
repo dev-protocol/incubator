@@ -26,14 +26,13 @@ describe('Admin', () => {
 			})
 		})
 	})
-	describe('Admin: addAdmin', () => {
+	describe('Admin: addAdmin, isAdmin', () => {
 		describe('success', () => {
 			it('administrators can add an administrator.', async () => {
 				const admin = await deployContract(deployer, AdminTest)
-				const otherAdmin = admin.connect(newAdmin)
 				await admin.addAdmin(newAdmin.address)
-				const value = await otherAdmin.getValueOnlyAdmin()
-				expect(value.toNumber()).to.be.equal(1)
+				const result = await admin.isAdmin(newAdmin.address)
+				expect(result).to.be.equal(true)
 			})
 		})
 		describe('fail', () => {
@@ -46,25 +45,24 @@ describe('Admin', () => {
 			})
 		})
 	})
-	describe('Admin: deleteAdmin', () => {
+	describe('Admin: deleteAdmin, isAdmin', () => {
 		describe('success', () => {
-			it('administrators can add an administrator.', async () => {
+			it('administrative privileges can be removed.', async () => {
 				const admin = await deployContract(deployer, AdminTest)
+				let result = await admin.isAdmin(deployer.address)
+				expect(result).to.be.equal(true)
 				await admin.deleteAdmin(deployer.address)
-				await expect(admin.getValueOnlyAdmin()).to.be.revertedWith(
-					'admin only.'
-				)
+				result = await admin.isAdmin(deployer.address)
+				expect(result).to.be.equal(false)
 			})
 		})
 		describe('fail', () => {
-			it('no one but the administrator can add an administrator.', async () => {
+			it('only an administrator can run it.', async () => {
 				const admin = await deployContract(deployer, AdminTest)
 				const otherAdmin = admin.connect(newAdmin)
-				await expect(
-					otherAdmin.deleteAdmin(newAdmin.address)
-				).to.be.revertedWith('admin only.')
-				const value = await admin.getValueOnlyAdmin()
-				expect(value.toNumber()).to.be.equal(1)
+				await expect(otherAdmin.deleteAdmin(admin.address)).to.be.revertedWith(
+					'admin only.'
+				)
 			})
 		})
 	})
