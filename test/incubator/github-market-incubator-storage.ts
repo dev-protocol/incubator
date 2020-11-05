@@ -16,17 +16,6 @@ describe('GitHubMarketIncubatorStorage', () => {
 		)
 		await storageTest.createStorage()
 	})
-	describe('setStartBlockNumber, getStartBlockNumber', () => {
-		it('Initial value is 0.', async () => {
-			const result = await storageTest.getStartBlockNumber('dummy')
-			expect(result.toNumber()).to.be.equal(0)
-		})
-		it('The set value can be taken as it is.', async () => {
-			await storageTest.setStartBlockNumberTest('dummy', 10)
-			const result = await storageTest.getStartBlockNumber('dummy')
-			expect(result.toNumber()).to.be.equal(10)
-		})
-	})
 	describe('setPropertyAddress, getPropertyAddress', () => {
 		it('Initial value is 0x0000.......', async () => {
 			const result = await storageTest.getPropertyAddress('dummy')
@@ -60,17 +49,6 @@ describe('GitHubMarketIncubatorStorage', () => {
 			expect(result).to.be.equal(test.address)
 		})
 	})
-	describe('setOperatorAddress, getOperatorAddress', () => {
-		it('Initial value is 0x0000........', async () => {
-			const result = await storageTest.getOperatorAddress()
-			expect(result).to.be.equal(constants.AddressZero)
-		})
-		it('The set value can be taken as it is.', async () => {
-			await storageTest.setOperatorAddressTest(test.address)
-			const result = await storageTest.getOperatorAddress()
-			expect(result).to.be.equal(test.address)
-		})
-	})
 	describe('setAddressConfigAddress, getAddressConfigAddress', () => {
 		it('Initial value is 0x0000........', async () => {
 			const result = await storageTest.getAddressConfigAddress()
@@ -80,17 +58,6 @@ describe('GitHubMarketIncubatorStorage', () => {
 			await storageTest.setAddressConfigAddressTest(test.address)
 			const result = await storageTest.getAddressConfigAddress()
 			expect(result).to.be.equal(test.address)
-		})
-	})
-	describe('setMaxProceedBlockNumber, getMaxProceedBlockNumber', () => {
-		it('Initial value is 0.', async () => {
-			const result = await storageTest.getMaxProceedBlockNumber()
-			expect(result.toNumber()).to.be.equal(0)
-		})
-		it('The set value can be taken as it is.', async () => {
-			await storageTest.setMaxProceedBlockNumberTest(3000000000)
-			const result = await storageTest.getMaxProceedBlockNumber()
-			expect(result.toNumber()).to.be.equal(3000000000)
 		})
 	})
 	describe('setStakeTokenValue, getStakeTokenValue', () => {

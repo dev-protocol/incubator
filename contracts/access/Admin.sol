@@ -6,7 +6,7 @@ import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 
 abstract contract Admin is AccessControl {
 	constructor() public {
-		_setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
+		_setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
 	}
 
 	modifier onlyAdmin() {

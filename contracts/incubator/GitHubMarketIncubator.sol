@@ -3,6 +3,7 @@ pragma solidity 0.6.12;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {IMarket} from "contracts/incubator/interface/IMarket.sol";
 import {
 	IMarketBehavior
@@ -16,6 +17,7 @@ import {
 } from "contracts/incubator/GitHubMarketIncubatorStorage.sol";
 
 contract GitHubMarketIncubator is GitHubMarketIncubatorStorage {
+	using SafeMath for uint256;
 	event Authenticate(
 		address indexed _sender,
 		address market,
@@ -24,9 +26,30 @@ contract GitHubMarketIncubator is GitHubMarketIncubatorStorage {
 		string _publicSignature
 	);
 
+	bytes32 public constant OPERATOR_ROLE = keccak256(
+		"OPERATOR_ROLE"
+	);
+
+	constructor() public {
+		_setRoleAdmin(OPERATOR_ROLE, DEFAULT_ADMIN_ROLE);
+		grantRole(OPERATOR_ROLE, _msgSender());
+	}
+
 	modifier onlyOperator {
-		require(msg.sender == getOperatorAddress(), "sender is not operator.");
+		require(isOperator(_msgSender()), "operator only.");
 		_;
+	}
+
+	function isOperator(address account) public view returns (bool) {
+		return hasRole(OPERATOR_ROLE, account);
+	}
+
+	function addOperator(address _operator) external onlyAdmin {
+		grantRole(OPERATOR_ROLE, _operator);
+	}
+
+	function deleteOperator(address _operator) external onlyAdmin {
+		revokeRole(OPERATOR_ROLE, _operator);
 	}
 
 	function start(address _property, string memory _githubRepository)
@@ -34,7 +57,7 @@ contract GitHubMarketIncubator is GitHubMarketIncubatorStorage {
 		onlyOperator
 	{
 		setPropertyAddress(_githubRepository, _property);
-		setStartBlockNumber(_githubRepository, block.number);
+		setStartPrice(_githubRepository, getLastPrice());
 	}
 
 	function clearAccountAddress(address _property) external onlyOperator {
@@ -49,7 +72,7 @@ contract GitHubMarketIncubator is GitHubMarketIncubatorStorage {
 		require(property != address(0), "illegal user.");
 		address account = getAccountAddress(property);
 		if (account != address(0)) {
-			require(account == msg.sender, "authentication processed.");
+			require(account == _msgSender(), "authentication processed.");
 		}
 		address market = getMarketAddress();
 		bool result = IMarket(market).authenticate(
@@ -61,9 +84,9 @@ contract GitHubMarketIncubator is GitHubMarketIncubatorStorage {
 			""
 		);
 		require(result, "failed to authenticate.");
-		setAccountAddress(property, msg.sender);
+		setAccountAddress(property, _msgSender());
 		emit Authenticate(
-			msg.sender,
+			_msgSender(),
 			market,
 			property,
 			_githubRepository,
@@ -101,8 +124,7 @@ contract GitHubMarketIncubator is GitHubMarketIncubatorStorage {
 		propertyInstance.transfer(account, balance);
 
 		// lockup
-		uint256 decimals = dev.decimals()**10;
-		IDev(devToken).deposit(property, getStakeTokenValue() * decimals);
+		IDev(devToken).deposit(property, getStakeTokenValue());
 	}
 
 	function cancelLockup(address _property) external onlyOperator {
@@ -125,20 +147,17 @@ contract GitHubMarketIncubator is GitHubMarketIncubatorStorage {
 		view
 		returns (uint256)
 	{
-		// TODO 本当にあっているか確認
-		// Lockupのアドレスを取得
+		// TODO 念のためのキャップをつける
+		uint256 latestPrice = getLastPrice();
+		uint256 startPrice = getStartPrice(_githubRepository);
+		return latestPrice.sub(startPrice).mul(getStakeTokenValue());
+	}
+
+	function getLastPrice() private view returns (uint256) {
 		address lockup = IAddressConfig(getAddressConfigAddress()).lockup();
-		// getStorageLastCumulativeInterestPriceの結果を取得
 		(, , uint256 latestPrice) = ILockup(lockup)
 			.calculateCumulativeRewardPrices();
-		// startした時のブロック番号を取得
-		uint256 proceedBlockNumber = getProceedBlockNumber(_githubRepository);
-		/// DEVコントラクトのアドレスを取得
-		address devToken = IAddressConfig(getAddressConfigAddress()).token();
-		ERC20 dev = ERC20(devToken);
-		uint256 decimals = dev.decimals()**10;
-		return
-			latestPrice * getStakeTokenValue() * decimals * proceedBlockNumber;
+		return latestPrice;
 	}
 
 	//setter
@@ -146,40 +165,15 @@ contract GitHubMarketIncubator is GitHubMarketIncubatorStorage {
 		setMarketAddress(_market);
 	}
 
-	function setOperator(address _operator) external onlyAdmin {
-		setOperatorAddress(_operator);
-	}
-
 	function setAddressConfig(address _addressConfig) external onlyAdmin {
 		setAddressConfigAddress(_addressConfig);
-	}
-
-	function setMaxProceedBlock(uint256 _maxProceedBlockNumber)
-		external
-		onlyAdmin
-	{
-		setMaxProceedBlockNumber(_maxProceedBlockNumber);
 	}
 
 	function setStakeToken(uint256 _stakeTokenValue) external onlyAdmin {
 		setStakeTokenValue(_stakeTokenValue);
 	}
-
-	function getProceedBlockNumber(string memory _githubRepository)
-		private
-		view
-		returns (uint256)
-	{
-		uint256 proceedBlockNumber = block.number -
-			getStartBlockNumber(_githubRepository);
-		uint256 maxProceedBlockNumber = getMaxProceedBlockNumber();
-		if (proceedBlockNumber >= maxProceedBlockNumber) {
-			return maxProceedBlockNumber;
-		}
-		return proceedBlockNumber;
-	}
 }
 
 // TODO 3ヶ月経った頃にチームが stop 関数のようなものを実行する
-// 複数の捜査権限を保持させる
-// https://docs.openzeppelin.com/contracts/3.x/api/access#AccessControl
+// TODO キャップもつける
+

@@ -6,13 +6,6 @@ import {
 } from "contracts/incubator/GitHubMarketIncubatorStorage.sol";
 
 contract GitHubMarketIncubatorStorageTest is GitHubMarketIncubatorStorage {
-	function setStartBlockNumberTest(
-		string memory _githubRepository,
-		uint256 _blockNUmber
-	) external {
-		setStartBlockNumber(_githubRepository, _blockNUmber);
-	}
-
 	function setPropertyAddressTest(
 		string memory _githubRepository,
 		address _property
@@ -30,18 +23,8 @@ contract GitHubMarketIncubatorStorageTest is GitHubMarketIncubatorStorage {
 		setMarketAddress(_market);
 	}
 
-	function setOperatorAddressTest(address _operator) external {
-		setOperatorAddress(_operator);
-	}
-
 	function setAddressConfigAddressTest(address _link) external {
 		setAddressConfigAddress(_link);
-	}
-
-	function setMaxProceedBlockNumberTest(uint256 _maxProceedBlockNumber)
-		external
-	{
-		setMaxProceedBlockNumber(_maxProceedBlockNumber);
 	}
 
 	function setStakeTokenValueTest(uint256 _stakeTokenValue) external {

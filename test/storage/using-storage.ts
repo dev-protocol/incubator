@@ -5,56 +5,9 @@ import UsingStorageTest from '../../build/UsingStorageTest.json'
 
 use(solidity)
 
-describe.only('UsingStorage', () => {
+describe('UsingStorage', () => {
 	const provider = new MockProvider()
 	const [deployer, newAdmin, user] = provider.getWallets()
-
-	describe('UsingStorage: addAdmin, deleteAdmin', () => {
-		describe('success', () => {
-			const checkAdminAndStorageOwnerAuthority = async (
-				// eslint-disable-next-line @typescript-eslint/prefer-readonly-parameter-types
-				us: Contract,
-				target: string,
-				checkValue: boolean
-			): Promise<void> => {
-				let result = await us.isAdmin(target)
-				expect(result).to.be.equal(checkValue)
-				result = await us.isStorageOwner(target)
-				expect(result).to.be.equal(checkValue)
-			}
-
-			it('can grant admin and storage administrator privileges.', async () => {
-				const us = await deployContract(deployer, UsingStorageTest)
-				await checkAdminAndStorageOwnerAuthority(us, newAdmin.address, false)
-				await us.addAdmin(newAdmin.address)
-				await checkAdminAndStorageOwnerAuthority(us, newAdmin.address, true)
-			})
-			it('can remove admin and storage administrator privileges.', async () => {
-				const us = await deployContract(deployer, UsingStorageTest)
-				await checkAdminAndStorageOwnerAuthority(us, newAdmin.address, false)
-				await us.addAdmin(newAdmin.address)
-				await checkAdminAndStorageOwnerAuthority(us, newAdmin.address, true)
-				await us.deleteAdmin(newAdmin.address)
-				await checkAdminAndStorageOwnerAuthority(us, newAdmin.address, false)
-			})
-		})
-		describe('fail', () => {
-			it('no one but admin can be executed (addAdmin).', async () => {
-				const us = await deployContract(deployer, UsingStorageTest)
-				const usOther = us.connect(newAdmin)
-				await expect(usOther.addAdmin(newAdmin.address)).to.be.revertedWith(
-					'admin only.'
-				)
-			})
-			it('no one but admin can be executed (deleteAdmin).', async () => {
-				const us = await deployContract(deployer, UsingStorageTest)
-				const usOther = us.connect(newAdmin)
-				await expect(usOther.deleteAdmin(newAdmin.address)).to.be.revertedWith(
-					'admin only.'
-				)
-			})
-		})
-	})
 
 	describe('UsingStorage: addStorageOwner, deleteStorageOwner', () => {
 		describe('success', () => {
