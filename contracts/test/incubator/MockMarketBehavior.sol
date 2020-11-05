@@ -19,19 +19,13 @@ contract MockMarketBehavior is IMarketBehavior {
 		string calldata,
 		address,
 		address
-	)
-		external
-		override
-		returns (
-			bool
-		)
-	{
+	) external override returns (bool) {
 		auth[address(0)] = true;
 	}
 
 	function schema() external view override returns (string memory) {
 		return
-		// solhint-disable-next-line quotes
+			// solhint-disable-next-line quotes
 			'["GitHub Repository (e.g, your/awesome-repos)", "Khaos Public Signature"]';
 	}
 

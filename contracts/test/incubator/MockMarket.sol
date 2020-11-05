@@ -24,13 +24,7 @@ contract MockMarket is IMarket {
 		string calldata,
 		string calldata,
 		string calldata
-	)
-		external
-		override
-		returns (
-			bool
-		)
-	{
+	) external override returns (bool) {
 		auth[_prop] = true;
 		return true;
 	}
@@ -43,13 +37,7 @@ contract MockMarket is IMarket {
 		string calldata,
 		string calldata,
 		string calldata
-	)
-		external
-		override
-		returns (
-			bool
-		)
-	{
+	) external override returns (bool) {
 		auth[_prop] = true;
 		return false;
 	}

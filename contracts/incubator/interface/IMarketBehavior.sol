@@ -12,11 +12,7 @@ interface IMarketBehavior {
 		string calldata _args5,
 		address market,
 		address account
-	)
-		external
-		returns (
-			bool
-		);
+	) external returns (bool);
 
 	function schema() external view returns (string memory);
 
