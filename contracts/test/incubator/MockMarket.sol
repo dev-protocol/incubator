@@ -28,7 +28,6 @@ contract MockMarket is IMarket {
 		external
 		override
 		returns (
-			// solium-disable-next-line indentation
 			bool
 		)
 	{
@@ -48,7 +47,6 @@ contract MockMarket is IMarket {
 		external
 		override
 		returns (
-			// solium-disable-next-line indentation
 			bool
 		)
 	{

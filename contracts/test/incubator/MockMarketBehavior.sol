@@ -23,7 +23,6 @@ contract MockMarketBehavior is IMarketBehavior {
 		external
 		override
 		returns (
-			// solium-disable-next-line indentation
 			bool
 		)
 	{
@@ -32,6 +31,7 @@ contract MockMarketBehavior is IMarketBehavior {
 
 	function schema() external view override returns (string memory) {
 		return
+		// solhint-disable-next-line quotes
 			'["GitHub Repository (e.g, your/awesome-repos)", "Khaos Public Signature"]';
 	}
 

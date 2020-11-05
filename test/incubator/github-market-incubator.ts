@@ -136,7 +136,7 @@ class IncubatorInstance {
 	}
 }
 
-describe.only('GitHubMarketIncubator', () => {
+describe('GitHubMarketIncubator', () => {
 	const init = async (): Promise<IncubatorInstance> => {
 		const provider = new MockProvider()
 		const wallets = new Wallets(provider)
@@ -225,7 +225,7 @@ describe.only('GitHubMarketIncubator', () => {
 			})
 		})
 	})
-	describe.only('setter', () => {
+	describe('setter', () => {
 		describe('market', () => {
 			it('you can get the value you set.', async () => {
 				const instance = await init()

@@ -115,7 +115,7 @@ contract GitHubMarketIncubator is GitHubMarketIncubatorStorage {
 		ILockup(lockup).withdraw(_property);
 	}
 
-	function rescue(address _to, uint256 _amount) external onlyOwner {
+	function rescue(address _to, uint256 _amount) external onlyAdmin {
 		IERC20 dev = IERC20(IAddressConfig(getAddressConfigAddress()).token());
 		dev.transfer(_to, _amount);
 	}
@@ -129,37 +129,39 @@ contract GitHubMarketIncubator is GitHubMarketIncubatorStorage {
 		// Lockupのアドレスを取得
 		address lockup = IAddressConfig(getAddressConfigAddress()).lockup();
 		// getStorageLastCumulativeInterestPriceの結果を取得
-		// (, , uint256 latestPrice) = ILockup(lockup).calculateCumulativeRewardPrices();
+		(, , uint256 latestPrice) = ILockup(lockup)
+			.calculateCumulativeRewardPrices();
 		// startした時のブロック番号を取得
 		uint256 proceedBlockNumber = getProceedBlockNumber(_githubRepository);
 		/// DEVコントラクトのアドレスを取得
 		address devToken = IAddressConfig(getAddressConfigAddress()).token();
 		ERC20 dev = ERC20(devToken);
 		uint256 decimals = dev.decimals()**10;
-		return price * getStakeTokenValue() * decimals * proceedBlockNumber;
+		return
+			latestPrice * getStakeTokenValue() * decimals * proceedBlockNumber;
 	}
 
 	//setter
-	function setMarket(address _market) external onlyOwner {
+	function setMarket(address _market) external onlyAdmin {
 		setMarketAddress(_market);
 	}
 
-	function setOperator(address _operator) external onlyOwner {
+	function setOperator(address _operator) external onlyAdmin {
 		setOperatorAddress(_operator);
 	}
 
-	function setAddressConfig(address _addressConfig) external onlyOwner {
+	function setAddressConfig(address _addressConfig) external onlyAdmin {
 		setAddressConfigAddress(_addressConfig);
 	}
 
 	function setMaxProceedBlock(uint256 _maxProceedBlockNumber)
 		external
-		onlyOwner
+		onlyAdmin
 	{
 		setMaxProceedBlockNumber(_maxProceedBlockNumber);
 	}
 
-	function setStakeToken(uint256 _stakeTokenValue) external onlyOwner {
+	function setStakeToken(uint256 _stakeTokenValue) external onlyAdmin {
 		setStakeTokenValue(_stakeTokenValue);
 	}
 

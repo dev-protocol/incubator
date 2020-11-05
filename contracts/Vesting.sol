@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity >=0.4.21 <0.7.0;
+pragma solidity 0.6.12;
 
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
@@ -26,6 +26,7 @@ contract Vesting is Ownable {
 			IERC20(token).transfer(msg.sender, withdrawable),
 			"fail to transfer"
 		);
+		// solhint-disable-next-line reentrancy
 		lastValues[msg.sender] = cumulative;
 	}
 

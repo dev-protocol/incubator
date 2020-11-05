@@ -2,14 +2,38 @@
 
 pragma solidity 0.6.12;
 
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {Admin} from "contracts/access/Admin.sol";
 import {EternalStorage} from "contracts/storage/EternalStorage.sol";
 
 /**
  * Module for contrast handling EternalStorage.
  */
-contract UsingStorage is Ownable {
+contract UsingStorage is Admin {
 	address private _storage;
+	bytes32 public constant STORAGE_OWNER_ROLE = keccak256(
+		"STORAGE_OWNER_ROLE"
+	);
+
+	constructor() public {
+		_setRoleAdmin(STORAGE_OWNER_ROLE, DEFAULT_ADMIN_ROLE);
+	}
+
+	modifier onlyStoargeOwner() {
+		require(isStorageOwner(_msgSender()), "storage owner only.");
+		_;
+	}
+
+	function addStorageOwner(address _storageOwner) external {
+		grantRole(STORAGE_OWNER_ROLE, _storageOwner);
+	}
+
+	function deleteStorageOwner(address _storageOwner) external {
+		revokeRole(STORAGE_OWNER_ROLE, _storageOwner);
+	}
+
+	function isStorageOwner(address account) private view returns (bool) {
+		return hasRole(STORAGE_OWNER_ROLE, account);
+	}
 
 	/**
 	 * Modifier to verify that EternalStorage is set.
@@ -41,9 +65,9 @@ contract UsingStorage is Ownable {
 	/**
 	 * Create a new EternalStorage contract.
 	 * This function call will fail if the EternalStorage contract is already set.
-	 * Also, only the owner can execute it.
+	 * Also, only the storage owner can execute it.
 	 */
-	function createStorage() external onlyOwner {
+	function createStorage() external onlyStoargeOwner {
 		require(_storage == address(0), "storage is set");
 		EternalStorage tmp = new EternalStorage();
 		_storage = address(tmp);
@@ -51,17 +75,17 @@ contract UsingStorage is Ownable {
 
 	/**
 	 * Assigns the EternalStorage contract that has already been created.
-	 * Only the owner can execute this function.
+	 * Only the storage owner can execute this function.
 	 */
-	function setStorage(address _storageAddress) external onlyOwner {
+	function setStorage(address _storageAddress) external onlyStoargeOwner {
 		_storage = _storageAddress;
 	}
 
 	/**
 	 * Delegates the owner of the current EternalStorage contract.
-	 * Only the owner can execute this function.
+	 * Only the storage owner can execute this function.
 	 */
-	function changeOwner(address newOwner) external onlyOwner {
+	function changeOwner(address newOwner) external onlyStoargeOwner {
 		EternalStorage(_storage).changeOwner(newOwner);
 	}
 }

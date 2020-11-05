@@ -13,7 +13,6 @@ interface IMarket {
 	)
 		external
 		returns (
-			// solium-disable-next-line indentation
 			bool
 		);
 
@@ -28,7 +27,6 @@ interface IMarket {
 	)
 		external
 		returns (
-			// solium-disable-next-line indentation
 			bool
 		);
 
