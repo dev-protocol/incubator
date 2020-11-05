@@ -26,9 +26,7 @@ contract GitHubMarketIncubator is GitHubMarketIncubatorStorage {
 		string _publicSignature
 	);
 
-	bytes32 public constant OPERATOR_ROLE = keccak256(
-		"OPERATOR_ROLE"
-	);
+	bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
 
 	constructor() public {
 		_setRoleAdmin(OPERATOR_ROLE, DEFAULT_ADMIN_ROLE);
@@ -176,4 +174,3 @@ contract GitHubMarketIncubator is GitHubMarketIncubatorStorage {
 
 // TODO 3ヶ月経った頃にチームが stop 関数のようなものを実行する
 // TODO キャップもつける
-

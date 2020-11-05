@@ -6,14 +6,10 @@ import {UsingStorage} from "contracts/storage/UsingStorage.sol";
 contract GitHubMarketIncubatorStorage is UsingStorage {
 	// StartPrice
 	// TODO ここのテストも作る
-	function setStartPrice(
-		string memory _githubRepository,
-		uint256 _price
-	) internal {
-		eternalStorage().setUint(
-			getStartPriceKey(_githubRepository),
-			_price
-		);
+	function setStartPrice(string memory _githubRepository, uint256 _price)
+		internal
+	{
+		eternalStorage().setUint(getStartPriceKey(_githubRepository), _price);
 	}
 
 	function getStartPrice(string memory _githubRepository)
@@ -21,8 +17,7 @@ contract GitHubMarketIncubatorStorage is UsingStorage {
 		view
 		returns (uint256)
 	{
-		return
-			eternalStorage().getUint(getStartPriceKey(_githubRepository));
+		return eternalStorage().getUint(getStartPriceKey(_githubRepository));
 	}
 
 	function getStartPriceKey(string memory _githubRepository)
@@ -30,8 +25,7 @@ contract GitHubMarketIncubatorStorage is UsingStorage {
 		pure
 		returns (bytes32)
 	{
-		return
-			keccak256(abi.encodePacked("_startPrice", _githubRepository));
+		return keccak256(abi.encodePacked("_startPrice", _githubRepository));
 	}
 
 	// PropertyAddress
