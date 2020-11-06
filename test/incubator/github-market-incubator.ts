@@ -268,51 +268,51 @@ describe('GitHubMarketIncubator', () => {
 		})
 	})
 
-	// Describe('clearAccountAddress', () => {
-	// 	describe('success', () => {
-	// 		it('Stored account addresses can be deleted.', async () => {
-	// 			const instance = await init()
-	// 			const property = instance.provider.createEmptyWallet()
-	// 			await instance.incubatorOperator.start(
-	// 				property.address,
-	// 				'hogehoge/rep',
-	// 				{
-	// 					gasLimit: 1000000,
-	// 				}
-	// 			)
-	// 			await instance.incubatorUser.authenticate(
-	// 				'hogehoge/rep',
-	// 				'dummy-public-signature',
-	// 				{
-	// 					gasLimit: 1000000,
-	// 				}
-	// 			)
-	// 			let accountAddress = await instance.incubator.getAccountAddress(
-	// 				property.address
-	// 			)
-	// 			expect(accountAddress).to.be.equal(instance.wallets.user.address)
-	// 			await instance.incubatorOperator.clearAccountAddress(property.address)
-	// 			accountAddress = await instance.incubator.getAccountAddress(
-	// 				property.address
-	// 			)
-	// 			expect(accountAddress).to.be.equal(constants.AddressZero)
-	// 		})
-	// 	})
-	// 	describe('fail', () => {
-	// 		it('only operators can execute.', async () => {
-	// 			const instance = await init()
-	// 			const property = instance.provider.createEmptyWallet()
-	// 			const tmp = instance.incubator.clearAccountAddress(
-	// 				property.address,
-	// 				'hogehoge/rep',
-	// 				{
-	// 					gasLimit: 1000000,
-	// 				}
-	// 			)
-	// 			await expect(tmp).to.be.revertedWith('sender is not operator.')
-	// 		})
-	// 	})
-	// })
+	describe('clearAccountAddress', () => {
+		describe('success', () => {
+			it('Stored account addresses can be deleted.', async () => {
+				const [instance, , wallets, provider] = await init()
+				const property = provider.createEmptyWallet()
+				await instance.incubatorOperator.start(
+					property.address,
+					'hogehoge/rep',
+					10000,
+					1000,
+					{
+						gasLimit: 1000000,
+					}
+				)
+				await instance.incubatorUser.authenticate(
+					'hogehoge/rep',
+					'dummy-public-signature',
+					{
+						gasLimit: 1000000,
+					}
+				)
+				let accountAddress = await instance.incubator.getAccountAddress(
+					property.address
+				)
+				expect(accountAddress).to.be.equal(wallets.user.address)
+				await instance.incubatorOperator.clearAccountAddress(property.address)
+				accountAddress = await instance.incubator.getAccountAddress(
+					property.address
+				)
+				expect(accountAddress).to.be.equal(constants.AddressZero)
+			})
+		})
+		describe('fail', () => {
+			it('only operators can execute.', async () => {
+				const [instance, , , provider] = await init()
+				const property = provider.createEmptyWallet()
+				await expect(
+					instance.incubatorStorageOwner.clearAccountAddress(property.address)
+				).to.be.revertedWith('operator only.')
+				await expect(
+					instance.incubatorUser.clearAccountAddress(property.address)
+				).to.be.revertedWith('operator only.')
+			})
+		})
+	})
 	describe('rescue', () => {
 		describe('success', () => {
 			it('can rescue the DEV tokens.', async () => {
