@@ -172,7 +172,7 @@ contract GitHubMarketIncubator is GitHubMarketIncubatorStorage {
 	function getDevDecimals() private view returns (uint256) {
 		address token = IAddressConfig(getAddressConfigAddress()).token();
 		ERC20 dev = ERC20(token);
-		return uint256(10) ** dev.decimals();
+		return uint256(10)**dev.decimals();
 	}
 
 	//setter

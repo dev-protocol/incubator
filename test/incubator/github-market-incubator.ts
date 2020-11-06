@@ -313,6 +313,47 @@ describe('GitHubMarketIncubator', () => {
 	// 		})
 	// 	})
 	// })
+	describe('rescue', () => {
+		describe('success', () => {
+			it('can rescue the DEV tokens.', async () => {
+				const [instance, mock, wallets] = await init()
+				await mock.dev.transfer(instance.incubator.address, 10000)
+				let balance = await mock.dev.balanceOf(instance.incubator.address)
+				expect(balance.toNumber()).to.be.equal(10000)
+				await instance.incubator.rescue(wallets.user.address, 10000)
+				balance = await mock.dev.balanceOf(instance.incubator.address)
+				expect(balance.toNumber()).to.be.equal(0)
+				balance = await mock.dev.balanceOf(wallets.user.address)
+				expect(balance.toNumber()).to.be.equal(10000)
+			})
+		})
+		describe('fail', () => {
+			it('dev tokens that exceed the amount held cannot be rescued.', async () => {
+				const [instance, mock, wallets] = await init()
+				await mock.dev.transfer(instance.incubator.address, 10000)
+				const balance = await mock.dev.balanceOf(instance.incubator.address)
+				expect(balance.toNumber()).to.be.equal(10000)
+				await expect(
+					instance.incubator.rescue(wallets.user.address, 20000)
+				).to.be.revertedWith('transfer amount exceeds balance')
+			})
+			it('おnly the administrator can execute the function..', async () => {
+				const [instance, mock, wallets] = await init()
+				await mock.dev.transfer(instance.incubator.address, 10000)
+				const balance = await mock.dev.balanceOf(instance.incubator.address)
+				expect(balance.toNumber()).to.be.equal(10000)
+				await expect(
+					instance.incubatorOperator.rescue(wallets.user.address, 10000)
+				).to.be.revertedWith('admin only.')
+				await expect(
+					instance.incubatorStorageOwner.rescue(wallets.user.address, 10000)
+				).to.be.revertedWith('admin only.')
+				await expect(
+					instance.incubatorUser.rescue(wallets.user.address, 10000)
+				).to.be.revertedWith('admin only.')
+			})
+		})
+	})
 	describe('setter', () => {
 		describe('market', () => {
 			it('you can get the value you set.', async () => {
