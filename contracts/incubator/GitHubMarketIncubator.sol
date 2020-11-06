@@ -2,6 +2,7 @@
 pragma solidity 0.6.12;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {IMarket} from "contracts/incubator/interface/IMarket.sol";
@@ -18,6 +19,8 @@ import {
 
 contract GitHubMarketIncubator is GitHubMarketIncubatorStorage {
 	using SafeMath for uint256;
+	using SafeERC20 for IERC20;
+
 	event Authenticate(
 		address indexed _sender,
 		address market,
@@ -56,11 +59,11 @@ contract GitHubMarketIncubator is GitHubMarketIncubatorStorage {
 		uint256 _staking,
 		uint256 _rewardLimit
 	) external onlyOperator {
-		// TODO 10**18
 		setPropertyAddress(_githubRepository, _property);
 		setStartPrice(_githubRepository, getLastPrice());
-		setStaking(_githubRepository, _staking);
-		setRewardLimit(_githubRepository, _rewardLimit);
+		uint256 devDecimals = getDevDecimals();
+		setStaking(_githubRepository, _staking.mul(devDecimals));
+		setRewardLimit(_githubRepository, _rewardLimit.mul(devDecimals));
 	}
 
 	function clearAccountAddress(address _property) external onlyOperator {
@@ -124,7 +127,7 @@ contract GitHubMarketIncubator is GitHubMarketIncubatorStorage {
 		IProperty(property).changeAuthor(account);
 		IERC20 propertyInstance = IERC20(property);
 		uint256 balance = propertyInstance.balanceOf(address(this));
-		propertyInstance.transfer(account, balance);
+		propertyInstance.safeTransfer(account, balance);
 
 		// lockup
 		IDev(devToken).deposit(property, getStaking(_githubRepository));
@@ -142,7 +145,7 @@ contract GitHubMarketIncubator is GitHubMarketIncubatorStorage {
 
 	function rescue(address _to, uint256 _amount) external onlyAdmin {
 		IERC20 dev = IERC20(IAddressConfig(getAddressConfigAddress()).token());
-		dev.transfer(_to, _amount);
+		dev.safeTransfer(_to, _amount);
 	}
 
 	function getReword(string memory _githubRepository)
@@ -164,6 +167,12 @@ contract GitHubMarketIncubator is GitHubMarketIncubatorStorage {
 		(, , uint256 latestPrice) = ILockup(lockup)
 			.calculateCumulativeRewardPrices();
 		return latestPrice;
+	}
+
+	function getDevDecimals() private view returns (uint256) {
+		address token = IAddressConfig(getAddressConfigAddress()).token();
+		ERC20 dev = ERC20(token);
+		return uint256(10) ** dev.decimals();
 	}
 
 	//setter
