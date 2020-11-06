@@ -50,10 +50,12 @@ contract GitHubMarketIncubator is GitHubMarketIncubatorStorage {
 		revokeRole(OPERATOR_ROLE, _operator);
 	}
 
-	function start(address _property, string memory _githubRepository, uint256 _staking, uint256 _rewardLimit)
-		external
-		onlyOperator
-	{
+	function start(
+		address _property,
+		string memory _githubRepository,
+		uint256 _staking,
+		uint256 _rewardLimit
+	) external onlyOperator {
 		// TODO 10**18
 		setPropertyAddress(_githubRepository, _property);
 		setStartPrice(_githubRepository, getLastPrice());
@@ -150,7 +152,9 @@ contract GitHubMarketIncubator is GitHubMarketIncubatorStorage {
 	{
 		uint256 latestPrice = getLastPrice();
 		uint256 startPrice = getStartPrice(_githubRepository);
-		uint256 reword = latestPrice.sub(startPrice).mul(getStaking(_githubRepository));
+		uint256 reword = latestPrice.sub(startPrice).mul(
+			getStaking(_githubRepository)
+		);
 		uint256 rewordLimit = getRewardLimit(_githubRepository);
 		return reword < rewordLimit ? reword : rewordLimit;
 	}
