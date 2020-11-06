@@ -5,7 +5,7 @@ pragma solidity 0.6.12;
 contract MockLockup {
 	mapping(address => bool) private cancelStorage;
 	mapping(address => bool) private withdrawStorage;
-	uint256 private value = 100;
+	uint256 public baseValue = 100;
 
 	function cancel(address _property) external {
 		cancelStorage[_property] = true;
@@ -24,6 +24,6 @@ contract MockLockup {
 			uint256 _interest
 		)
 	{
-		return (0, 0, value);
+		return (0, 0, baseValue * block.number);
 	}
 }

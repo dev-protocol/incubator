@@ -50,12 +50,15 @@ contract GitHubMarketIncubator is GitHubMarketIncubatorStorage {
 		revokeRole(OPERATOR_ROLE, _operator);
 	}
 
-	function start(address _property, string memory _githubRepository)
+	function start(address _property, string memory _githubRepository, uint256 _staking, uint256 _rewardLimit)
 		external
 		onlyOperator
 	{
+		// TODO 10**18
 		setPropertyAddress(_githubRepository, _property);
 		setStartPrice(_githubRepository, getLastPrice());
+		setStaking(_githubRepository, _staking);
+		setRewardLimit(_githubRepository, _rewardLimit);
 	}
 
 	function clearAccountAddress(address _property) external onlyOperator {
@@ -111,7 +114,7 @@ contract GitHubMarketIncubator is GitHubMarketIncubatorStorage {
 		address devToken = IAddressConfig(getAddressConfigAddress()).token();
 		ERC20 dev = ERC20(devToken);
 		require(
-			dev.transfer(account, getRewordValue(_githubRepository)),
+			dev.transfer(account, getReword(_githubRepository)),
 			"failed to transfer reword."
 		);
 
@@ -122,7 +125,7 @@ contract GitHubMarketIncubator is GitHubMarketIncubatorStorage {
 		propertyInstance.transfer(account, balance);
 
 		// lockup
-		IDev(devToken).deposit(property, getStakeTokenValue());
+		IDev(devToken).deposit(property, getStaking(_githubRepository));
 	}
 
 	function cancelLockup(address _property) external onlyOperator {
@@ -140,15 +143,16 @@ contract GitHubMarketIncubator is GitHubMarketIncubatorStorage {
 		dev.transfer(_to, _amount);
 	}
 
-	function getRewordValue(string memory _githubRepository)
+	function getReword(string memory _githubRepository)
 		public
 		view
 		returns (uint256)
 	{
-		// TODO 念のためのキャップをつける
 		uint256 latestPrice = getLastPrice();
 		uint256 startPrice = getStartPrice(_githubRepository);
-		return latestPrice.sub(startPrice).mul(getStakeTokenValue());
+		uint256 reword = latestPrice.sub(startPrice).mul(getStaking(_githubRepository));
+		uint256 rewordLimit = getRewardLimit(_githubRepository);
+		return reword < rewordLimit ? reword : rewordLimit;
 	}
 
 	function getLastPrice() private view returns (uint256) {
@@ -166,11 +170,4 @@ contract GitHubMarketIncubator is GitHubMarketIncubatorStorage {
 	function setAddressConfig(address _addressConfig) external onlyAdmin {
 		setAddressConfigAddress(_addressConfig);
 	}
-
-	function setStakeToken(uint256 _stakeTokenValue) external onlyAdmin {
-		setStakeTokenValue(_stakeTokenValue);
-	}
 }
-
-// TODO 3ヶ月経った頃にチームが stop 関数のようなものを実行する
-// TODO キャップもつける

@@ -16,6 +16,39 @@ describe('GitHubMarketIncubatorStorage', () => {
 		)
 		await storageTest.createStorage()
 	})
+	describe('setStartPrice, getStartPrice', () => {
+		it('Initial value is 0', async () => {
+			const result = await storageTest.getStartPrice('dummy')
+			expect(result.toNumber()).to.be.equal(0)
+		})
+		it('The set value can be taken as it is.', async () => {
+			await storageTest.setStartPriceTest('dummy', 1000000)
+			const result = await storageTest.getStartPrice('dummy')
+			expect(result.toNumber()).to.be.equal(1000000)
+		})
+	})
+	describe('setStaking, getStaking', () => {
+		it('Initial value is 0', async () => {
+			const result = await storageTest.getStaking('dummy')
+			expect(result.toNumber()).to.be.equal(0)
+		})
+		it('The set value can be taken as it is.', async () => {
+			await storageTest.setStakingTest('dummy', 2000000)
+			const result = await storageTest.getStaking('dummy')
+			expect(result.toNumber()).to.be.equal(2000000)
+		})
+	})
+	describe('setRewardLimit, getRewardLimit', () => {
+		it('Initial value is 0', async () => {
+			const result = await storageTest.getRewardLimit('dummy')
+			expect(result.toNumber()).to.be.equal(0)
+		})
+		it('The set value can be taken as it is.', async () => {
+			await storageTest.setRewardLimitTest('dummy', 3000000)
+			const result = await storageTest.getRewardLimit('dummy')
+			expect(result.toNumber()).to.be.equal(3000000)
+		})
+	})
 	describe('setPropertyAddress, getPropertyAddress', () => {
 		it('Initial value is 0x0000.......', async () => {
 			const result = await storageTest.getPropertyAddress('dummy')
@@ -58,17 +91,6 @@ describe('GitHubMarketIncubatorStorage', () => {
 			await storageTest.setAddressConfigAddressTest(test.address)
 			const result = await storageTest.getAddressConfigAddress()
 			expect(result).to.be.equal(test.address)
-		})
-	})
-	describe('setStakeTokenValue, getStakeTokenValue', () => {
-		it('Initial value is 0.', async () => {
-			const result = await storageTest.getStakeTokenValue()
-			expect(result.toNumber()).to.be.equal(0)
-		})
-		it('The set value can be taken as it is.', async () => {
-			await storageTest.setStakeTokenValueTest(40000000)
-			const result = await storageTest.getStakeTokenValue()
-			expect(result.toNumber()).to.be.equal(40000000)
 		})
 	})
 })

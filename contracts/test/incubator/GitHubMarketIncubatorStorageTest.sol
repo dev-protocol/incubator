@@ -6,6 +6,27 @@ import {
 } from "contracts/incubator/GitHubMarketIncubatorStorage.sol";
 
 contract GitHubMarketIncubatorStorageTest is GitHubMarketIncubatorStorage {
+	function setStartPriceTest(
+		string memory _githubRepository,
+		uint256 _price
+	) external {
+		setStartPrice(_githubRepository, _price);
+	}
+
+	function setStakingTest(
+		string memory _githubRepository,
+		uint256 _staking
+	) external {
+		setStaking(_githubRepository, _staking);
+	}
+
+	function setRewardLimitTest(
+		string memory _githubRepository,
+		uint256 _rewardLimit
+	) external {
+		setRewardLimit(_githubRepository, _rewardLimit);
+	}
+
 	function setPropertyAddressTest(
 		string memory _githubRepository,
 		address _property
@@ -25,9 +46,5 @@ contract GitHubMarketIncubatorStorageTest is GitHubMarketIncubatorStorage {
 
 	function setAddressConfigAddressTest(address _link) external {
 		setAddressConfigAddress(_link);
-	}
-
-	function setStakeTokenValueTest(uint256 _stakeTokenValue) external {
-		setStakeTokenValue(_stakeTokenValue);
 	}
 }

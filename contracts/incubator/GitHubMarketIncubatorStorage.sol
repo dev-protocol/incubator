@@ -5,7 +5,6 @@ import {UsingStorage} from "contracts/storage/UsingStorage.sol";
 
 contract GitHubMarketIncubatorStorage is UsingStorage {
 	// StartPrice
-	// TODO ここのテストも作る
 	function setStartPrice(string memory _githubRepository, uint256 _price)
 		internal
 	{
@@ -26,6 +25,45 @@ contract GitHubMarketIncubatorStorage is UsingStorage {
 		returns (bytes32)
 	{
 		return keccak256(abi.encodePacked("_startPrice", _githubRepository));
+	}
+
+	// Staking
+	function setStaking(string memory _githubRepository, uint256 _staking)
+		internal
+	{
+		eternalStorage().setUint(getStakingKey(_githubRepository), _staking);
+	}
+
+	function getStaking(string memory _githubRepository)
+		public
+		view
+		returns (uint256)
+	{
+		return eternalStorage().getUint(getStakingKey(_githubRepository));
+	}
+
+	function getStakingKey(string memory _githubRepository)
+		private
+		pure
+		returns (bytes32)
+	{
+		return keccak256(abi.encodePacked("_staking", _githubRepository));
+	}
+
+	// Reward limit
+	function setRewardLimit(string memory _githubRepository, uint256 _rewardLimit) internal {
+		eternalStorage().setUint(
+			getRewardLimitKey(_githubRepository),
+			_rewardLimit
+		);
+	}
+
+	function getRewardLimit(string memory _githubRepository) public view returns (uint256) {
+		return eternalStorage().getUint(getRewardLimitKey(_githubRepository));
+	}
+
+	function getRewardLimitKey(string memory _githubRepository) private pure returns (bytes32) {
+		return keccak256(abi.encodePacked(_githubRepository, "_rewardLimit"));
 	}
 
 	// PropertyAddress
@@ -93,19 +131,6 @@ contract GitHubMarketIncubatorStorage is UsingStorage {
 		return keccak256(abi.encodePacked("_marketAddress"));
 	}
 
-	// // Operator
-	// function setOperatorAddress(address _operator) internal {
-	// 	eternalStorage().setAddress(getOperatorAddressKey(), _operator);
-	// }
-
-	// function getOperatorAddress() public view returns (address) {
-	// 	return eternalStorage().getAddress(getOperatorAddressKey());
-	// }
-
-	// function getOperatorAddressKey() private pure returns (bytes32) {
-	// 	return keccak256(abi.encodePacked("_operatorAddress"));
-	// }
-
 	// AddressConfig
 	function setAddressConfigAddress(address _addressConfig) internal {
 		eternalStorage().setAddress(
@@ -120,34 +145,5 @@ contract GitHubMarketIncubatorStorage is UsingStorage {
 
 	function getAddressConfigAddressKey() private pure returns (bytes32) {
 		return keccak256(abi.encodePacked("_addressConfig"));
-	}
-
-	// // MaxProceedBlockNumber
-	// function setMaxProceedBlockNumber(uint256 _maxProceedBlockNumber) internal {
-	// 	eternalStorage().setUint(
-	// 		getMaxProceedBlockNumberKey(),
-	// 		_maxProceedBlockNumber
-	// 	);
-	// }
-
-	// function getMaxProceedBlockNumber() public view returns (uint256) {
-	// 	return eternalStorage().getUint(getMaxProceedBlockNumberKey());
-	// }
-
-	// function getMaxProceedBlockNumberKey() private pure returns (bytes32) {
-	// 	return keccak256(abi.encodePacked("_maxProceedBlockNumber"));
-	// }
-
-	// StakeTokenValue
-	function setStakeTokenValue(uint256 _stakeTokenValue) internal {
-		eternalStorage().setUint(getStakeTokenValueKey(), _stakeTokenValue);
-	}
-
-	function getStakeTokenValue() public view returns (uint256) {
-		return eternalStorage().getUint(getStakeTokenValueKey());
-	}
-
-	function getStakeTokenValueKey() private pure returns (bytes32) {
-		return keccak256(abi.encodePacked("_stakeTokenValue"));
 	}
 }
