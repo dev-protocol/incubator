@@ -120,10 +120,7 @@ contract GitHubMarketIncubator is GitHubMarketIncubatorStorage {
 		// transfer reword
 		address devToken = IAddressConfig(getAddressConfigAddress()).token();
 		ERC20 dev = ERC20(devToken);
-		require(
-			dev.transfer(account, reword),
-			"failed to transfer reword."
-		);
+		require(dev.transfer(account, reword), "failed to transfer reword.");
 
 		// change property author
 		IProperty(property).changeAuthor(account);
