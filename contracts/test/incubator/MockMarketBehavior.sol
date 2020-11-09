@@ -21,6 +21,7 @@ contract MockMarketBehavior is IMarketBehavior {
 		address
 	) external override returns (bool) {
 		auth[address(0)] = true;
+		return true;
 	}
 
 	function schema() external view override returns (string memory) {

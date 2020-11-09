@@ -61,9 +61,8 @@ contract GitHubMarketIncubator is GitHubMarketIncubatorStorage {
 	) external onlyOperator {
 		setPropertyAddress(_githubRepository, _property);
 		setStartPrice(_githubRepository, getLastPrice());
-		uint256 devDecimals = getDevDecimals();
-		setStaking(_githubRepository, _staking.mul(devDecimals));
-		setRewardLimit(_githubRepository, _rewardLimit.mul(devDecimals));
+		setStaking(_githubRepository, _staking);
+		setRewardLimit(_githubRepository, _rewardLimit);
 	}
 
 	function clearAccountAddress(address _property) external onlyOperator {
@@ -100,6 +99,7 @@ contract GitHubMarketIncubator is GitHubMarketIncubatorStorage {
 		);
 	}
 
+	// test
 	function finish(string memory _githubRepository, address _metrics)
 		external
 	{
@@ -107,6 +107,8 @@ contract GitHubMarketIncubator is GitHubMarketIncubatorStorage {
 		require(property != address(0), "illegal repository.");
 		address account = getAccountAddress(property);
 		require(account != address(0), "no authenticate yet.");
+		uint256 reword = getReword(_githubRepository);
+		require(reword != 0, "reword is 0.");
 		address marketBehavior = IMarket(getMarketAddress()).behavior();
 		string memory id = IMarketBehavior(marketBehavior).getId(_metrics);
 		require(
@@ -119,7 +121,7 @@ contract GitHubMarketIncubator is GitHubMarketIncubatorStorage {
 		address devToken = IAddressConfig(getAddressConfigAddress()).token();
 		ERC20 dev = ERC20(devToken);
 		require(
-			dev.transfer(account, getReword(_githubRepository)),
+			dev.transfer(account, reword),
 			"failed to transfer reword."
 		);
 
@@ -131,13 +133,16 @@ contract GitHubMarketIncubator is GitHubMarketIncubatorStorage {
 
 		// lockup
 		IDev(devToken).deposit(property, getStaking(_githubRepository));
+		setStaking(_githubRepository, 0);
 	}
 
+	// test
 	function cancelLockup(address _property) external onlyOperator {
 		address lockup = IAddressConfig(getAddressConfigAddress()).lockup();
 		ILockup(lockup).cancel(_property);
 	}
 
+	// test
 	function withdrawLockup(address _property) external onlyOperator {
 		address lockup = IAddressConfig(getAddressConfigAddress()).lockup();
 		ILockup(lockup).withdraw(_property);
@@ -167,12 +172,6 @@ contract GitHubMarketIncubator is GitHubMarketIncubatorStorage {
 		(, , uint256 latestPrice) = ILockup(lockup)
 			.calculateCumulativeRewardPrices();
 		return latestPrice;
-	}
-
-	function getDevDecimals() private view returns (uint256) {
-		address token = IAddressConfig(getAddressConfigAddress()).token();
-		ERC20 dev = ERC20(token);
-		return uint256(10)**dev.decimals();
 	}
 
 	//setter

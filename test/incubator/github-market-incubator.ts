@@ -1,3 +1,5 @@
+/* eslint-disable no-await-in-loop */
+/* eslint-disable @typescript-eslint/prefer-readonly-parameter-types */
 import {expect, use} from 'chai'
 import {Contract, Wallet, constants} from 'ethers'
 import {deployContract, MockProvider, solidity} from 'ethereum-waffle'
@@ -18,7 +20,6 @@ class Wallets {
 	private _storageOwner!: Wallet
 	private _user!: Wallet
 
-	// eslint-disable-next-line @typescript-eslint/prefer-readonly-parameter-types
 	constructor(provider: MockProvider) {
 		this._provider = provider
 	}
@@ -55,7 +56,6 @@ class MockContract {
 	private _marketBehavior!: Contract
 	private _market!: Contract
 	private _addressConfig!: Contract
-	// eslint-disable-next-line @typescript-eslint/prefer-readonly-parameter-types
 	constructor(wallets: Wallets) {
 		this._wallets = wallets
 	}
@@ -106,7 +106,6 @@ class IncubatorInstance {
 	private _incubatorOperator!: Contract
 	private _incubatorUser!: Contract
 
-	// eslint-disable-next-line @typescript-eslint/prefer-readonly-parameter-types
 	constructor(wallets: Wallets, mock: MockContract) {
 		this._wallets = wallets
 		this._mock = mock
@@ -179,48 +178,103 @@ describe('GitHubMarketIncubator', () => {
 			})
 		})
 		describe('fail', () => {
-			it('storage owner can not grant or remove operator privileges.', async () => {
-				const [instance, , wallets] = await init()
-				let result = await instance.incubator.isOperator(wallets.user.address)
-				expect(result).to.be.equal(false)
-				await expect(
-					instance.incubatorStorageOwner.addOperator(wallets.user.address)
-				).to.be.revertedWith('admin only.')
-				result = await instance.incubator.isOperator(wallets.user.address)
-				expect(result).to.be.equal(false)
-				await expect(
-					instance.incubatorStorageOwner.deleteOperator(wallets.user.address)
-				).to.be.revertedWith('admin only.')
-				result = await instance.incubator.isOperator(wallets.user.address)
-				expect(result).to.be.equal(false)
-			})
-			it('operator can not grant or remove operator privileges.', async () => {
-				const [instance, , wallets] = await init()
-				let result = await instance.incubator.isOperator(wallets.user.address)
-				expect(result).to.be.equal(false)
-				await expect(
-					instance.incubatorOperator.addOperator(wallets.user.address)
-				).to.be.revertedWith('admin only.')
-				result = await instance.incubator.isOperator(wallets.user.address)
-				expect(result).to.be.equal(false)
-				await expect(
-					instance.incubatorOperator.deleteOperator(wallets.user.address)
-				).to.be.revertedWith('admin only.')
-				result = await instance.incubator.isOperator(wallets.user.address)
-				expect(result).to.be.equal(false)
+			it('only administrators can do this.', async () => {
+				const check = async (incubator: Contract): Promise<void> => {
+					const wallet = provider.createEmptyWallet()
+
+					let result = await incubator.isOperator(wallet.address)
+					expect(result).to.be.equal(false)
+					await expect(
+						incubator.addOperator(wallet.address)
+					).to.be.revertedWith('admin only.')
+					result = await incubator.isOperator(wallet.address)
+					expect(result).to.be.equal(false)
+					await expect(
+						incubator.deleteOperator(wallet.address)
+					).to.be.revertedWith('admin only.')
+					result = await incubator.isOperator(wallet.address)
+					expect(result).to.be.equal(false)
+				}
+
+				const [instance, , , provider] = await init()
+				await check(instance.incubatorStorageOwner)
+				await check(instance.incubatorOperator)
+				await check(instance.incubatorUser)
 			})
 		})
 	})
 
 	describe('start', () => {
 		describe('success', () => {
-			it('パラメータがストレージに保存される.', async () => {
+			it('Parameters are stored in storage.', async () => {
+				const check = async (incubator: Contract): Promise<void> => {
+					const property = provider.createEmptyWallet()
+					const repository = 'hogehoge/rep'
+					const stakingValue = '10000' + DEV_DECIMALS
+					const limitValue = '1000' + DEV_DECIMALS
+					await incubator.start(
+						property.address,
+						repository,
+						stakingValue,
+						limitValue,
+						{
+							gasLimit: 1000000,
+						}
+					)
+					expect(await incubator.getPropertyAddress(repository)).to.be.equal(
+						property.address
+					)
+					const [
+						,
+						,
+						lastPrice,
+					] = await mock.lockup.calculateCumulativeRewardPrices()
+					expect(await incubator.getStartPrice(repository)).to.be.equal(
+						lastPrice.toNumber()
+					)
+					const staking = await incubator.getStaking(repository)
+					expect(staking.toString()).to.be.equal(stakingValue.toString())
+					const limit = await incubator.getRewardLimit(repository)
+					expect(limit.toString()).to.be.equal(limitValue.toString())
+				}
+
 				const [instance, mock, , provider] = await init()
+				await check(instance.incubator)
+				await check(instance.incubatorOperator)
+			})
+		})
+		describe('fail', () => {
+			it('only administrators and operators can do this.', async () => {
+				const check = async (incubator: Contract): Promise<void> => {
+					const property = provider.createEmptyWallet()
+					const tmp = incubator.start(
+						property.address,
+						'hogehoge/rep',
+						10000,
+						1000,
+						{
+							gasLimit: 1000000,
+						}
+					)
+					await expect(tmp).to.be.revertedWith('operator only.')
+				}
+
+				const [instance, , , provider] = await init()
+				await check(instance.incubatorUser)
+				await check(instance.incubatorStorageOwner)
+			})
+		})
+	})
+
+	describe('authenticate', () => {
+		describe('success', () => {
+			it('the approval process is executed.', async () => {
+				const [instance, mock, wallets, provider] = await init()
 				const property = provider.createEmptyWallet()
 				const repository = 'hogehoge/rep'
-				const stakingValue = 10000
-				const limitValue = 1000
-				await instance.incubatorOperator.start(
+				const stakingValue = '10' + DEV_DECIMALS
+				const limitValue = '10000' + DEV_DECIMALS
+				await instance.incubator.start(
 					property.address,
 					repository,
 					stakingValue,
@@ -229,41 +283,106 @@ describe('GitHubMarketIncubator', () => {
 						gasLimit: 1000000,
 					}
 				)
-				expect(
-					await instance.incubator.getPropertyAddress(repository)
-				).to.be.equal(property.address)
-				const [
-					,
-					,
-					lastPrice,
-				] = await mock.lockup.calculateCumulativeRewardPrices()
-				expect(await instance.incubator.getStartPrice(repository)).to.be.equal(
-					lastPrice.toNumber()
+				await expect(
+					instance.incubator.authenticate('hogehoge/rep', 'dummy-public', {
+						gasLimit: 1000000,
+					})
 				)
-				const staking = await instance.incubator.getStaking(repository)
-				expect(staking.toString()).to.be.equal(
-					stakingValue.toString() + DEV_DECIMALS
-				)
-				const limit = await instance.incubator.getRewardLimit(repository)
-				expect(limit.toString()).to.be.equal(
-					limitValue.toString() + DEV_DECIMALS
-				)
+					.to.emit(instance.incubator, 'Authenticate')
+					.withArgs(
+						wallets.deployer.address,
+						mock.market.address,
+						property.address,
+						'hogehoge/rep',
+						'dummy-public'
+					)
 			})
-		})
-		describe('fail', () => {
-			it('only operators can execute.', async () => {
-				const [instance, , , provider] = await init()
+			it('Theres nothing wrong with running it multiple times.', async () => {
+				const [instance, mock, wallets, provider] = await init()
 				const property = provider.createEmptyWallet()
-				const tmp = instance.incubatorUser.start(
+				const repository = 'hogehoge/rep'
+				const stakingValue = '10' + DEV_DECIMALS
+				const limitValue = '10000' + DEV_DECIMALS
+				await instance.incubator.start(
 					property.address,
-					'hogehoge/rep',
-					10000,
-					1000,
+					repository,
+					stakingValue,
+					limitValue,
 					{
 						gasLimit: 1000000,
 					}
 				)
-				await expect(tmp).to.be.revertedWith('operator only.')
+				await expect(
+					instance.incubator.authenticate('hogehoge/rep', 'dummy-public', {
+						gasLimit: 1000000,
+					})
+				)
+					.to.emit(instance.incubator, 'Authenticate')
+					.withArgs(
+						wallets.deployer.address,
+						mock.market.address,
+						property.address,
+						'hogehoge/rep',
+						'dummy-public'
+					)
+				await expect(
+					instance.incubator.authenticate('hogehoge/rep', 'dummy-public', {
+						gasLimit: 1000000,
+					})
+				)
+					.to.emit(instance.incubator, 'Authenticate')
+					.withArgs(
+						wallets.deployer.address,
+						mock.market.address,
+						property.address,
+						'hogehoge/rep',
+						'dummy-public'
+					)
+			})
+		})
+		describe('fail', () => {
+			it('If the start function is not executed, an error occurs.', async () => {
+				const [instance] = await init()
+				await expect(
+					instance.incubator.authenticate('hogehoge/rep', 'dummy-public', {
+						gasLimit: 1000000,
+					})
+				).to.be.revertedWith('illegal user.')
+			})
+			it('An error occurs when a different user executes it than the first time.', async () => {
+				const [instance, mock, wallets, provider] = await init()
+				const property = provider.createEmptyWallet()
+				const repository = 'hogehoge/rep'
+				const stakingValue = '10' + DEV_DECIMALS
+				const limitValue = '10000' + DEV_DECIMALS
+				await instance.incubator.start(
+					property.address,
+					repository,
+					stakingValue,
+					limitValue,
+					{
+						gasLimit: 1000000,
+					}
+				)
+				await expect(
+					instance.incubator.authenticate('hogehoge/rep', 'dummy-public', {
+						gasLimit: 1000000,
+					})
+				)
+					.to.emit(instance.incubator, 'Authenticate')
+					.withArgs(
+						wallets.deployer.address,
+						mock.market.address,
+						property.address,
+						'hogehoge/rep',
+						'dummy-public'
+					)
+
+				await expect(
+					instance.incubatorUser.authenticate('hogehoge/rep', 'dummy-public', {
+						gasLimit: 1000000,
+					})
+				).to.be.revertedWith('authentication processed.')
 			})
 		})
 	})
@@ -271,45 +390,101 @@ describe('GitHubMarketIncubator', () => {
 	describe('clearAccountAddress', () => {
 		describe('success', () => {
 			it('Stored account addresses can be deleted.', async () => {
+				const check = async (
+					incubator: Contract,
+					incubatorUser: Contract
+				): Promise<void> => {
+					const property = provider.createEmptyWallet()
+					await incubator.start(property.address, 'hogehoge/rep', 10000, 1000, {
+						gasLimit: 1000000,
+					})
+					await incubatorUser.authenticate(
+						'hogehoge/rep',
+						'dummy-public-signature',
+						{
+							gasLimit: 1000000,
+						}
+					)
+					let accountAddress = await incubator.getAccountAddress(
+						property.address
+					)
+					expect(accountAddress).to.be.equal(wallets.user.address)
+					await incubator.clearAccountAddress(property.address)
+					accountAddress = await incubator.getAccountAddress(property.address)
+					expect(accountAddress).to.be.equal(constants.AddressZero)
+				}
+
 				const [instance, , wallets, provider] = await init()
-				const property = provider.createEmptyWallet()
-				await instance.incubatorOperator.start(
-					property.address,
-					'hogehoge/rep',
-					10000,
-					1000,
-					{
-						gasLimit: 1000000,
-					}
-				)
-				await instance.incubatorUser.authenticate(
-					'hogehoge/rep',
-					'dummy-public-signature',
-					{
-						gasLimit: 1000000,
-					}
-				)
-				let accountAddress = await instance.incubator.getAccountAddress(
-					property.address
-				)
-				expect(accountAddress).to.be.equal(wallets.user.address)
-				await instance.incubatorOperator.clearAccountAddress(property.address)
-				accountAddress = await instance.incubator.getAccountAddress(
-					property.address
-				)
-				expect(accountAddress).to.be.equal(constants.AddressZero)
+				await check(instance.incubator, instance.incubatorUser)
+				await check(instance.incubatorOperator, instance.incubatorUser)
 			})
 		})
 		describe('fail', () => {
-			it('only operators can execute.', async () => {
+			it('only administrators and operators can do this.', async () => {
+				const check = async (incubator: Contract): Promise<void> => {
+					const property = provider.createEmptyWallet()
+					await expect(
+						incubator.clearAccountAddress(property.address)
+					).to.be.revertedWith('operator only.')
+					await expect(
+						incubator.clearAccountAddress(property.address)
+					).to.be.revertedWith('operator only.')
+				}
+
 				const [instance, , , provider] = await init()
-				const property = provider.createEmptyWallet()
-				await expect(
-					instance.incubatorStorageOwner.clearAccountAddress(property.address)
-				).to.be.revertedWith('operator only.')
-				await expect(
-					instance.incubatorUser.clearAccountAddress(property.address)
-				).to.be.revertedWith('operator only.')
+				await check(instance.incubatorStorageOwner)
+				await check(instance.incubatorUser)
+			})
+		})
+	})
+
+	describe('clearAccountAddress', () => {
+		describe('success', () => {
+			it('Stored account addresses can be deleted.', async () => {
+				const check = async (
+					incubator: Contract,
+					incubatorUser: Contract
+				): Promise<void> => {
+					const property = provider.createEmptyWallet()
+					await incubator.start(property.address, 'hogehoge/rep', 10000, 1000, {
+						gasLimit: 1000000,
+					})
+					await incubatorUser.authenticate(
+						'hogehoge/rep',
+						'dummy-public-signature',
+						{
+							gasLimit: 1000000,
+						}
+					)
+					let accountAddress = await incubator.getAccountAddress(
+						property.address
+					)
+					expect(accountAddress).to.be.equal(wallets.user.address)
+					await incubator.clearAccountAddress(property.address)
+					accountAddress = await incubator.getAccountAddress(property.address)
+					expect(accountAddress).to.be.equal(constants.AddressZero)
+				}
+
+				const [instance, , wallets, provider] = await init()
+				await check(instance.incubator, instance.incubatorUser)
+				await check(instance.incubatorOperator, instance.incubatorUser)
+			})
+		})
+		describe('fail', () => {
+			it('only administrators and operators can do this.', async () => {
+				const check = async (incubator: Contract): Promise<void> => {
+					const property = provider.createEmptyWallet()
+					await expect(
+						incubator.clearAccountAddress(property.address)
+					).to.be.revertedWith('operator only.')
+					await expect(
+						incubator.clearAccountAddress(property.address)
+					).to.be.revertedWith('operator only.')
+				}
+
+				const [instance, , , provider] = await init()
+				await check(instance.incubatorStorageOwner)
+				await check(instance.incubatorUser)
 			})
 		})
 	})
@@ -337,21 +512,93 @@ describe('GitHubMarketIncubator', () => {
 					instance.incubator.rescue(wallets.user.address, 20000)
 				).to.be.revertedWith('transfer amount exceeds balance')
 			})
-			it('おnly the administrator can execute the function..', async () => {
-				const [instance, mock, wallets] = await init()
+			it('only the administrator can execute the function..', async () => {
+				const check = async (incubator: Contract): Promise<void> => {
+					const property = provider.createEmptyWallet()
+					const balance = await mock.dev.balanceOf(incubator.address)
+					expect(balance.toNumber()).to.be.equal(10000)
+					await expect(
+						incubator.rescue(property.address, 10000)
+					).to.be.revertedWith('admin only.')
+				}
+
+				const [instance, mock, , provider] = await init()
 				await mock.dev.transfer(instance.incubator.address, 10000)
-				const balance = await mock.dev.balanceOf(instance.incubator.address)
-				expect(balance.toNumber()).to.be.equal(10000)
-				await expect(
-					instance.incubatorOperator.rescue(wallets.user.address, 10000)
-				).to.be.revertedWith('admin only.')
-				await expect(
-					instance.incubatorStorageOwner.rescue(wallets.user.address, 10000)
-				).to.be.revertedWith('admin only.')
-				await expect(
-					instance.incubatorUser.rescue(wallets.user.address, 10000)
-				).to.be.revertedWith('admin only.')
+				await check(instance.incubatorOperator)
+				await check(instance.incubatorStorageOwner)
+				await check(instance.incubatorUser)
 			})
+		})
+	})
+	describe('getReword', () => {
+		it('if the repository is not registered, it returns 0.', async () => {
+			const [instance] = await init()
+			const reword = await instance.incubator.getReword('hogehoge/hugahuga')
+			expect(reword.toNumber()).to.be.equal(0)
+		})
+		describe('It returns a value proportional to the difference between the initial value and the staking.', () => {
+			it('10.', async () => {
+				const [instance, , , provider] = await init()
+				const wallet = provider.createEmptyWallet()
+
+				await instance.incubator.start(
+					wallet.address,
+					'user/repository',
+					'10' + DEV_DECIMALS,
+					'10000' + DEV_DECIMALS
+				)
+				for (let i = 0; i < 5; i++) {
+					await provider.send('evm_mine', [])
+					const result = await instance.incubator.getReword('user/repository')
+					expect(result.toString()).to.be.equal(
+						(i + 1).toString() + '000' + DEV_DECIMALS
+					)
+				}
+			})
+			it('20.', async () => {
+				const [instance, , , provider] = await init()
+				const wallet = provider.createEmptyWallet()
+
+				await instance.incubator.start(
+					wallet.address,
+					'user/repository',
+					'20' + DEV_DECIMALS,
+					'10000' + DEV_DECIMALS
+				)
+				for (let i = 0; i < 5; i++) {
+					await provider.send('evm_mine', [])
+					const result = await instance.incubator.getReword('user/repository')
+					expect(result.toString()).to.be.equal(
+						((i + 1) * 2).toString() + '000' + DEV_DECIMALS
+					)
+				}
+			})
+		})
+		it('if the limit is exceeded, the value of the limit is returned.', async () => {
+			const [instance, , , provider] = await init()
+			const wallet = provider.createEmptyWallet()
+
+			await instance.incubator.start(
+				wallet.address,
+				'user/repository',
+				'10' + DEV_DECIMALS,
+				'10000' + DEV_DECIMALS
+			)
+			for (let i = 0; i < 9; i++) {
+				await provider.send('evm_mine', [])
+			}
+
+			let result = await instance.incubator.getReword('user/repository')
+			expect(result.toString()).to.be.equal('9000' + DEV_DECIMALS)
+			await provider.send('evm_mine', [])
+			result = await instance.incubator.getReword('user/repository')
+			expect(result.toString()).to.be.equal('10000' + DEV_DECIMALS)
+			await provider.send('evm_mine', [])
+			result = await instance.incubator.getReword('user/repository')
+			expect(result.toString()).to.be.equal('10000' + DEV_DECIMALS)
+			await provider.send('evm_mine', [])
+			result = await instance.incubator.getReword('user/repository')
+			expect(result.toString()).to.be.equal('10000' + DEV_DECIMALS)
 		})
 	})
 	describe('setter', () => {
@@ -362,11 +609,17 @@ describe('GitHubMarketIncubator', () => {
 				expect(marketAddress).to.be.equal(mock.market.address)
 			})
 			it('only owner can set.', async () => {
+				const check = async (incubator: Contract): Promise<void> => {
+					const wallet = provider.createEmptyWallet()
+					await expect(incubator.setMarket(wallet.address)).to.be.revertedWith(
+						'admin only.'
+					)
+				}
+
 				const [instance, , , provider] = await init()
-				const wallet = provider.createEmptyWallet()
-				await expect(
-					instance.incubatorUser.setMarket(wallet.address)
-				).to.be.revertedWith('admin only.')
+				await check(instance.incubatorOperator)
+				await check(instance.incubatorStorageOwner)
+				await check(instance.incubatorUser)
 			})
 		})
 		describe('addressConfig', () => {
@@ -376,11 +629,17 @@ describe('GitHubMarketIncubator', () => {
 				expect(operatorAddress).to.be.equal(mock.addressConfig.address)
 			})
 			it('only owner can set.', async () => {
+				const check = async (incubator: Contract): Promise<void> => {
+					const wallet = provider.createEmptyWallet()
+					await expect(
+						incubator.setAddressConfig(wallet.address)
+					).to.be.revertedWith('admin only.')
+				}
+
 				const [instance, , , provider] = await init()
-				const wallet = provider.createEmptyWallet()
-				await expect(
-					instance.incubatorUser.setAddressConfig(wallet.address)
-				).to.be.revertedWith('admin only.')
+				await check(instance.incubatorOperator)
+				await check(instance.incubatorStorageOwner)
+				await check(instance.incubatorUser)
 			})
 		})
 	})
