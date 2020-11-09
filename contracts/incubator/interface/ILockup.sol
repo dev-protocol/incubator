@@ -3,9 +3,8 @@
 pragma solidity 0.6.12;
 
 interface ILockup {
-	function cancel(address _property) external;
 
-	function withdraw(address _property) external;
+	function withdraw(address _property, uint256 _amount) external;
 
 	function calculateCumulativeRewardPrices()
 		external

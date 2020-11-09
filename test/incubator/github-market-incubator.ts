@@ -298,7 +298,7 @@ describe('GitHubMarketIncubator', () => {
 					)
 			})
 			it('Theres nothing wrong with running it multiple times.', async () => {
-				const [instance, mock, wallets, provider] = await init()
+				const [instance, , , provider] = await init()
 				const property = provider.createEmptyWallet()
 				const repository = 'hogehoge/rep'
 				const stakingValue = '10' + DEV_DECIMALS
@@ -312,32 +312,12 @@ describe('GitHubMarketIncubator', () => {
 						gasLimit: 1000000,
 					}
 				)
-				await expect(
-					instance.incubator.authenticate('hogehoge/rep', 'dummy-public', {
-						gasLimit: 1000000,
-					})
-				)
-					.to.emit(instance.incubator, 'Authenticate')
-					.withArgs(
-						wallets.deployer.address,
-						mock.market.address,
-						property.address,
-						'hogehoge/rep',
-						'dummy-public'
-					)
-				await expect(
-					instance.incubator.authenticate('hogehoge/rep', 'dummy-public', {
-						gasLimit: 1000000,
-					})
-				)
-					.to.emit(instance.incubator, 'Authenticate')
-					.withArgs(
-						wallets.deployer.address,
-						mock.market.address,
-						property.address,
-						'hogehoge/rep',
-						'dummy-public'
-					)
+				await instance.incubator.authenticate('hogehoge/rep', 'dummy-public', {
+					gasLimit: 1000000,
+				})
+				await instance.incubator.authenticate('hogehoge/rep', 'dummy-public', {
+					gasLimit: 1000000,
+				})
 			})
 		})
 		describe('fail', () => {
@@ -350,7 +330,7 @@ describe('GitHubMarketIncubator', () => {
 				).to.be.revertedWith('illegal user.')
 			})
 			it('An error occurs when a different user executes it than the first time.', async () => {
-				const [instance, mock, wallets, provider] = await init()
+				const [instance, , , provider] = await init()
 				const property = provider.createEmptyWallet()
 				const repository = 'hogehoge/rep'
 				const stakingValue = '10' + DEV_DECIMALS
@@ -364,19 +344,9 @@ describe('GitHubMarketIncubator', () => {
 						gasLimit: 1000000,
 					}
 				)
-				await expect(
-					instance.incubator.authenticate('hogehoge/rep', 'dummy-public', {
-						gasLimit: 1000000,
-					})
-				)
-					.to.emit(instance.incubator, 'Authenticate')
-					.withArgs(
-						wallets.deployer.address,
-						mock.market.address,
-						property.address,
-						'hogehoge/rep',
-						'dummy-public'
-					)
+				await instance.incubator.authenticate('hogehoge/rep', 'dummy-public', {
+					gasLimit: 1000000,
+				})
 
 				await expect(
 					instance.incubatorUser.authenticate('hogehoge/rep', 'dummy-public', {

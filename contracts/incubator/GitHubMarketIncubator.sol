@@ -134,15 +134,9 @@ contract GitHubMarketIncubator is GitHubMarketIncubatorStorage {
 	}
 
 	// test
-	function cancelLockup(address _property) external onlyOperator {
+	function withdrawLockup(address _property, uint256 _amount) external onlyOperator {
 		address lockup = IAddressConfig(getAddressConfigAddress()).lockup();
-		ILockup(lockup).cancel(_property);
-	}
-
-	// test
-	function withdrawLockup(address _property) external onlyOperator {
-		address lockup = IAddressConfig(getAddressConfigAddress()).lockup();
-		ILockup(lockup).withdraw(_property);
+		ILockup(lockup).withdraw(_property, _amount);
 	}
 
 	function rescue(address _to, uint256 _amount) external onlyAdmin {
