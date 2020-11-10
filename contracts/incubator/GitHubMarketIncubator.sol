@@ -149,7 +149,16 @@ contract GitHubMarketIncubator is GitHubMarketIncubatorStorage {
 		setStaking(_githubRepository, 0);
 
 		// event
-		emit Finish(_msgSender(),marketBehavior, property, _githubRepository, _metrics, reword, account, staking);
+		emit Finish(
+			_msgSender(),
+			marketBehavior,
+			property,
+			_githubRepository,
+			_metrics,
+			reword,
+			account,
+			staking
+		);
 	}
 
 	// test
