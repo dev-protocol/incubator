@@ -204,7 +204,7 @@ describe('GitHubMarketIncubator', () => {
 		})
 	})
 
-	describe('start', () => {
+	describe.only('start', () => {
 		describe('success', () => {
 			it('Parameters are stored in storage.', async () => {
 				const check = async (incubator: Contract): Promise<void> => {
@@ -212,6 +212,7 @@ describe('GitHubMarketIncubator', () => {
 					const repository = 'hogehoge/rep'
 					const stakingValue = '10000' + DEV_DECIMALS
 					const limitValue = '1000' + DEV_DECIMALS
+
 					await incubator.start(
 						property.address,
 						repository,
@@ -244,6 +245,36 @@ describe('GitHubMarketIncubator', () => {
 			})
 		})
 		describe('fail', () => {
+			it('An error occurs when staking is zero.', async () => {
+				const [instance, , , provider] = await init()
+				const property = provider.createEmptyWallet()
+				await expect(
+					instance.incubatorOperator.start(
+						property.address,
+						'hogehoge/rep',
+						0,
+						1000,
+						{
+							gasLimit: 1000000,
+						}
+					)
+				).to.be.revertedWith('staking is 0.')
+			})
+			it('An error occurs when reword limit is zero.', async () => {
+				const [instance, , , provider] = await init()
+				const property = provider.createEmptyWallet()
+				await expect(
+					instance.incubatorOperator.start(
+						property.address,
+						'hogehoge/rep',
+						10,
+						0,
+						{
+							gasLimit: 1000000,
+						}
+					)
+				).to.be.revertedWith('reword limit is 0.')
+			})
 			it('only administrators and operators can do this.', async () => {
 				const check = async (incubator: Contract): Promise<void> => {
 					const property = provider.createEmptyWallet()
@@ -473,6 +504,22 @@ describe('GitHubMarketIncubator', () => {
 			})
 		})
 		describe('fail', () => {
+			it('can not send to a zero address.', async () => {
+				const [instance, mock] = await init()
+				await mock.dev.transfer(instance.incubator.address, 10000)
+				await expect(
+					instance.incubator.rescue(constants.AddressZero, 10000, {
+						gasLimit: 1000000,
+					})
+				).to.be.revertedWith('ERC20: transfer to the zero address')
+			})
+			it.only('can not send 0 amount.', async () => {
+				const [instance, mock, wallets] = await init()
+				await mock.dev.transfer(instance.incubator.address, 10000)
+				await instance.incubator.rescue(wallets.user.address, 0, {
+					gasLimit: 1000000,
+				})
+			})
 			it('dev tokens that exceed the amount held cannot be rescued.', async () => {
 				const [instance, mock, wallets] = await init()
 				await mock.dev.transfer(instance.incubator.address, 10000)
@@ -573,43 +620,63 @@ describe('GitHubMarketIncubator', () => {
 	})
 	describe('setter', () => {
 		describe('market', () => {
-			it('you can get the value you set.', async () => {
-				const [instance, mock] = await init()
-				const marketAddress = await instance.incubator.getMarketAddress()
-				expect(marketAddress).to.be.equal(mock.market.address)
+			describe('success', () => {
+				it('you can get the value you set.', async () => {
+					const [instance, mock] = await init()
+					const marketAddress = await instance.incubator.getMarketAddress()
+					expect(marketAddress).to.be.equal(mock.market.address)
+				})
 			})
-			it('only owner can set.', async () => {
-				const check = async (incubator: Contract): Promise<void> => {
-					const wallet = provider.createEmptyWallet()
-					await expect(incubator.setMarket(wallet.address)).to.be.revertedWith(
-						'admin only.'
-					)
-				}
+			describe('fail', () => {
+				it('can not set 0 address.', async () => {
+					const [instance] = await init()
+					await expect(
+						instance.incubator.setMarket(constants.AddressZero)
+					).to.be.revertedWith('address is 0.')
+				})
+				it('only owner can set.', async () => {
+					const check = async (incubator: Contract): Promise<void> => {
+						const wallet = provider.createEmptyWallet()
+						await expect(
+							incubator.setMarket(wallet.address)
+						).to.be.revertedWith('admin only.')
+					}
 
-				const [instance, , , provider] = await init()
-				await check(instance.incubatorOperator)
-				await check(instance.incubatorStorageOwner)
-				await check(instance.incubatorUser)
+					const [instance, , , provider] = await init()
+					await check(instance.incubatorOperator)
+					await check(instance.incubatorStorageOwner)
+					await check(instance.incubatorUser)
+				})
 			})
 		})
 		describe('addressConfig', () => {
-			it('you can get the value you set.', async () => {
-				const [instance, mock] = await init()
-				const operatorAddress = await instance.incubator.getAddressConfigAddress()
-				expect(operatorAddress).to.be.equal(mock.addressConfig.address)
+			describe('success', () => {
+				it('you can get the value you set.', async () => {
+					const [instance, mock] = await init()
+					const operatorAddress = await instance.incubator.getAddressConfigAddress()
+					expect(operatorAddress).to.be.equal(mock.addressConfig.address)
+				})
 			})
-			it('only owner can set.', async () => {
-				const check = async (incubator: Contract): Promise<void> => {
-					const wallet = provider.createEmptyWallet()
+			describe('fail', () => {
+				it('can not set 0 address.', async () => {
+					const [instance] = await init()
 					await expect(
-						incubator.setAddressConfig(wallet.address)
-					).to.be.revertedWith('admin only.')
-				}
+						instance.incubator.setAddressConfig(constants.AddressZero)
+					).to.be.revertedWith('address is 0.')
+				})
+				it('only owner can set.', async () => {
+					const check = async (incubator: Contract): Promise<void> => {
+						const wallet = provider.createEmptyWallet()
+						await expect(
+							incubator.setAddressConfig(wallet.address)
+						).to.be.revertedWith('admin only.')
+					}
 
-				const [instance, , , provider] = await init()
-				await check(instance.incubatorOperator)
-				await check(instance.incubatorStorageOwner)
-				await check(instance.incubatorUser)
+					const [instance, , , provider] = await init()
+					await check(instance.incubatorOperator)
+					await check(instance.incubatorStorageOwner)
+					await check(instance.incubatorUser)
+				})
 			})
 		})
 	})

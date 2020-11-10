@@ -22,11 +22,22 @@ contract GitHubMarketIncubator is GitHubMarketIncubatorStorage {
 	using SafeERC20 for IERC20;
 
 	event Authenticate(
-		address indexed _sender,
-		address market,
+		address _sender,
+		address _market,
 		address _property,
 		string _githubRepository,
 		string _publicSignature
+	);
+
+	event Finish(
+		address _sender,
+		address _marketBehavior,
+		address _property,
+		string _githubRepository,
+		address _metrics,
+		uint256 _reword,
+		address _account,
+		uint256 _staking
 	);
 
 	bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
@@ -59,8 +70,12 @@ contract GitHubMarketIncubator is GitHubMarketIncubatorStorage {
 		uint256 _staking,
 		uint256 _rewardLimit
 	) external onlyOperator {
+		require(_staking != 0, "staking is 0.");
+		require(_rewardLimit != 0, "reword limit is 0.");
+
+		uint256 lastPrice = getLastPrice();
 		setPropertyAddress(_githubRepository, _property);
-		setStartPrice(_githubRepository, getLastPrice());
+		setStartPrice(_githubRepository, lastPrice);
 		setStaking(_githubRepository, _staking);
 		setRewardLimit(_githubRepository, _rewardLimit);
 	}
@@ -129,8 +144,12 @@ contract GitHubMarketIncubator is GitHubMarketIncubatorStorage {
 		propertyInstance.safeTransfer(account, balance);
 
 		// lockup
-		IDev(devToken).deposit(property, getStaking(_githubRepository));
+		uint256 staking = getStaking(_githubRepository);
+		IDev(devToken).deposit(property, staking);
 		setStaking(_githubRepository, 0);
+
+		// event
+		emit Finish(_msgSender(),marketBehavior, property, _githubRepository, _metrics, reword, account, staking);
 	}
 
 	// test
@@ -170,10 +189,12 @@ contract GitHubMarketIncubator is GitHubMarketIncubatorStorage {
 
 	//setter
 	function setMarket(address _market) external onlyAdmin {
+		require(_market != address(0), "address is 0.");
 		setMarketAddress(_market);
 	}
 
 	function setAddressConfig(address _addressConfig) external onlyAdmin {
+		require(_addressConfig != address(0), "address is 0.");
 		setAddressConfigAddress(_addressConfig);
 	}
 }
