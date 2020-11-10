@@ -1,6 +1,8 @@
+/* eslint-disable new-cap */
 /* eslint-disable no-await-in-loop */
 /* eslint-disable @typescript-eslint/prefer-readonly-parameter-types */
 import {expect, use} from 'chai'
+import BigNumber from 'bignumber.js'
 import {Contract, Wallet, constants} from 'ethers'
 import {deployContract, MockProvider, solidity} from 'ethereum-waffle'
 import GitHubMarketIncubator from '../../build/GitHubMarketIncubator.json'
@@ -9,6 +11,7 @@ import MockAddressConfig from '../../build/MockAddressConfig.json'
 import MockMarketBehavior from '../../build/MockMarketBehavior.json'
 import MockDev from '../../build/MockDev.json'
 import MockLockup from '../../build/MockLockup.json'
+import MockProperty from '../../build/MockProperty.json'
 
 use(solidity)
 
@@ -80,6 +83,17 @@ class MockContract {
 		return this._addressConfig
 	}
 
+	public async generatePropertyMock(
+		incubatorAddress: string
+	): Promise<Contract> {
+		const property = await deployContract(
+			this._wallets.deployer,
+			MockProperty,
+			[incubatorAddress, 'mock', 'MOCK']
+		)
+		return property
+	}
+
 	public async generate(): Promise<void> {
 		this._dev = await deployContract(this._wallets.deployer, MockDev)
 		this._lockup = await deployContract(this._wallets.deployer, MockLockup)
@@ -149,6 +163,45 @@ class IncubatorInstance {
 	}
 }
 
+class RewordCalculator {
+	private readonly _incubator: Contract
+	private readonly _provider: MockProvider
+	private readonly _repository: string
+	private _increment!: BigNumber
+	private _baseReword!: BigNumber
+	private _baseBlockNumber!: number
+
+	constructor(
+		_incubator: Contract,
+		_provider: MockProvider,
+		repository: string
+	) {
+		this._incubator = _incubator
+		this._provider = _provider
+		this._repository = repository
+	}
+
+	public async setOneBlockRewords(): Promise<void> {
+		const before = await this._incubator.getReword(this._repository)
+		await this._provider.send('evm_mine', [])
+		const after = await this._incubator.getReword(this._repository)
+		this._increment = before.minus(after)
+	}
+
+	public async setBaseRewords(): Promise<void> {
+		this._baseReword = await this._incubator.getReword(this._repository)
+		this._baseBlockNumber = await this._provider.getBlockNumber()
+	}
+
+	public async getCurrentRewords(): Promise<BigNumber> {
+		const currentBlockNumber = await this._provider.getBlockNumber()
+
+		return this._baseReword.plus(
+			this._increment.times(currentBlockNumber - this._baseBlockNumber)
+		)
+	}
+}
+
 describe('GitHubMarketIncubator', () => {
 	const init = async (): Promise<
 		[IncubatorInstance, MockContract, Wallets, MockProvider]
@@ -204,7 +257,7 @@ describe('GitHubMarketIncubator', () => {
 		})
 	})
 
-	describe.only('start', () => {
+	describe('start', () => {
 		describe('success', () => {
 			it('Parameters are stored in storage.', async () => {
 				const check = async (incubator: Contract): Promise<void> => {
@@ -388,55 +441,91 @@ describe('GitHubMarketIncubator', () => {
 		})
 	})
 
-	describe('clearAccountAddress', () => {
+	describe('finish', () => {
 		describe('success', () => {
-			it('Stored account addresses can be deleted.', async () => {
-				const check = async (
-					incubator: Contract,
-					incubatorUser: Contract
-				): Promise<void> => {
-					const property = provider.createEmptyWallet()
-					await incubator.start(property.address, 'hogehoge/rep', 10000, 1000, {
+			it('終了処理が実行され、propertyコントラクトにステーキングされる.', async () => {
+				// Prepare
+				const [instance, mock, wallets, provider] = await init()
+				const property = await mock.generatePropertyMock(
+					instance.incubator.address
+				)
+				const metrics = provider.createEmptyWallet()
+				const repository = 'hogehoge/rep'
+				const stakingValue = '10' + DEV_DECIMALS
+				const limitValue = '10000' + DEV_DECIMALS
+				await mock.marketBehavior.setId(metrics.address, repository)
+				await mock.dev.transfer(
+					instance.incubator.address,
+					'1000000' + DEV_DECIMALS
+				)
+				const caluculator = new RewordCalculator(
+					instance.incubator,
+					provider,
+					repository
+				)
+
+				// Before check
+				let userBalance = await mock.dev.balanceOf(wallets.user.address)
+				expect(userBalance.toNumber()).to.be.equal(0)
+				let propertyDevBalance = await mock.dev.balanceOf(property.address)
+				expect(propertyDevBalance.toNumber()).to.be.equal(0)
+				let userPropertyBalance = await property.balamcdOf(wallets.user.address)
+				expect(userPropertyBalance.toNumber()).to.be.equal(0)
+
+				// Action
+				await instance.incubatorOperator.start(
+					property.address,
+					repository,
+					stakingValue,
+					limitValue,
+					{
 						gasLimit: 1000000,
-					})
-					await incubatorUser.authenticate(
-						'hogehoge/rep',
-						'dummy-public-signature',
-						{
-							gasLimit: 1000000,
-						}
-					)
-					let accountAddress = await incubator.getAccountAddress(
-						property.address
-					)
-					expect(accountAddress).to.be.equal(wallets.user.address)
-					await incubator.clearAccountAddress(property.address)
-					accountAddress = await incubator.getAccountAddress(property.address)
-					expect(accountAddress).to.be.equal(constants.AddressZero)
-				}
+					}
+				)
+				await caluculator.setOneBlockRewords()
+				await instance.incubatorUser.authenticate(repository, 'dummy-public', {
+					gasLimit: 1000000,
+				})
+				const reword = await instance.incubatorUser.getReword(repository)
+				expect(reword.toString()).to.be.equal(DEV_DECIMALS)
+				await caluculator.setBaseRewords()
+				await instance.incubatorUser.finish(repository, metrics.address, {
+					gasLimit: 1000000,
+				})
 
-				const [instance, , wallets, provider] = await init()
-				await check(instance.incubator, instance.incubatorUser)
-				await check(instance.incubatorOperator, instance.incubatorUser)
+				// After check
+				const currentRewords = await caluculator.getCurrentRewords()
+				userBalance = await mock.dev.balanceOf(wallets.user.address)
+				expect(userBalance.toString()).to.be.equal(currentRewords.toString())
+				userPropertyBalance = await property.balamcdOf(wallets.user.address)
+				const supply = await property.supply()
+				await property
+					.expect(userPropertyBalance.toString())
+					.to.be.equal(supply.toString())
+				const afterStakingValue = await instance.incubatorUser.getStaking(
+					repository
+				)
+				expect(afterStakingValue.toNumber()).to.be.equal(0)
+				propertyDevBalance = await mock.dev.balanceOf(property.address)
+				expect(propertyDevBalance.toString()).to.be.equal(stakingValue)
+				const filterFinish = instance.incubator.filters.Finish(
+					wallets.user.address
+				)
+				const events = await instance.incubator.queryFilter(filterFinish)
+				expect(events[0].args?.[0]).to.be.equal(mock.marketBehavior.address)
+				expect(events[0].args?.[1]).to.be.equal(property.address)
+				expect(events[0].args?.[2]).to.be.equal(repository)
+				expect(events[0].args?.[3]).to.be.equal(metrics.address)
+				expect(events[0].args?.[4].toString()).to.be.equal(
+					currentRewords.toString()
+				)
+				expect(events[0].args?.[5]).to.be.equal(wallets.user.address)
+				expect(events[0].args?.[6].toString()).to.be.equal(stakingValue)
 			})
 		})
-		describe('fail', () => {
-			it('only administrators and operators can do this.', async () => {
-				const check = async (incubator: Contract): Promise<void> => {
-					const property = provider.createEmptyWallet()
-					await expect(
-						incubator.clearAccountAddress(property.address)
-					).to.be.revertedWith('operator only.')
-					await expect(
-						incubator.clearAccountAddress(property.address)
-					).to.be.revertedWith('operator only.')
-				}
-
-				const [instance, , , provider] = await init()
-				await check(instance.incubatorStorageOwner)
-				await check(instance.incubatorUser)
-			})
-		})
+		// Describe('fail', () => {
+		// 	it('only administrators and operators can do this.', async () => {})
+		// })
 	})
 
 	describe('clearAccountAddress', () => {

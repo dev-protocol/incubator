@@ -39,6 +39,13 @@ contract MockMarketBehavior is IMarketBehavior {
 		return repositories[_metrics];
 	}
 
+	function setId(address _metrics, string memory _value)
+		external
+		returns (string memory)
+	{
+		repositories[_metrics] = _value;
+	}
+
 	function getMetrics(string memory _repository)
 		external
 		view

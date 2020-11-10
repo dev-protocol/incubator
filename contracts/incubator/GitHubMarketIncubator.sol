@@ -22,7 +22,7 @@ contract GitHubMarketIncubator is GitHubMarketIncubatorStorage {
 	using SafeERC20 for IERC20;
 
 	event Authenticate(
-		address _sender,
+		address indexed _sender,
 		address _market,
 		address _property,
 		string _githubRepository,
@@ -30,7 +30,7 @@ contract GitHubMarketIncubator is GitHubMarketIncubatorStorage {
 	);
 
 	event Finish(
-		address _sender,
+		address indexed _sender,
 		address _marketBehavior,
 		address _property,
 		string _githubRepository,
