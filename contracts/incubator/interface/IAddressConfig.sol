@@ -2,7 +2,6 @@
 
 pragma solidity 0.6.12;
 
-// もしかしたらいらなくなるかも
 interface IAddressConfig {
 	function token() external view returns (address);
 
