@@ -2,8 +2,7 @@
 /* eslint-disable no-await-in-loop */
 /* eslint-disable @typescript-eslint/prefer-readonly-parameter-types */
 import {expect, use} from 'chai'
-import BigNumber from 'bignumber.js'
-import {Contract, Wallet, constants} from 'ethers'
+import {Contract, Wallet, constants, BigNumber} from 'ethers'
 import {deployContract, MockProvider, solidity} from 'ethereum-waffle'
 import GitHubMarketIncubator from '../../build/GitHubMarketIncubator.json'
 import MockMarket from '../../build/MockMarket.json'
@@ -185,7 +184,7 @@ class RewordCalculator {
 		const before = await this._incubator.getReword(this._repository)
 		await this._provider.send('evm_mine', [])
 		const after = await this._incubator.getReword(this._repository)
-		this._increment = before.minus(after)
+		this._increment = after.sub(before)
 	}
 
 	public async setBaseRewords(): Promise<void> {
@@ -196,12 +195,11 @@ class RewordCalculator {
 	public async getCurrentRewords(): Promise<BigNumber> {
 		const currentBlockNumber = await this._provider.getBlockNumber()
 
-		return this._baseReword.plus(
-			this._increment.times(currentBlockNumber - this._baseBlockNumber)
+		return this._baseReword.add(
+			this._increment.mul(currentBlockNumber - this._baseBlockNumber)
 		)
 	}
 }
-
 describe('GitHubMarketIncubator', () => {
 	const init = async (): Promise<
 		[IncubatorInstance, MockContract, Wallets, MockProvider]
@@ -443,7 +441,7 @@ describe('GitHubMarketIncubator', () => {
 
 	describe('finish', () => {
 		describe('success', () => {
-			it('終了処理が実行され、propertyコントラクトにステーキングされる.', async () => {
+			it('The termination process is executed and the property contract is staked to the property contract.', async () => {
 				// Prepare
 				const [instance, mock, wallets, provider] = await init()
 				const property = await mock.generatePropertyMock(
@@ -469,7 +467,7 @@ describe('GitHubMarketIncubator', () => {
 				expect(userBalance.toNumber()).to.be.equal(0)
 				let propertyDevBalance = await mock.dev.balanceOf(property.address)
 				expect(propertyDevBalance.toNumber()).to.be.equal(0)
-				let userPropertyBalance = await property.balamcdOf(wallets.user.address)
+				let userPropertyBalance = await property.balanceOf(wallets.user.address)
 				expect(userPropertyBalance.toNumber()).to.be.equal(0)
 
 				// Action
@@ -486,8 +484,6 @@ describe('GitHubMarketIncubator', () => {
 				await instance.incubatorUser.authenticate(repository, 'dummy-public', {
 					gasLimit: 1000000,
 				})
-				const reword = await instance.incubatorUser.getReword(repository)
-				expect(reword.toString()).to.be.equal(DEV_DECIMALS)
 				await caluculator.setBaseRewords()
 				await instance.incubatorUser.finish(repository, metrics.address, {
 					gasLimit: 1000000,
@@ -497,11 +493,9 @@ describe('GitHubMarketIncubator', () => {
 				const currentRewords = await caluculator.getCurrentRewords()
 				userBalance = await mock.dev.balanceOf(wallets.user.address)
 				expect(userBalance.toString()).to.be.equal(currentRewords.toString())
-				userPropertyBalance = await property.balamcdOf(wallets.user.address)
+				userPropertyBalance = await property.balanceOf(wallets.user.address)
 				const supply = await property.supply()
-				await property
-					.expect(userPropertyBalance.toString())
-					.to.be.equal(supply.toString())
+				expect(userPropertyBalance.toString()).to.be.equal(supply.toString())
 				const afterStakingValue = await instance.incubatorUser.getStaking(
 					repository
 				)
@@ -512,20 +506,147 @@ describe('GitHubMarketIncubator', () => {
 					wallets.user.address
 				)
 				const events = await instance.incubator.queryFilter(filterFinish)
-				expect(events[0].args?.[0]).to.be.equal(mock.marketBehavior.address)
-				expect(events[0].args?.[1]).to.be.equal(property.address)
-				expect(events[0].args?.[2]).to.be.equal(repository)
-				expect(events[0].args?.[3]).to.be.equal(metrics.address)
-				expect(events[0].args?.[4].toString()).to.be.equal(
+				expect(events[0].args?.[0]).to.be.equal(wallets.user.address)
+				expect(events[0].args?.[1]).to.be.equal(mock.marketBehavior.address)
+				expect(events[0].args?.[2]).to.be.equal(property.address)
+				expect(events[0].args?.[3]).to.be.equal(repository)
+				expect(events[0].args?.[4]).to.be.equal(metrics.address)
+				expect(events[0].args?.[5].toString()).to.be.equal(
 					currentRewords.toString()
 				)
-				expect(events[0].args?.[5]).to.be.equal(wallets.user.address)
-				expect(events[0].args?.[6].toString()).to.be.equal(stakingValue)
+				expect(events[0].args?.[6]).to.be.equal(wallets.user.address)
+				expect(events[0].args?.[7].toString()).to.be.equal(stakingValue)
 			})
 		})
-		// Describe('fail', () => {
-		// 	it('only administrators and operators can do this.', async () => {})
-		// })
+		describe('fail', () => {
+			it('if the repository is not configured, an error occurs.', async () => {
+				const [instance, , , provider] = await init()
+				const metrics = provider.createEmptyWallet()
+				const repository = 'hogehoge/rep'
+				await expect(
+					instance.incubator.finish(repository, metrics.address, {
+						gasLimit: 1000000,
+					})
+				).to.be.revertedWith('illegal repository.')
+			})
+			it('if no account is set up, an error occurs.', async () => {
+				const [instance, mock, , provider] = await init()
+				const property = await mock.generatePropertyMock(
+					instance.incubator.address
+				)
+				const metrics = provider.createEmptyWallet()
+				const repository = 'hogehoge/rep'
+				const stakingValue = '10' + DEV_DECIMALS
+				const limitValue = '10000' + DEV_DECIMALS
+
+				await instance.incubatorOperator.start(
+					property.address,
+					repository,
+					stakingValue,
+					limitValue,
+					{
+						gasLimit: 1000000,
+					}
+				)
+				await expect(
+					instance.incubator.finish(repository, metrics.address, {
+						gasLimit: 1000000,
+					})
+				).to.be.revertedWith('no authenticate yet.')
+			})
+			it('If you do not have the correct metrics set, you will get an error.', async () => {
+				const [instance, mock, , provider] = await init()
+				const property = await mock.generatePropertyMock(
+					instance.incubator.address
+				)
+				const metrics = provider.createEmptyWallet()
+				const repository = 'hogehoge/rep'
+				const stakingValue = '10' + DEV_DECIMALS
+				const limitValue = '10000' + DEV_DECIMALS
+
+				await instance.incubatorOperator.start(
+					property.address,
+					repository,
+					stakingValue,
+					limitValue,
+					{
+						gasLimit: 1000000,
+					}
+				)
+				await instance.incubatorUser.authenticate(repository, 'dummy-public', {
+					gasLimit: 1000000,
+				})
+				await expect(
+					instance.incubator.finish(repository, metrics.address, {
+						gasLimit: 1000000,
+					})
+				).to.be.revertedWith('illegal metrics.')
+			})
+		})
+	})
+
+	describe('withdrawLockup', () => {
+		const prepare = async (): Promise<
+			[IncubatorInstance, string, Contract]
+		> => {
+			const [instance, mock, , provider] = await init()
+			const property = await mock.generatePropertyMock(
+				instance.incubator.address
+			)
+			const metrics = provider.createEmptyWallet()
+			const repository = 'hogehoge/rep'
+			const stakingValue = '10' + DEV_DECIMALS
+			const limitValue = '10000' + DEV_DECIMALS
+			await mock.marketBehavior.setId(metrics.address, repository)
+			await mock.dev.transfer(
+				instance.incubator.address,
+				'1000000' + DEV_DECIMALS
+			)
+
+			// Action
+			await instance.incubatorOperator.start(
+				property.address,
+				repository,
+				stakingValue,
+				limitValue,
+				{
+					gasLimit: 1000000,
+				}
+			)
+			await instance.incubatorUser.authenticate(repository, 'dummy-public', {
+				gasLimit: 1000000,
+			})
+			await instance.incubatorUser.finish(repository, metrics.address, {
+				gasLimit: 1000000,
+			})
+			return [instance, property.address, mock.lockup]
+		}
+
+		describe('success', () => {
+			it('Lockup.withdraw is executed.(operator)', async () => {
+				const [instance, propertyAddress, lockup] = await prepare()
+				await instance.incubatorOperator.withdrawLockup(propertyAddress, 10)
+				const value = await lockup.withdrawStorage(propertyAddress)
+				expect(value.toNumber()).to.be.equal(10)
+			})
+			it('Lockup.withdraw is executed.(administorator)', async () => {
+				const [instance, propertyAddress, lockup] = await prepare()
+				await instance.incubator.withdrawLockup(propertyAddress, 10)
+				const value = await lockup.withdrawStorage(propertyAddress)
+				expect(value.toNumber()).to.be.equal(10)
+			})
+		})
+		describe('fail', () => {
+			it('only administrators and operators are allowed to run it.', async () => {
+				const [instance, propertyAddress] = await prepare()
+				await expect(
+					instance.incubatorStorageOwner.withdrawLockup(propertyAddress, 10)
+				).to.be.revertedWith('operator only.')
+				await expect(
+					instance.incubatorUser.withdrawLockup(propertyAddress, 10)
+				).to.be.revertedWith('operator only.')
+			})
+		})
 	})
 
 	describe('clearAccountAddress', () => {
@@ -602,7 +723,7 @@ describe('GitHubMarketIncubator', () => {
 					})
 				).to.be.revertedWith('ERC20: transfer to the zero address')
 			})
-			it.only('can not send 0 amount.', async () => {
+			it('can not send 0 amount.', async () => {
 				const [instance, mock, wallets] = await init()
 				await mock.dev.transfer(instance.incubator.address, 10000)
 				await instance.incubator.rescue(wallets.user.address, 0, {

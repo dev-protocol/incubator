@@ -114,7 +114,6 @@ contract GitHubMarketIncubator is GitHubMarketIncubatorStorage {
 		);
 	}
 
-	// test
 	function finish(string memory _githubRepository, address _metrics)
 		external
 	{
@@ -134,8 +133,8 @@ contract GitHubMarketIncubator is GitHubMarketIncubatorStorage {
 
 		// transfer reword
 		address devToken = IAddressConfig(getAddressConfigAddress()).token();
-		ERC20 dev = ERC20(devToken);
-		require(dev.transfer(account, reword), "failed to transfer reword.");
+		IERC20 dev = IERC20(devToken);
+		dev.safeTransfer(account, reword);
 
 		// change property author
 		IProperty(property).changeAuthor(account);
