@@ -160,7 +160,6 @@ contract GitHubMarketIncubator is GitHubMarketIncubatorStorage {
 		);
 	}
 
-	// test
 	function withdrawLockup(address _property, uint256 _amount)
 		external
 		onlyOperator
