@@ -1,12 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/restrict-plus-operands */
 /* eslint-disable @typescript-eslint/prefer-readonly-parameter-types */
-import {expect} from 'chai'
-import {Contract} from 'ethers'
-import {deployContract, MockProvider} from 'ethereum-waffle'
+import { expect } from 'chai'
+import { Contract } from 'ethers'
+import { deployContract, MockProvider } from 'ethereum-waffle'
 import Vesting from '../build/Vesting.json'
 import Token from '../build/Token.json'
-import {mine} from './libs'
+import { mine } from './libs'
 
 const err = (e: Error) => e
 

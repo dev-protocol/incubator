@@ -10,9 +10,8 @@ import {EternalStorage} from "contracts/storage/EternalStorage.sol";
  */
 contract UsingStorage is Admin {
 	address private _storage;
-	bytes32 public constant STORAGE_OWNER_ROLE = keccak256(
-		"STORAGE_OWNER_ROLE"
-	);
+	bytes32 public constant STORAGE_OWNER_ROLE =
+		keccak256("STORAGE_OWNER_ROLE");
 
 	constructor() public {
 		_setRoleAdmin(STORAGE_OWNER_ROLE, DEFAULT_ADMIN_ROLE);

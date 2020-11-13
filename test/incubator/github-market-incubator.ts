@@ -1,9 +1,9 @@
 /* eslint-disable new-cap */
 /* eslint-disable no-await-in-loop */
 /* eslint-disable @typescript-eslint/prefer-readonly-parameter-types */
-import {expect, use} from 'chai'
-import {Contract, Wallet, constants, BigNumber} from 'ethers'
-import {deployContract, MockProvider, solidity} from 'ethereum-waffle'
+import { expect, use } from 'chai'
+import { Contract, Wallet, constants, BigNumber } from 'ethers'
+import { deployContract, MockProvider, solidity } from 'ethereum-waffle'
 import GitHubMarketIncubator from '../../build/GitHubMarketIncubator.json'
 import MockMarket from '../../build/MockMarket.json'
 import MockAddressConfig from '../../build/MockAddressConfig.json'

@@ -95,14 +95,15 @@ contract GitHubMarketIncubator is GitHubMarketIncubatorStorage {
 			require(account == _msgSender(), "authentication processed.");
 		}
 		address market = getMarketAddress();
-		bool result = IMarket(market).authenticate(
-			property,
-			_githubRepository,
-			_publicSignature,
-			"",
-			"",
-			""
-		);
+		bool result =
+			IMarket(market).authenticate(
+				property,
+				_githubRepository,
+				_publicSignature,
+				"",
+				"",
+				""
+			);
 		require(result, "failed to authenticate.");
 		setAccountAddress(property, _msgSender());
 		emit Authenticate(
@@ -180,17 +181,16 @@ contract GitHubMarketIncubator is GitHubMarketIncubatorStorage {
 	{
 		uint256 latestPrice = getLastPrice();
 		uint256 startPrice = getStartPrice(_githubRepository);
-		uint256 reword = latestPrice.sub(startPrice).mul(
-			getStaking(_githubRepository)
-		);
+		uint256 reword =
+			latestPrice.sub(startPrice).mul(getStaking(_githubRepository));
 		uint256 rewordLimit = getRewardLimit(_githubRepository);
 		return reword < rewordLimit ? reword : rewordLimit;
 	}
 
 	function getLastPrice() private view returns (uint256) {
 		address lockup = IAddressConfig(getAddressConfigAddress()).lockup();
-		(, , uint256 latestPrice) = ILockup(lockup)
-			.calculateCumulativeRewardPrices();
+		(, , uint256 latestPrice) =
+			ILockup(lockup).calculateCumulativeRewardPrices();
 		return latestPrice;
 	}
 

@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/prefer-readonly-parameter-types */
-import {providers} from 'ethers'
+import { providers } from 'ethers'
 
 export async function mine(
 	provider: providers.Web3Provider,
