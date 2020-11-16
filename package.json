@@ -11,6 +11,7 @@
 		"exec": "node",
 		"preexec": "yarn build",
 		"deploy": "yarn exec scripts/deploy.js",
+		"deployIncubator": "yarn exec scripts/deployIncubator.js",
 		"lint": "yarn lint:eslint && yarn lint:solhint && yarn lint:format",
 		"lint:eslint": "eslint . --ext .ts,.js --fix",
 		"lint:solhint": "solhint --fix --max-warnings 0 \"contracts/**/*.sol\"",
