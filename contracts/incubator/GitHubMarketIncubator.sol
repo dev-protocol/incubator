@@ -6,18 +6,15 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {IMarket} from "@devprtcl/protocol/contracts/interface/IMarket.sol";
-import {
-	IMarketBehavior
-} from "@devprtcl/protocol/contracts/interface/IMarketBehavior.sol";
-import {IProperty} from "contracts/incubator/interface/IProperty.sol";
-import {
-	IAddressConfig
-} from "@devprtcl/protocol/contracts/interface/IAddressConfig.sol";
+// prettier-ignore
+import {IMarketBehavior} from "@devprtcl/protocol/contracts/interface/IMarketBehavior.sol";
+import {IProperty} from "@devprtcl/protocol/contracts/interface/IProperty.sol";
+// prettier-ignore
+import {IAddressConfig} from "@devprtcl/protocol/contracts/interface/IAddressConfig.sol";
 import {IDev} from "@devprtcl/protocol/contracts/interface/IDev.sol";
 import {ILockup} from "@devprtcl/protocol/contracts/interface/ILockup.sol";
-import {
-	GitHubMarketIncubatorStorage
-} from "contracts/incubator/GitHubMarketIncubatorStorage.sol";
+// prettier-ignore
+import {GitHubMarketIncubatorStorage} from "contracts/incubator/GitHubMarketIncubatorStorage.sol";
 
 contract GitHubMarketIncubator is GitHubMarketIncubatorStorage {
 	using SafeMath for uint256;
