@@ -1,5 +1,5 @@
 {
-	"name": "template-repos-ts-sol",
+	"name": "incubator",
 	"version": "1.0.0",
 	"description": "Template repository for using TypeScript and Solidity",
 	"main": "index.js",
