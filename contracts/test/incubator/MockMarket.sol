@@ -1,10 +1,8 @@
 // SPDX-License-Identifier: MPL-2.0
 pragma solidity 0.6.12;
 
-import {IMarket} from "contracts/incubator/interface/IMarket.sol";
-import {
-	IMarketBehavior
-} from "contracts/incubator/interface/IMarketBehavior.sol";
+import {IMarket} from "@devprtcl/protocol/contracts/interface/IMarket.sol";
+import {IMarketBehavior} from "@devprtcl/protocol/contracts/interface/IMarketBehavior.sol";
 
 contract MockMarket is IMarket {
 	address public override behavior;
@@ -60,5 +58,9 @@ contract MockMarket is IMarket {
 
 	function deauthenticate(address _metrics) external override {
 		deauth[_metrics] = false;
+	}
+
+	function issuedMetrics() external override view returns (uint256) {
+		return 10;
 	}
 }
