@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: MPL-2.0
 pragma solidity 0.6.12;
 
-import {
-	UsingStorage
-} from "@devprtcl/util-contracts/contracts/storage/UsingStorage.sol";
+// prettier-ignore
+import {UsingStorage} from "@devprtcl/util-contracts/contracts/storage/UsingStorage.sol";
 
 contract GitHubMarketIncubatorStorage is UsingStorage {
 	// StartPrice

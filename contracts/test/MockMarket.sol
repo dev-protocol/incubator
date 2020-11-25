@@ -2,9 +2,8 @@
 pragma solidity 0.6.12;
 
 import {IMarket} from "@devprtcl/protocol/contracts/interface/IMarket.sol";
-import {
-	IMarketBehavior
-} from "@devprtcl/protocol/contracts/interface/IMarketBehavior.sol";
+// prettier-ignore
+import {IMarketBehavior} from "@devprtcl/protocol/contracts/interface/IMarketBehavior.sol";
 
 contract MockMarket is IMarket {
 	address public override behavior;

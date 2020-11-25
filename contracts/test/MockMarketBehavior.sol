@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: MPL-2.0
 pragma solidity 0.6.12;
 
-import {
-	IMarketBehavior
-} from "@devprtcl/protocol/contracts/interface/IMarketBehavior.sol";
+// prettier-ignore
+import {IMarketBehavior} from "@devprtcl/protocol/contracts/interface/IMarketBehavior.sol";
 
 contract MockMarketBehavior is IMarketBehavior {
 	mapping(address => bool) private auth;
