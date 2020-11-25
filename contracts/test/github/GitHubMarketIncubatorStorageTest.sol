@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 pragma solidity 0.6.12;
 
-import {
-	GitHubMarketIncubatorStorage
-} from "contracts/incubator/GitHubMarketIncubatorStorage.sol";
+import {GitHubMarketIncubatorStorage} from "contracts/github/GitHubMarketIncubatorStorage.sol";
 
 contract GitHubMarketIncubatorStorageTest is GitHubMarketIncubatorStorage {
 	function setStartPriceTest(string memory _githubRepository, uint256 _price)

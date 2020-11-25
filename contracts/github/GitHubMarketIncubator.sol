@@ -14,7 +14,7 @@ import {IAddressConfig} from "@devprtcl/protocol/contracts/interface/IAddressCon
 import {IDev} from "@devprtcl/protocol/contracts/interface/IDev.sol";
 import {ILockup} from "@devprtcl/protocol/contracts/interface/ILockup.sol";
 // prettier-ignore
-import {GitHubMarketIncubatorStorage} from "contracts/incubator/GitHubMarketIncubatorStorage.sol";
+import {GitHubMarketIncubatorStorage} from "contracts/github/GitHubMarketIncubatorStorage.sol";
 
 contract GitHubMarketIncubator is GitHubMarketIncubatorStorage {
 	using SafeMath for uint256;
