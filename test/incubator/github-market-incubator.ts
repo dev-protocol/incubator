@@ -4,6 +4,7 @@
 import { expect, use } from 'chai'
 import { Contract, Wallet, constants, BigNumber } from 'ethers'
 import { deployContract, MockProvider, solidity } from 'ethereum-waffle'
+import { mine } from '@devprtcl/util-ts'
 import GitHubMarketIncubator from '../../build/GitHubMarketIncubator.json'
 import MockMarket from '../../build/MockMarket.json'
 import MockAddressConfig from '../../build/MockAddressConfig.json'
@@ -182,7 +183,7 @@ class RewordCalculator {
 
 	public async setOneBlockRewords(): Promise<void> {
 		const before = await this._incubator.getReword(this._repository)
-		await this._provider.send('evm_mine', [])
+		await mine(this._provider, 1)
 		const after = await this._incubator.getReword(this._repository)
 		this._increment = after.sub(before)
 	}
@@ -775,7 +776,7 @@ describe('GitHubMarketIncubator', () => {
 					'10000' + DEV_DECIMALS
 				)
 				for (let i = 0; i < 5; i++) {
-					await provider.send('evm_mine', [])
+					await mine(provider, 1)
 					const result = await instance.incubator.getReword('user/repository')
 					expect(result.toString()).to.be.equal(
 						(i + 1).toString() + '000' + DEV_DECIMALS
@@ -793,7 +794,7 @@ describe('GitHubMarketIncubator', () => {
 					'10000' + DEV_DECIMALS
 				)
 				for (let i = 0; i < 5; i++) {
-					await provider.send('evm_mine', [])
+					await mine(provider, 1)
 					const result = await instance.incubator.getReword('user/repository')
 					expect(result.toString()).to.be.equal(
 						((i + 1) * 2).toString() + '000' + DEV_DECIMALS
@@ -811,19 +812,17 @@ describe('GitHubMarketIncubator', () => {
 				'10' + DEV_DECIMALS,
 				'10000' + DEV_DECIMALS
 			)
-			for (let i = 0; i < 9; i++) {
-				await provider.send('evm_mine', [])
-			}
+			await mine(provider, 9)
 
 			let result = await instance.incubator.getReword('user/repository')
 			expect(result.toString()).to.be.equal('9000' + DEV_DECIMALS)
-			await provider.send('evm_mine', [])
+			await mine(provider, 1)
 			result = await instance.incubator.getReword('user/repository')
 			expect(result.toString()).to.be.equal('10000' + DEV_DECIMALS)
-			await provider.send('evm_mine', [])
+			await mine(provider, 1)
 			result = await instance.incubator.getReword('user/repository')
 			expect(result.toString()).to.be.equal('10000' + DEV_DECIMALS)
-			await provider.send('evm_mine', [])
+			await mine(provider, 1)
 			result = await instance.incubator.getReword('user/repository')
 			expect(result.toString()).to.be.equal('10000' + DEV_DECIMALS)
 		})

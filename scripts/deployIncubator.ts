@@ -4,7 +4,7 @@
 
 import { ethers } from 'ethers'
 import * as gitHubMarketIncubator from './../build/GitHubMarketIncubator.json'
-import { ethgas } from './lib/ethgas'
+import { ethGasStationFetcher } from '@devprtcl/util-ts'
 require('dotenv').config()
 
 const deploy = async (): Promise<void> => {
@@ -22,10 +22,10 @@ const deploy = async (): Promise<void> => {
 		gitHubMarketIncubator.bytecode,
 		wallet
 	)
-	const gasPrice = ethgas(ETHGASSTATION_TOKEN!)
+	const gasPrice = ethGasStationFetcher(ETHGASSTATION_TOKEN!)
 	const contract = await factory.deploy({
 		gasLimit: 6721975,
-		gasPrice: await gasPrice('fastest'),
+		gasPrice: await gasPrice(),
 	})
 	await contract.deployed()
 	console.log(contract.address)
