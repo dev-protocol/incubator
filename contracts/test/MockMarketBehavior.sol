@@ -2,7 +2,7 @@
 pragma solidity 0.6.12;
 
 // prettier-ignore
-import {IMarketBehavior} from "@devprtcl/protocol/contracts/interface/IMarketBehavior.sol";
+import {IMarketBehavior} from "@devprotocol/protocol/contracts/interface/IMarketBehavior.sol";
 
 contract MockMarketBehavior is IMarketBehavior {
 	mapping(address => bool) private auth;

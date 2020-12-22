@@ -4,7 +4,7 @@
 import { expect, use } from 'chai'
 import { Contract, Wallet, constants, BigNumber } from 'ethers'
 import { deployContract, MockProvider, solidity } from 'ethereum-waffle'
-import { mine } from '@devprtcl/util-ts'
+import { mine } from '@devprotocol/util-ts'
 import GitHubMarketIncubator from '../../build/GitHubMarketIncubator.json'
 import MockMarket from '../../build/MockMarket.json'
 import MockAddressConfig from '../../build/MockAddressConfig.json'

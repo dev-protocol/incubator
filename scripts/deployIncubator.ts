@@ -4,7 +4,7 @@
 
 import { ethers } from 'ethers'
 import * as gitHubMarketIncubator from './../build/GitHubMarketIncubator.json'
-import { ethGasStationFetcher } from '@devprtcl/util-ts'
+import { ethGasStationFetcher } from '@devprotocol/util-ts'
 require('dotenv').config()
 
 const deploy = async (): Promise<void> => {

@@ -2,7 +2,7 @@
 pragma solidity 0.6.12;
 
 // prettier-ignore
-import {UsingStorage} from "@devprtcl/util-contracts/contracts/storage/UsingStorage.sol";
+import {UsingStorage} from "@devprotocol/util-contracts/contracts/storage/UsingStorage.sol";
 
 contract GitHubMarketIncubatorStorage is UsingStorage {
 	// StartPrice

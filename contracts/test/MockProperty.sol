@@ -2,7 +2,7 @@
 pragma solidity 0.6.12;
 
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import {IProperty} from "@devprtcl/protocol/contracts/interface/IProperty.sol";
+import {IProperty} from "@devprotocol/protocol/contracts/interface/IProperty.sol";
 
 contract MockProperty is ERC20, IProperty {
 	address public override author;
