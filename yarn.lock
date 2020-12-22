@@ -23,10 +23,10 @@
     chalk "^2.0.0"
     js-tokens "^4.0.0"
 
-"@devprotocol/protocol@^3.0.4":
-  version "3.0.4"
-  resolved "https://registry.yarnpkg.com/@devprotocol/protocol/-/protocol-3.0.4.tgz#b5d71ff0e1d3cd69413aa695e2f92e5dbb93386b"
-  integrity sha512-txgZVtTMQHFLQ7aAL3SaQrj1Gd4cy1KXxKW5CujH36MGkqwNXSSxl1Al6cEk+h+CDH0mq1BmNAgNT27ny4FXDg==
+"@devprotocol/protocol@3.0.5":
+  version "3.0.5"
+  resolved "https://registry.yarnpkg.com/@devprotocol/protocol/-/protocol-3.0.5.tgz#0bc932c4e736c263970ea9cb792c894831463ca5"
+  integrity sha512-5stWuua+0t6QezNpBSS8hca9nAHs5CLyRnA71Bcu/NadG8SnHNAwwdvpkVK8RAs88Zxtip7IdTBQHH7WzrVAJw==
   dependencies:
     "@openzeppelin/contracts" "^2.5.0"
     commander "^6.0.0"
