@@ -8,6 +8,7 @@ import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {IMarket} from "@devprotocol/protocol/contracts/interface/IMarket.sol";
 // prettier-ignore
 import {IMarketBehavior} from "@devprotocol/protocol/contracts/interface/IMarketBehavior.sol";
+// prettier-ignore
 import {IProperty} from "@devprotocol/protocol/contracts/interface/IProperty.sol";
 // prettier-ignore
 import {IAddressConfig} from "@devprotocol/protocol/contracts/interface/IAddressConfig.sol";
