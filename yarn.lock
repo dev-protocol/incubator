@@ -23,7 +23,7 @@
     chalk "^2.0.0"
     js-tokens "^4.0.0"
 
-"@devprotocol/protocol@3.0.5":
+"@devprotocol/protocol@3.0.5", "@devprotocol/protocol@^3.0.3":
   version "3.0.5"
   resolved "https://registry.yarnpkg.com/@devprotocol/protocol/-/protocol-3.0.5.tgz#0bc932c4e736c263970ea9cb792c894831463ca5"
   integrity sha512-5stWuua+0t6QezNpBSS8hca9nAHs5CLyRnA71Bcu/NadG8SnHNAwwdvpkVK8RAs88Zxtip7IdTBQHH7WzrVAJw==
@@ -32,11 +32,12 @@
     commander "^6.0.0"
     shelljs "^0.8.3"
 
-"@devprotocol/util-contracts@^1.0.2":
-  version "1.0.2"
-  resolved "https://registry.yarnpkg.com/@devprotocol/util-contracts/-/util-contracts-1.0.2.tgz#9cc939430910ae952c1ec5922330caae3f1491fb"
-  integrity sha512-hBJ0WYokGQQ9dIrDXTFR17uQR67PfY0kA4IbGTVCJO8rf8ul1HlslRnQmtbczQ9DCOsFN8oW0aBHPu9cY5cJhA==
+"@devprotocol/util-contracts@2.0.0":
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/@devprotocol/util-contracts/-/util-contracts-2.0.0.tgz#003e816e92f390421351dc8e62055938026e2574"
+  integrity sha512-lmBUqe5KNG6Hs49oeE7wRsHxwHo+/WXwGsaOLpzVD97XfIPPmENbafkehcqrx0/ejPvmxPejNDGV4Jv7U7pvWQ==
   dependencies:
+    "@devprotocol/protocol" "^3.0.3"
     "@openzeppelin/contracts" "3.3.0"
 
 "@devprotocol/util-ts@^1.4.0":

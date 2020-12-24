@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MPL-2.0
-pragma solidity 0.6.12;
+pragma solidity 0.7.6;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
@@ -42,7 +42,7 @@ contract GitHubMarketIncubator is GitHubMarketIncubatorStorage {
 
 	bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
 
-	constructor() public {
+	constructor() {
 		_setRoleAdmin(OPERATOR_ROLE, DEFAULT_ADMIN_ROLE);
 		grantRole(OPERATOR_ROLE, _msgSender());
 	}

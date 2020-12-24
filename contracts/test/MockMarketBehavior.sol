@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: MPL-2.0
-pragma solidity 0.6.12;
+pragma solidity 0.7.6;
 
 // prettier-ignore
 import {IMarketBehavior} from "@devprotocol/protocol/contracts/interface/IMarketBehavior.sol";
 
 contract MockMarketBehavior is IMarketBehavior {
+	// solhint-disable-next-line quotes
+	string private schemaInfo = '["GitHub Repository (e.g, your/awesome-repos)", "Khaos Public Signature"]';
 	mapping(address => bool) private auth;
 	mapping(address => string) private repositories;
 	mapping(bytes32 => address) private metrics;
@@ -24,9 +26,7 @@ contract MockMarketBehavior is IMarketBehavior {
 	}
 
 	function schema() external view override returns (string memory) {
-		return
-			// solhint-disable-next-line quotes
-			'["GitHub Repository (e.g, your/awesome-repos)", "Khaos Public Signature"]';
+		return schemaInfo;
 	}
 
 	function getId(address _metrics)
@@ -40,7 +40,6 @@ contract MockMarketBehavior is IMarketBehavior {
 
 	function setId(address _metrics, string memory _value)
 		external
-		returns (string memory)
 	{
 		repositories[_metrics] = _value;
 	}

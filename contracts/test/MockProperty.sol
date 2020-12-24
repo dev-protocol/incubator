@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MPL-2.0
-pragma solidity 0.6.12;
+pragma solidity 0.7.6;
 
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 // prettier-ignore
@@ -14,7 +14,7 @@ contract MockProperty is ERC20, IProperty {
 		address _own,
 		string memory _name,
 		string memory _symbol
-	) public ERC20(_name, _symbol) {
+	) ERC20(_name, _symbol) {
 		author = _own;
 
 		_mint(author, supply);

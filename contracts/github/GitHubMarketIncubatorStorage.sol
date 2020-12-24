@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MPL-2.0
-pragma solidity 0.6.12;
+pragma solidity 0.7.6;
 
 // prettier-ignore
 import {UsingStorage} from "@devprotocol/util-contracts/contracts/storage/UsingStorage.sol";

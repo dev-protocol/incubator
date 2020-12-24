@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MPL-2.0
-pragma solidity 0.6.12;
+pragma solidity 0.7.6;
 
 import {IMarket} from "@devprotocol/protocol/contracts/interface/IMarket.sol";
 // prettier-ignore
@@ -7,12 +7,14 @@ import {IMarketBehavior} from "@devprotocol/protocol/contracts/interface/IMarket
 
 contract MockMarket is IMarket {
 	address public override behavior;
+	address private zero = address(0);
+	uint256 private ten = 10;
 	bool public override enabled;
 	uint256 public override votingEndBlockNumber;
 	mapping(address => bool) private auth;
 	mapping(address => bool) private deauth;
 
-	constructor(address _behavior) public {
+	constructor(address _behavior) {
 		behavior = _behavior;
 	}
 
@@ -46,7 +48,8 @@ contract MockMarket is IMarket {
 		override
 		returns (address)
 	{
-		return address(0);
+		zero = address(0);
+		return zero;
 	}
 
 	function toEnable() external override {
@@ -62,6 +65,6 @@ contract MockMarket is IMarket {
 	}
 
 	function issuedMetrics() external view override returns (uint256) {
-		return 10;
+		return ten;
 	}
 }
