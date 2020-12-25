@@ -32,10 +32,10 @@
     commander "^6.0.0"
     shelljs "^0.8.3"
 
-"@devprotocol/util-contracts@2.0.0":
-  version "2.0.0"
-  resolved "https://registry.yarnpkg.com/@devprotocol/util-contracts/-/util-contracts-2.0.0.tgz#003e816e92f390421351dc8e62055938026e2574"
-  integrity sha512-lmBUqe5KNG6Hs49oeE7wRsHxwHo+/WXwGsaOLpzVD97XfIPPmENbafkehcqrx0/ejPvmxPejNDGV4Jv7U7pvWQ==
+"@devprotocol/util-contracts@2.1.2":
+  version "2.1.2"
+  resolved "https://registry.yarnpkg.com/@devprotocol/util-contracts/-/util-contracts-2.1.2.tgz#0c9a3ce0361c3e25f654fa08e3fce921ae59025e"
+  integrity sha512-tyGyUu/XDA//zdh4zJwqoF0XqxmJfOXlRPY5odbGzqYu1CIr835wViGGhPR9rSQGjryawqvQ4H6ltGHcMonqBw==
   dependencies:
     "@devprotocol/protocol" "^3.0.3"
     "@openzeppelin/contracts" "3.3.0"
