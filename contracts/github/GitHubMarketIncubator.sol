@@ -184,7 +184,14 @@ contract GitHubMarketIncubator is GitHubMarketIncubatorStorage {
 		uint256 reword =
 			latestPrice.sub(startPrice).mul(getStaking(_githubRepository));
 		uint256 rewordLimit = getRewardLimit(_githubRepository);
-		return reword < rewordLimit ? reword : rewordLimit;
+		if (reword <= rewordLimit) {
+			return reword;
+		}
+		uint256 over = reword.sub(rewordLimit);
+		if (rewordLimit < over) {
+			return 0;
+		}
+		return rewordLimit.sub(over);
 	}
 
 	function getLastPrice() private view returns (uint256) {
