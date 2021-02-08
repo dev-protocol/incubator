@@ -264,12 +264,14 @@ describe('GitHubMarketIncubator', () => {
 					const repository = 'hogehoge/rep'
 					const stakingValue = '10000' + DEV_DECIMALS
 					const limitValue = '1000' + DEV_DECIMALS
+					const lowerLimitValue = '10' + DEV_DECIMALS
 
 					await incubator.start(
 						property.address,
 						repository,
 						stakingValue,
 						limitValue,
+						lowerLimitValue,
 						{
 							gasLimit: 1000000,
 						}
@@ -306,6 +308,7 @@ describe('GitHubMarketIncubator', () => {
 						'hogehoge/rep',
 						0,
 						1000,
+						10,
 						{
 							gasLimit: 1000000,
 						}
@@ -321,11 +324,28 @@ describe('GitHubMarketIncubator', () => {
 						'hogehoge/rep',
 						10,
 						0,
+						0,
 						{
 							gasLimit: 1000000,
 						}
 					)
 				).to.be.revertedWith('reword limit is 0.')
+			})
+			it('An error occurs when reword limit is less than the lower limit.', async () => {
+				const [instance, , , provider] = await init()
+				const property = provider.createEmptyWallet()
+				await expect(
+					instance.incubatorOperator.start(
+						property.address,
+						'hogehoge/rep',
+						10,
+						10,
+						15,
+						{
+							gasLimit: 1000000,
+						}
+					)
+				).to.be.revertedWith('limit is less than lower limit.')
 			})
 			it('only administrators and operators can do this.', async () => {
 				const check = async (incubator: Contract): Promise<void> => {
@@ -335,6 +355,7 @@ describe('GitHubMarketIncubator', () => {
 						'hogehoge/rep',
 						10000,
 						1000,
+						10,
 						{
 							gasLimit: 1000000,
 						}
@@ -357,11 +378,13 @@ describe('GitHubMarketIncubator', () => {
 				const repository = 'hogehoge/rep'
 				const stakingValue = '10' + DEV_DECIMALS
 				const limitValue = '10000' + DEV_DECIMALS
+				const lowerLimitValue = '1' + DEV_DECIMALS
 				await instance.incubator.start(
 					property.address,
 					repository,
 					stakingValue,
 					limitValue,
+					lowerLimitValue,
 					{
 						gasLimit: 1000000,
 					}
@@ -386,11 +409,13 @@ describe('GitHubMarketIncubator', () => {
 				const repository = 'hogehoge/rep'
 				const stakingValue = '10' + DEV_DECIMALS
 				const limitValue = '10000' + DEV_DECIMALS
+				const lowerLimitValue = '10' + DEV_DECIMALS
 				await instance.incubator.start(
 					property.address,
 					repository,
 					stakingValue,
 					limitValue,
+					lowerLimitValue,
 					{
 						gasLimit: 1000000,
 					}
@@ -418,11 +443,13 @@ describe('GitHubMarketIncubator', () => {
 				const repository = 'hogehoge/rep'
 				const stakingValue = '10' + DEV_DECIMALS
 				const limitValue = '10000' + DEV_DECIMALS
+				const lowerLimitValue = '10' + DEV_DECIMALS
 				await instance.incubator.start(
 					property.address,
 					repository,
 					stakingValue,
 					limitValue,
+					lowerLimitValue,
 					{
 						gasLimit: 1000000,
 					}
@@ -452,6 +479,7 @@ describe('GitHubMarketIncubator', () => {
 				const repository = 'hogehoge/rep'
 				const stakingValue = '10' + DEV_DECIMALS
 				const limitValue = '10000' + DEV_DECIMALS
+				const lowerLimitValue = '10' + DEV_DECIMALS
 				await mock.marketBehavior.setId(metrics.address, repository)
 				await mock.dev.transfer(
 					instance.incubator.address,
@@ -477,6 +505,7 @@ describe('GitHubMarketIncubator', () => {
 					repository,
 					stakingValue,
 					limitValue,
+					lowerLimitValue,
 					{
 						gasLimit: 1000000,
 					}
@@ -539,12 +568,14 @@ describe('GitHubMarketIncubator', () => {
 				const repository = 'hogehoge/rep'
 				const stakingValue = '10' + DEV_DECIMALS
 				const limitValue = '10000' + DEV_DECIMALS
+				const lowerLimitValue = '10' + DEV_DECIMALS
 
 				await instance.incubatorOperator.start(
 					property.address,
 					repository,
 					stakingValue,
 					limitValue,
+					lowerLimitValue,
 					{
 						gasLimit: 1000000,
 					}
@@ -564,12 +595,14 @@ describe('GitHubMarketIncubator', () => {
 				const repository = 'hogehoge/rep'
 				const stakingValue = '10' + DEV_DECIMALS
 				const limitValue = '10000' + DEV_DECIMALS
+				const lowerLimitValue = '10' + DEV_DECIMALS
 
 				await instance.incubatorOperator.start(
 					property.address,
 					repository,
 					stakingValue,
 					limitValue,
+					lowerLimitValue,
 					{
 						gasLimit: 1000000,
 					}
@@ -598,6 +631,7 @@ describe('GitHubMarketIncubator', () => {
 			const repository = 'hogehoge/rep'
 			const stakingValue = '10' + DEV_DECIMALS
 			const limitValue = '10000' + DEV_DECIMALS
+			const lowerLimitValue = '10' + DEV_DECIMALS
 			await mock.marketBehavior.setId(metrics.address, repository)
 			await mock.dev.transfer(
 				instance.incubator.address,
@@ -610,6 +644,7 @@ describe('GitHubMarketIncubator', () => {
 				repository,
 				stakingValue,
 				limitValue,
+				lowerLimitValue,
 				{
 					gasLimit: 1000000,
 				}
@@ -658,9 +693,16 @@ describe('GitHubMarketIncubator', () => {
 					incubatorUser: Contract
 				): Promise<void> => {
 					const property = provider.createEmptyWallet()
-					await incubator.start(property.address, 'hogehoge/rep', 10000, 1000, {
-						gasLimit: 1000000,
-					})
+					await incubator.start(
+						property.address,
+						'hogehoge/rep',
+						10000,
+						1000,
+						10,
+						{
+							gasLimit: 1000000,
+						}
+					)
 					await incubatorUser.authenticate(
 						'hogehoge/rep',
 						'dummy-public-signature',
@@ -773,7 +815,8 @@ describe('GitHubMarketIncubator', () => {
 					wallet.address,
 					'user/repository',
 					'10' + DEV_DECIMALS,
-					'10000' + DEV_DECIMALS
+					'10000' + DEV_DECIMALS,
+					'10' + DEV_DECIMALS
 				)
 				for (let i = 0; i < 5; i++) {
 					await mine(provider, 1)
@@ -791,7 +834,8 @@ describe('GitHubMarketIncubator', () => {
 					wallet.address,
 					'user/repository',
 					'20' + DEV_DECIMALS,
-					'10000' + DEV_DECIMALS
+					'10000' + DEV_DECIMALS,
+					'10' + DEV_DECIMALS
 				)
 				for (let i = 0; i < 5; i++) {
 					await mine(provider, 1)
@@ -810,7 +854,8 @@ describe('GitHubMarketIncubator', () => {
 				wallet.address,
 				'user/repository',
 				'10' + DEV_DECIMALS,
-				'10000' + DEV_DECIMALS
+				'10000' + DEV_DECIMALS,
+				'10' + DEV_DECIMALS
 			)
 			await mine(provider, 9)
 			let result = await instance.incubator.getReword('user/repository')
@@ -829,10 +874,13 @@ describe('GitHubMarketIncubator', () => {
 			expect(result.toString()).to.be.equal('1000' + DEV_DECIMALS)
 			await mine(provider, 1)
 			result = await instance.incubator.getReword('user/repository')
-			expect(result.toString()).to.be.equal('0')
+			expect(result.toString()).to.be.equal('10' + DEV_DECIMALS)
 			await mine(provider, 1)
 			result = await instance.incubator.getReword('user/repository')
-			expect(result.toString()).to.be.equal('0')
+			expect(result.toString()).to.be.equal('10' + DEV_DECIMALS)
+			await mine(provider, 10)
+			result = await instance.incubator.getReword('user/repository')
+			expect(result.toString()).to.be.equal('10' + DEV_DECIMALS)
 		})
 	})
 	describe('setter', () => {

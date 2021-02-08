@@ -24,6 +24,13 @@ contract GitHubMarketIncubatorStorageTest is GitHubMarketIncubatorStorage {
 		setRewardLimit(_githubRepository, _rewardLimit);
 	}
 
+	function setRewardLowerLimitTest(
+		string memory _githubRepository,
+		uint256 _rewardLimit
+	) external {
+		setRewardLowerLimit(_githubRepository, _rewardLimit);
+	}
+
 	function setPropertyAddressTest(
 		string memory _githubRepository,
 		address _property
