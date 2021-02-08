@@ -78,6 +78,35 @@ contract GitHubMarketIncubatorStorage is UsingStorage {
 		return keccak256(abi.encodePacked(_githubRepository, "_rewardLimit"));
 	}
 
+	// Reward lower limit
+	function setRewardLowerLimit(
+		string memory _githubRepository,
+		uint256 _rewardLowerLimit
+	) internal {
+		eternalStorage().setUint(
+			getRewardLowerLimitKey(_githubRepository),
+			_rewardLowerLimit
+		);
+	}
+
+	function getRewardLowerLimit(string memory _githubRepository)
+		public
+		view
+		returns (uint256)
+	{
+		return
+			eternalStorage().getUint(getRewardLowerLimitKey(_githubRepository));
+	}
+
+	function getRewardLowerLimitKey(string memory _githubRepository)
+		private
+		pure
+		returns (bytes32)
+	{
+		return
+			keccak256(abi.encodePacked(_githubRepository, "_rewardLowerLimit"));
+	}
+
 	// PropertyAddress
 	function setPropertyAddress(
 		string memory _githubRepository,

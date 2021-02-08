@@ -49,6 +49,17 @@ describe('GitHubMarketIncubatorStorage', () => {
 			expect(result.toNumber()).to.be.equal(3000000)
 		})
 	})
+	describe('setRewardLowerLimit, getRewardLowerLimit', () => {
+		it('Initial value is 0', async () => {
+			const result = await storageTest.getRewardLowerLimit('dummy')
+			expect(result.toNumber()).to.be.equal(0)
+		})
+		it('The set value can be taken as it is.', async () => {
+			await storageTest.setRewardLowerLimitTest('dummy', 9000000)
+			const result = await storageTest.getRewardLowerLimit('dummy')
+			expect(result.toNumber()).to.be.equal(9000000)
+		})
+	})
 	describe('setPropertyAddress, getPropertyAddress', () => {
 		it('Initial value is 0x0000.......', async () => {
 			const result = await storageTest.getPropertyAddress('dummy')

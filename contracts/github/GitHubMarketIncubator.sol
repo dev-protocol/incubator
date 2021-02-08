@@ -68,16 +68,22 @@ contract GitHubMarketIncubator is GitHubMarketIncubatorStorage {
 		address _property,
 		string memory _githubRepository,
 		uint256 _staking,
-		uint256 _rewardLimit
+		uint256 _rewardLimit,
+		uint256 _rewardLowerLimit
 	) external onlyOperator {
 		require(_staking != 0, "staking is 0.");
 		require(_rewardLimit != 0, "reword limit is 0.");
+		require(
+			_rewardLowerLimit <= _rewardLimit,
+			"limit is less than lower limit."
+		);
 
 		uint256 lastPrice = getLastPrice();
 		setPropertyAddress(_githubRepository, _property);
 		setStartPrice(_githubRepository, lastPrice);
 		setStaking(_githubRepository, _staking);
 		setRewardLimit(_githubRepository, _rewardLimit);
+		setRewardLowerLimit(_githubRepository, _rewardLowerLimit);
 	}
 
 	function clearAccountAddress(address _property) external onlyOperator {
@@ -188,10 +194,12 @@ contract GitHubMarketIncubator is GitHubMarketIncubatorStorage {
 			return reword;
 		}
 		uint256 over = reword.sub(rewordLimit);
+		uint256 rewordLowerLimit = getRewardLowerLimit(_githubRepository);
 		if (rewordLimit < over) {
-			return 0;
+			return rewordLowerLimit;
 		}
-		return rewordLimit.sub(over);
+		uint256 tmp = rewordLimit.sub(over);
+		return tmp <= rewordLowerLimit ? rewordLowerLimit : tmp;
 	}
 
 	function getLastPrice() private view returns (uint256) {
