@@ -5,8 +5,9 @@ pragma solidity 0.7.6;
 import {IMarketBehavior} from "@devprotocol/protocol/contracts/interface/IMarketBehavior.sol";
 
 contract MockMarketBehavior is IMarketBehavior {
-	// solhint-disable-next-line quotes
-	string private schemaInfo = '["GitHub Repository (e.g, your/awesome-repos)", "Khaos Public Signature"]';
+	string private schemaInfo =
+		// solhint-disable-next-line quotes
+		'["GitHub Repository (e.g, your/awesome-repos)", "Khaos Public Signature"]';
 	mapping(address => bool) private auth;
 	mapping(address => string) private repositories;
 	mapping(bytes32 => address) private metrics;
@@ -38,9 +39,7 @@ contract MockMarketBehavior is IMarketBehavior {
 		return repositories[_metrics];
 	}
 
-	function setId(address _metrics, string memory _value)
-		external
-	{
+	function setId(address _metrics, string memory _value) external {
 		repositories[_metrics] = _value;
 	}
 
