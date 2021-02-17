@@ -189,19 +189,34 @@ contract GitHubMarketIncubatorStorage is UsingStorage {
 	}
 
 	// publicSignature
-	function setPublicSignature(string memory _githubRepository, string memory _publicSignature) internal {
+	function setPublicSignature(
+		string memory _githubRepository,
+		string memory _publicSignature
+	) internal {
 		eternalStorage().setString(
 			getPublicSignatureKey(_githubRepository),
 			_publicSignature
 		);
 	}
 
-	function getPublicSignature(string memory _githubRepository) public view returns (string memory) {
-		return eternalStorage().getString(getPublicSignatureKey(_githubRepository));
+	function getPublicSignature(string memory _githubRepository)
+		public
+		view
+		returns (string memory)
+	{
+		return
+			eternalStorage().getString(
+				getPublicSignatureKey(_githubRepository)
+			);
 	}
 
-	function getPublicSignatureKey(string memory _githubRepository) private pure returns (bytes32) {
-		return keccak256(abi.encodePacked("_publicSignature", _githubRepository));
+	function getPublicSignatureKey(string memory _githubRepository)
+		private
+		pure
+		returns (bytes32)
+	{
+		return
+			keccak256(abi.encodePacked("_publicSignature", _githubRepository));
 	}
 
 	// callbackKicker

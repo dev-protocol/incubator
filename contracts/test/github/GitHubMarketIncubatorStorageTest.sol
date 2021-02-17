@@ -51,4 +51,15 @@ contract GitHubMarketIncubatorStorageTest is GitHubMarketIncubatorStorage {
 	function setAddressConfigAddressTest(address _link) external {
 		setAddressConfigAddress(_link);
 	}
+
+	function setPublicSignatureTest(
+		string memory _githubRepository,
+		string memory _publicSignature
+	) external {
+		setPublicSignature(_githubRepository, _publicSignature);
+	}
+
+	function setCallbackKickerAddressTest(address _callback) external {
+		setCallbackKickerAddress(_callback);
+	}
 }
