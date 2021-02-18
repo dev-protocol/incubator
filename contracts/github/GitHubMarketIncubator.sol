@@ -33,10 +33,12 @@ contract GitHubMarketIncubator is GitHubMarketIncubatorStorage {
 
 	event Finish(
 		address indexed _property,
+		uint256 _status,
 		string _githubRepository,
 		uint256 _reword,
 		address _account,
-		uint256 _staking
+		uint256 _staking,
+		string _errorMessage
 	);
 
 	event Twitter(
@@ -157,13 +159,30 @@ contract GitHubMarketIncubator is GitHubMarketIncubatorStorage {
 		);
 	}
 
-	function finish(string memory _githubRepository) external {
+	function finish(
+		string memory _githubRepository,
+		uint256 _status,
+		string memory _errorMessage
+	) external {
 		require(msg.sender == getCallbackKickerAddress(), "illegal access.");
 		address property = getPropertyAddress(_githubRepository);
 		address account = getAccountAddress(property);
 		uint256 reword = getReword(_githubRepository);
 		require(reword != 0, "reword is 0.");
+		uint256 staking = getStaking(_githubRepository);
 
+		if (_status != 0) {
+			emit Finish(
+				property,
+				_status,
+				_githubRepository,
+				reword,
+				account,
+				staking,
+				_errorMessage
+			);
+			return;
+		}
 		// transfer reword
 		address devToken = IAddressConfig(getAddressConfigAddress()).token();
 		IERC20 dev = IERC20(devToken);
@@ -176,12 +195,19 @@ contract GitHubMarketIncubator is GitHubMarketIncubatorStorage {
 		propertyInstance.safeTransfer(account, balance);
 
 		// lockup
-		uint256 staking = getStaking(_githubRepository);
 		IDev(devToken).deposit(property, staking);
 		setStaking(_githubRepository, 0);
 
 		// event
-		emit Finish(property, _githubRepository, reword, account, staking);
+		emit Finish(
+			property,
+			_status,
+			_githubRepository,
+			reword,
+			account,
+			staking,
+			_errorMessage
+		);
 	}
 
 	function withdrawLockup(address _property, uint256 _amount)

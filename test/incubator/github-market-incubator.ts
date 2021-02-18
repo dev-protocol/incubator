@@ -754,7 +754,7 @@ describe('GitHubMarketIncubator', () => {
 					}
 				)
 				await caluculator.setBaseRewords()
-				await instance.incubatorCallbackKicker.finish(repository, {
+				await instance.incubatorCallbackKicker.finish(repository, 0, '', {
 					gasLimit: 1000000,
 				})
 
@@ -774,12 +774,83 @@ describe('GitHubMarketIncubator', () => {
 				const filterFinish = instance.incubator.filters.Finish(property.address)
 				const events = await instance.incubator.queryFilter(filterFinish)
 				expect(events[0].args?.[0]).to.be.equal(property.address)
-				expect(events[0].args?.[1]).to.be.equal(repository)
-				expect(events[0].args?.[2].toString()).to.be.equal(
+				expect(events[0].args?.[1]).to.be.equal('0')
+				expect(events[0].args?.[2]).to.be.equal(repository)
+				expect(events[0].args?.[3].toString()).to.be.equal(
 					currentRewords.toString()
 				)
-				expect(events[0].args?.[3]).to.be.equal(wallets.user.address)
-				expect(events[0].args?.[4].toString()).to.be.equal(stakingValue)
+				expect(events[0].args?.[4]).to.be.equal(wallets.user.address)
+				expect(events[0].args?.[5].toString()).to.be.equal(stakingValue)
+				expect(events[0].args?.[6].toString()).to.be.equal('')
+			})
+			it('エラーメッセージがある時はそのイベントが保存される.', async () => {
+				// Prepare
+				const [instance, mock, wallets, provider] = await init()
+				const property = await mock.generatePropertyMock(
+					instance.incubator.address
+				)
+				const metrics = provider.createEmptyWallet()
+				const repository = 'hogehoge/rep'
+				const stakingValue = '10' + DEV_DECIMALS
+				const limitValue = '10000' + DEV_DECIMALS
+				const lowerLimitValue = '10' + DEV_DECIMALS
+				await mock.marketBehavior.setId(metrics.address, repository)
+				await mock.dev.transfer(
+					instance.incubator.address,
+					'1000000' + DEV_DECIMALS
+				)
+				const caluculator = new RewordCalculator(
+					instance.incubator,
+					provider,
+					repository
+				)
+				// Action
+				await instance.incubatorOperator.start(
+					property.address,
+					repository,
+					stakingValue,
+					limitValue,
+					lowerLimitValue,
+					{
+						gasLimit: 1000000,
+					}
+				)
+				await caluculator.setOneBlockRewords()
+				await instance.incubatorUser.authenticate(repository, 'dummy-public', {
+					gasLimit: 1000000,
+				})
+				await instance.incubatorUser.intermediateProcess(
+					repository,
+					metrics.address,
+					'https://twitter/hogehoge',
+					'dummy-twitter-public',
+					{
+						gasLimit: 1000000,
+					}
+				)
+				await caluculator.setBaseRewords()
+				await instance.incubatorCallbackKicker.finish(
+					repository,
+					1,
+					'error-message',
+					{
+						gasLimit: 1000000,
+					}
+				)
+
+				// After check
+				const currentRewords = await caluculator.getCurrentRewords()
+				const filterFinish = instance.incubator.filters.Finish(property.address)
+				const events = await instance.incubator.queryFilter(filterFinish)
+				expect(events[0].args?.[0]).to.be.equal(property.address)
+				expect(events[0].args?.[1]).to.be.equal('1')
+				expect(events[0].args?.[2]).to.be.equal(repository)
+				expect(events[0].args?.[3].toString()).to.be.equal(
+					currentRewords.toString()
+				)
+				expect(events[0].args?.[4]).to.be.equal(wallets.user.address)
+				expect(events[0].args?.[5].toString()).to.be.equal(stakingValue)
+				expect(events[0].args?.[6].toString()).to.be.equal('error-message')
 			})
 		})
 		describe('fail', () => {
@@ -787,7 +858,7 @@ describe('GitHubMarketIncubator', () => {
 				const [instance] = await init()
 				for (const incubator of instance.otherThanCallbackKicker()) {
 					await expect(
-						incubator.finish('hogehoge/rep', {
+						incubator.finish('hogehoge/rep', 0, {
 							gasLimit: 1000000,
 						})
 					).to.be.revertedWith('illegal access.')
@@ -796,7 +867,7 @@ describe('GitHubMarketIncubator', () => {
 			it('When the reward is zero, an error occurs.', async () => {
 				const [instance] = await init()
 				await expect(
-					instance.incubatorCallbackKicker.finish('hogehoge/rep', {
+					instance.incubatorCallbackKicker.finish('hogehoge/rep', 0, {
 						gasLimit: 1000000,
 					})
 				).to.be.revertedWith('reword is 0.')
@@ -846,7 +917,7 @@ describe('GitHubMarketIncubator', () => {
 					gasLimit: 1000000,
 				}
 			)
-			await instance.incubatorCallbackKicker.finish(repository, {
+			await instance.incubatorCallbackKicker.finish(repository, 0, '', {
 				gasLimit: 1000000,
 			})
 			return [instance, property.address, mock]
