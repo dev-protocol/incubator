@@ -1,13 +1,29 @@
 // SPDX-License-Identifier: MPL-2.0
 pragma solidity 0.7.6;
 
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+
 // The real Lockup contract does not inherit the interface, so the test mock will do so as well.
 contract MockLockup {
-	mapping(address => uint256) public withdrawStorage;
 	uint256 public baseValue = 100;
+	address private devtoken;
+	// solhint-disable-next-line
+	uint256 private withdrawAmount = 100000000000000000000;
 
-	function withdraw(address _property, uint256 _amount) external {
-		withdrawStorage[_property] = _amount;
+	constructor(address _devToken) {
+		devtoken = _devToken;
+	}
+
+	function withdraw(address, uint256 _amount) external {
+		IERC20(devtoken).transfer(msg.sender, withdrawAmount + _amount);
+	}
+
+	function calculateWithdrawableInterestAmount(address, address)
+		external
+		view
+		returns (uint256)
+	{
+		return withdrawAmount;
 	}
 
 	function calculateCumulativeRewardPrices()

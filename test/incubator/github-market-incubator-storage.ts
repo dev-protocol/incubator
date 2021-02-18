@@ -81,8 +81,6 @@ describe('GitHubMarketIncubatorStorage', () => {
 		it('The set value can be taken as it is.', async () => {
 			const tmp1 = provider.createEmptyWallet()
 			const tmp2 = provider.createEmptyWallet()
-			console.log(tmp1.address)
-			console.log(tmp2.address)
 			await storageTest.setAccountAddressTest(tmp1.address, tmp2.address)
 			const result = await storageTest.getAccountAddress(tmp1.address)
 			expect(result).to.be.equal(tmp2.address)
@@ -95,7 +93,6 @@ describe('GitHubMarketIncubatorStorage', () => {
 		})
 		it('The set value can be taken as it is.', async () => {
 			const tmp = provider.createEmptyWallet()
-			console.log(tmp.address)
 			await storageTest.setMarketAddressTest(tmp.address)
 			const result = await storageTest.getMarketAddress()
 			expect(result).to.be.equal(tmp.address)
