@@ -527,7 +527,7 @@ describe('GitHubMarketIncubator', () => {
 
 	describe('intermediateProcess', () => {
 		describe('success', () => {
-			it('Twitter-related events will occur..', async () => {
+			it('Twitter-related events will occur.', async () => {
 				// Prepare
 				const [instance, mock, , provider] = await init()
 				const property = await mock.generatePropertyMock(
@@ -571,6 +571,52 @@ describe('GitHubMarketIncubator', () => {
 				expect(events[0].args?.[1]).to.be.equal('https://twitter')
 				expect(events[0].args?.[2]).to.be.equal('public-twitter-sig')
 				expect(events[0].args?.[3]).to.be.equal('dummy-public')
+			})
+			it('Can be run multiple times.', async () => {
+				// Prepare
+				const [instance, mock, , provider] = await init()
+				const property = await mock.generatePropertyMock(
+					instance.incubator.address
+				)
+				const metrics = provider.createEmptyWallet()
+				const repository = 'hogehoge/rep'
+				const stakingValue = '10' + DEV_DECIMALS
+				const limitValue = '10000' + DEV_DECIMALS
+				const lowerLimitValue = '10' + DEV_DECIMALS
+				await mock.marketBehavior.setId(metrics.address, repository)
+
+				// Action
+				await instance.incubatorOperator.start(
+					property.address,
+					repository,
+					stakingValue,
+					limitValue,
+					lowerLimitValue,
+					{
+						gasLimit: 1000000,
+					}
+				)
+				await instance.incubatorUser.authenticate(repository, 'dummy-public', {
+					gasLimit: 1000000,
+				})
+				await instance.incubatorUser.intermediateProcess(
+					repository,
+					metrics.address,
+					'https://twitter',
+					'public-twitter-sig',
+					{
+						gasLimit: 1000000,
+					}
+				)
+				await instance.incubatorUser.intermediateProcess(
+					repository,
+					metrics.address,
+					'https://twitter',
+					'public-twitter-sig',
+					{
+						gasLimit: 1000000,
+					}
+				)
 			})
 		})
 		describe('fail', () => {
@@ -783,7 +829,7 @@ describe('GitHubMarketIncubator', () => {
 				expect(events[0].args?.[5].toString()).to.be.equal(stakingValue)
 				expect(events[0].args?.[6].toString()).to.be.equal('')
 			})
-			it('エラーメッセージがある時はそのイベントが保存される.', async () => {
+			it('If status is non-zero, the error message will be stored in the event..', async () => {
 				// Prepare
 				const [instance, mock, wallets, provider] = await init()
 				const property = await mock.generatePropertyMock(
