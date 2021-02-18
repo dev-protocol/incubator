@@ -32,8 +32,7 @@ contract GitHubMarketIncubator is GitHubMarketIncubatorStorage {
 	);
 
 	event Finish(
-		address indexed _sender,
-		address _property,
+		address indexed _property,
 		string _githubRepository,
 		uint256 _reword,
 		address _account,
@@ -182,14 +181,7 @@ contract GitHubMarketIncubator is GitHubMarketIncubatorStorage {
 		setStaking(_githubRepository, 0);
 
 		// event
-		emit Finish(
-			_msgSender(),
-			property,
-			_githubRepository,
-			reword,
-			account,
-			staking
-		);
+		emit Finish(property, _githubRepository, reword, account, staking);
 	}
 
 	function withdrawLockup(address _property, uint256 _amount)

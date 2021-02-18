@@ -771,18 +771,15 @@ describe('GitHubMarketIncubator', () => {
 				expect(afterStakingValue.toNumber()).to.be.equal(0)
 				propertyDevBalance = await mock.dev.balanceOf(property.address)
 				expect(propertyDevBalance.toString()).to.be.equal(stakingValue)
-				const filterFinish = instance.incubator.filters.Finish(
-					wallets.callbackKicker.address
-				)
+				const filterFinish = instance.incubator.filters.Finish(property.address)
 				const events = await instance.incubator.queryFilter(filterFinish)
-				expect(events[0].args?.[0]).to.be.equal(wallets.callbackKicker.address)
-				expect(events[0].args?.[1]).to.be.equal(property.address)
-				expect(events[0].args?.[2]).to.be.equal(repository)
-				expect(events[0].args?.[3].toString()).to.be.equal(
+				expect(events[0].args?.[0]).to.be.equal(property.address)
+				expect(events[0].args?.[1]).to.be.equal(repository)
+				expect(events[0].args?.[2].toString()).to.be.equal(
 					currentRewords.toString()
 				)
-				expect(events[0].args?.[4]).to.be.equal(wallets.user.address)
-				expect(events[0].args?.[5].toString()).to.be.equal(stakingValue)
+				expect(events[0].args?.[3]).to.be.equal(wallets.user.address)
+				expect(events[0].args?.[4].toString()).to.be.equal(stakingValue)
 			})
 		})
 		describe('fail', () => {
