@@ -557,7 +557,7 @@ describe('GitHubMarketIncubator', () => {
 				await instance.incubatorUser.intermediateProcess(
 					repository,
 					metrics.address,
-					'https://twitter',
+					'1362570196712497157',
 					'public-twitter-sig',
 					{
 						gasLimit: 1000000,
@@ -568,7 +568,7 @@ describe('GitHubMarketIncubator', () => {
 				const filterTwitter = instance.incubator.filters.Twitter()
 				const events = await instance.incubator.queryFilter(filterTwitter)
 				expect(events[0].args?.[0]).to.be.equal(repository)
-				expect(events[0].args?.[1]).to.be.equal('https://twitter')
+				expect(events[0].args?.[1]).to.be.equal('1362570196712497157')
 				expect(events[0].args?.[2]).to.be.equal('public-twitter-sig')
 				expect(events[0].args?.[3]).to.be.equal('dummy-public')
 			})
@@ -602,7 +602,7 @@ describe('GitHubMarketIncubator', () => {
 				await instance.incubatorUser.intermediateProcess(
 					repository,
 					metrics.address,
-					'https://twitter',
+					'1362570196712497157',
 					'public-twitter-sig',
 					{
 						gasLimit: 1000000,
@@ -611,7 +611,7 @@ describe('GitHubMarketIncubator', () => {
 				await instance.incubatorUser.intermediateProcess(
 					repository,
 					metrics.address,
-					'https://twitter',
+					'1362570196712497157',
 					'public-twitter-sig',
 					{
 						gasLimit: 1000000,
@@ -627,7 +627,7 @@ describe('GitHubMarketIncubator', () => {
 					instance.incubatorUser.intermediateProcess(
 						'hogehoge/rep',
 						metrics.address,
-						'https://twitter',
+						'1362570196712497157',
 						'public-twitter-sig',
 						{
 							gasLimit: 1000000,
@@ -660,7 +660,7 @@ describe('GitHubMarketIncubator', () => {
 					instance.incubatorUser.intermediateProcess(
 						repository,
 						metrics.address,
-						'https://twitter',
+						'1362570196712497157',
 						'public-twitter-sig',
 						{
 							gasLimit: 1000000,
@@ -696,7 +696,7 @@ describe('GitHubMarketIncubator', () => {
 					instance.incubator.intermediateProcess(
 						repository,
 						metrics.address,
-						'https://twitter',
+						'1362570196712497157',
 						'public-twitter-sig',
 						{
 							gasLimit: 1000000,
@@ -732,7 +732,7 @@ describe('GitHubMarketIncubator', () => {
 					instance.incubatorUser.intermediateProcess(
 						repository,
 						metrics.address,
-						'https://twitter',
+						'1362570196712497157',
 						'public-twitter-sig',
 						{
 							gasLimit: 1000000,
@@ -793,7 +793,7 @@ describe('GitHubMarketIncubator', () => {
 				await instance.incubatorUser.intermediateProcess(
 					repository,
 					metrics.address,
-					'https://twitter/hogehoge',
+					'1362570196712497157',
 					'dummy-twitter-public',
 					{
 						gasLimit: 1000000,
@@ -868,7 +868,7 @@ describe('GitHubMarketIncubator', () => {
 				await instance.incubatorUser.intermediateProcess(
 					repository,
 					metrics.address,
-					'https://twitter/hogehoge',
+					'1362570196712497157',
 					'dummy-twitter-public',
 					{
 						gasLimit: 1000000,
@@ -957,7 +957,7 @@ describe('GitHubMarketIncubator', () => {
 			await instance.incubatorUser.intermediateProcess(
 				repository,
 				metrics.address,
-				'https://twitter',
+				'1362570196712497157',
 				'dummy-twitter-public',
 				{
 					gasLimit: 1000000,

@@ -133,7 +133,7 @@ contract GitHubMarketIncubator is GitHubMarketIncubatorStorage {
 	function intermediateProcess(
 		string memory _githubRepository,
 		address _metrics,
-		string memory _twitterUrl,
+		string memory _twitterId,
 		string memory _twitterPublicSignature
 	) external {
 		address property = getPropertyAddress(_githubRepository);
@@ -153,7 +153,7 @@ contract GitHubMarketIncubator is GitHubMarketIncubatorStorage {
 			getPublicSignature(_githubRepository);
 		emit Twitter(
 			_githubRepository,
-			_twitterUrl,
+			_twitterId,
 			_twitterPublicSignature,
 			githubPublicSignatur
 		);
