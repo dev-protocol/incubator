@@ -43,7 +43,7 @@ contract GitHubMarketIncubator is GitHubMarketIncubatorStorage {
 
 	event Twitter(
 		string _githubRepository,
-		string _twitterUrl,
+		string _twitterId,
 		string _twitterPublicSignature,
 		string _githubPublicSignature
 	);
