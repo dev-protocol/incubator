@@ -4,6 +4,8 @@ pragma solidity 0.7.6;
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+// prettier-ignore
+import {ERC20Burnable} from "@openzeppelin/contracts/token/ERC20/ERC20Burnable.sol";
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {IMarket} from "@devprotocol/protocol/contracts/interface/IMarket.sol";
 // prettier-ignore
@@ -30,14 +32,20 @@ contract GitHubMarketIncubator is GitHubMarketIncubatorStorage {
 	);
 
 	event Finish(
-		address indexed _sender,
-		address _marketBehavior,
-		address _property,
+		address indexed _property,
+		uint256 _status,
 		string _githubRepository,
-		address _metrics,
 		uint256 _reword,
 		address _account,
-		uint256 _staking
+		uint256 _staking,
+		string _errorMessage
+	);
+
+	event Twitter(
+		string _githubRepository,
+		string _twitterId,
+		string _twitterPublicSignature,
+		string _githubPublicSignature
 	);
 
 	bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
@@ -112,6 +120,7 @@ contract GitHubMarketIncubator is GitHubMarketIncubatorStorage {
 			);
 		require(result, "failed to authenticate.");
 		setAccountAddress(property, _msgSender());
+		setPublicSignature(_githubRepository, _publicSignature);
 		emit Authenticate(
 			_msgSender(),
 			market,
@@ -121,15 +130,18 @@ contract GitHubMarketIncubator is GitHubMarketIncubatorStorage {
 		);
 	}
 
-	function finish(string memory _githubRepository, address _metrics)
-		external
-	{
+	function intermediateProcess(
+		string memory _githubRepository,
+		address _metrics,
+		string memory _twitterId,
+		string memory _twitterPublicSignature
+	) external {
 		address property = getPropertyAddress(_githubRepository);
 		require(property != address(0), "illegal repository.");
 		address account = getAccountAddress(property);
 		require(account != address(0), "no authenticate yet.");
-		uint256 reword = getReword(_githubRepository);
-		require(reword != 0, "reword is 0.");
+		require(account == msg.sender, "illegal user.");
+
 		address marketBehavior = IMarket(getMarketAddress()).behavior();
 		string memory id = IMarketBehavior(marketBehavior).getId(_metrics);
 		require(
@@ -137,7 +149,40 @@ contract GitHubMarketIncubator is GitHubMarketIncubatorStorage {
 				keccak256(abi.encodePacked(_githubRepository)),
 			"illegal metrics."
 		);
+		string memory githubPublicSignatur =
+			getPublicSignature(_githubRepository);
+		emit Twitter(
+			_githubRepository,
+			_twitterId,
+			_twitterPublicSignature,
+			githubPublicSignatur
+		);
+	}
 
+	function finish(
+		string memory _githubRepository,
+		uint256 _status,
+		string memory _errorMessage
+	) external {
+		require(msg.sender == getCallbackKickerAddress(), "illegal access.");
+		address property = getPropertyAddress(_githubRepository);
+		address account = getAccountAddress(property);
+		uint256 reword = getReword(_githubRepository);
+		require(reword != 0, "reword is 0.");
+		uint256 staking = getStaking(_githubRepository);
+
+		if (_status != 0) {
+			emit Finish(
+				property,
+				_status,
+				_githubRepository,
+				reword,
+				account,
+				staking,
+				_errorMessage
+			);
+			return;
+		}
 		// transfer reword
 		address devToken = IAddressConfig(getAddressConfigAddress()).token();
 		IERC20 dev = IERC20(devToken);
@@ -150,20 +195,18 @@ contract GitHubMarketIncubator is GitHubMarketIncubatorStorage {
 		propertyInstance.safeTransfer(account, balance);
 
 		// lockup
-		uint256 staking = getStaking(_githubRepository);
 		IDev(devToken).deposit(property, staking);
 		setStaking(_githubRepository, 0);
 
 		// event
 		emit Finish(
-			_msgSender(),
-			marketBehavior,
 			property,
+			_status,
 			_githubRepository,
-			_metrics,
 			reword,
 			account,
-			staking
+			staking,
+			_errorMessage
 		);
 	}
 
@@ -171,8 +214,18 @@ contract GitHubMarketIncubator is GitHubMarketIncubatorStorage {
 		external
 		onlyOperator
 	{
-		address lockup = IAddressConfig(getAddressConfigAddress()).lockup();
-		ILockup(lockup).withdraw(_property, _amount);
+		IAddressConfig addressConfig =
+			IAddressConfig(getAddressConfigAddress());
+		address lockupAddress = addressConfig.lockup();
+		ILockup lockup = ILockup(lockupAddress);
+		uint256 tmp =
+			lockup.calculateWithdrawableInterestAmount(
+				_property,
+				address(this)
+			);
+		lockup.withdraw(_property, _amount);
+		ERC20Burnable dev = ERC20Burnable(addressConfig.token());
+		dev.burn(tmp);
 	}
 
 	function rescue(address _to, uint256 _amount) external onlyAdmin {
@@ -218,5 +271,10 @@ contract GitHubMarketIncubator is GitHubMarketIncubatorStorage {
 	function setAddressConfig(address _addressConfig) external onlyAdmin {
 		require(_addressConfig != address(0), "address is 0.");
 		setAddressConfigAddress(_addressConfig);
+	}
+
+	function setCallbackKicker(address _callbackKicker) external onlyAdmin {
+		require(_callbackKicker != address(0), "address is 0.");
+		setCallbackKickerAddress(_callbackKicker);
 	}
 }

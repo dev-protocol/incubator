@@ -7,7 +7,7 @@ use(solidity)
 
 describe('GitHubMarketIncubatorStorage', () => {
 	const provider = new MockProvider()
-	const [deployer, user, property, test] = provider.getWallets()
+	const [deployer] = provider.getWallets()
 	let storageTest: Contract
 	before(async () => {
 		storageTest = await deployContract(
@@ -66,20 +66,24 @@ describe('GitHubMarketIncubatorStorage', () => {
 			expect(result).to.be.equal(constants.AddressZero)
 		})
 		it('The set value can be taken as it is.', async () => {
-			await storageTest.setPropertyAddressTest('dummy', property.address)
+			const tmp = provider.createEmptyWallet()
+			await storageTest.setPropertyAddressTest('dummy', tmp.address)
 			const result = await storageTest.getPropertyAddress('dummy')
-			expect(result).to.be.equal(property.address)
+			expect(result).to.be.equal(tmp.address)
 		})
 	})
 	describe('setAccountAddress, getAccountAddress', () => {
 		it('Initial value is 0x0000........', async () => {
-			const result = await storageTest.getAccountAddress(property.address)
+			const tmp = provider.createEmptyWallet()
+			const result = await storageTest.getAccountAddress(tmp.address)
 			expect(result).to.be.equal(constants.AddressZero)
 		})
 		it('The set value can be taken as it is.', async () => {
-			await storageTest.setAccountAddressTest(property.address, user.address)
-			const result = await storageTest.getAccountAddress(property.address)
-			expect(result).to.be.equal(user.address)
+			const tmp1 = provider.createEmptyWallet()
+			const tmp2 = provider.createEmptyWallet()
+			await storageTest.setAccountAddressTest(tmp1.address, tmp2.address)
+			const result = await storageTest.getAccountAddress(tmp1.address)
+			expect(result).to.be.equal(tmp2.address)
 		})
 	})
 	describe('setMarketAddress, getMarketAddress', () => {
@@ -88,9 +92,10 @@ describe('GitHubMarketIncubatorStorage', () => {
 			expect(result).to.be.equal(constants.AddressZero)
 		})
 		it('The set value can be taken as it is.', async () => {
-			await storageTest.setMarketAddressTest(test.address)
+			const tmp = provider.createEmptyWallet()
+			await storageTest.setMarketAddressTest(tmp.address)
 			const result = await storageTest.getMarketAddress()
-			expect(result).to.be.equal(test.address)
+			expect(result).to.be.equal(tmp.address)
 		})
 	})
 	describe('setAddressConfigAddress, getAddressConfigAddress', () => {
@@ -99,9 +104,33 @@ describe('GitHubMarketIncubatorStorage', () => {
 			expect(result).to.be.equal(constants.AddressZero)
 		})
 		it('The set value can be taken as it is.', async () => {
-			await storageTest.setAddressConfigAddressTest(test.address)
+			const tmp = provider.createEmptyWallet()
+			await storageTest.setAddressConfigAddressTest(tmp.address)
 			const result = await storageTest.getAddressConfigAddress()
-			expect(result).to.be.equal(test.address)
+			expect(result).to.be.equal(tmp.address)
+		})
+	})
+	describe('setPublicSignature, getPublicSignature', () => {
+		it('Initial value is ""', async () => {
+			const result = await storageTest.getPublicSignature('dummy_repo')
+			expect(result).to.be.equal('')
+		})
+		it('The set value can be taken as it is.', async () => {
+			await storageTest.setPublicSignatureTest('dummy_repo', 'dummy_public_sig')
+			const result = await storageTest.getPublicSignature('dummy_repo')
+			expect(result).to.be.equal('dummy_public_sig')
+		})
+	})
+	describe('setCallbackKickerAddress, getCallbackKickerAddress', () => {
+		it('Initial value is 0x0000........', async () => {
+			const result = await storageTest.getCallbackKickerAddress()
+			expect(result).to.be.equal(constants.AddressZero)
+		})
+		it('The set value can be taken as it is.', async () => {
+			const tmp = provider.createEmptyWallet()
+			await storageTest.setCallbackKickerAddressTest(tmp.address)
+			const result = await storageTest.getCallbackKickerAddress()
+			expect(result).to.be.equal(tmp.address)
 		})
 	})
 })

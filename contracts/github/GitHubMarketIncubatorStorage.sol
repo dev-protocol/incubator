@@ -187,4 +187,51 @@ contract GitHubMarketIncubatorStorage is UsingStorage {
 	function getAddressConfigAddressKey() private pure returns (bytes32) {
 		return keccak256(abi.encodePacked("_addressConfig"));
 	}
+
+	// publicSignature
+	function setPublicSignature(
+		string memory _githubRepository,
+		string memory _publicSignature
+	) internal {
+		eternalStorage().setString(
+			getPublicSignatureKey(_githubRepository),
+			_publicSignature
+		);
+	}
+
+	function getPublicSignature(string memory _githubRepository)
+		public
+		view
+		returns (string memory)
+	{
+		return
+			eternalStorage().getString(
+				getPublicSignatureKey(_githubRepository)
+			);
+	}
+
+	function getPublicSignatureKey(string memory _githubRepository)
+		private
+		pure
+		returns (bytes32)
+	{
+		return
+			keccak256(abi.encodePacked("_publicSignature", _githubRepository));
+	}
+
+	// callbackKicker
+	function setCallbackKickerAddress(address _callbackKicker) internal {
+		eternalStorage().setAddress(
+			getCallbackKickerAddressKey(),
+			_callbackKicker
+		);
+	}
+
+	function getCallbackKickerAddress() public view returns (address) {
+		return eternalStorage().getAddress(getCallbackKickerAddressKey());
+	}
+
+	function getCallbackKickerAddressKey() private pure returns (bytes32) {
+		return keccak256(abi.encodePacked("_callbackKicker"));
+	}
 }
