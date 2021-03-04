@@ -1234,5 +1234,53 @@ describe('GitHubMarketIncubator', () => {
 				})
 			})
 		})
+		describe('setRewardLimitAndLowerLimit', () => {
+			describe('success', () => {
+				it('update RewardLimit and RewardLowerLimit', async () => {
+					const [instance] = await init()
+					const resRL = await instance.incubator.getRewardLimit('foo/bar')
+					const resRLL = await instance.incubator.getRewardLowerLimit('foo/bar')
+					expect(resRL).to.be.equal('0')
+					expect(resRLL).to.be.equal('0')
+					await instance.incubator.setRewardLimitAndLowerLimit(
+						'foo/bar',
+						456,
+						123
+					)
+					const nextResRL = await instance.incubator.getRewardLimit('foo/bar')
+					const nextResRLL = await instance.incubator.getRewardLowerLimit(
+						'foo/bar'
+					)
+					expect(nextResRL).to.be.equal('456')
+					expect(nextResRLL).to.be.equal('123')
+				})
+			})
+			describe('fail', () => {
+				it('can not set RewardLimit with 0', async () => {
+					const [instance] = await init()
+					await expect(
+						instance.incubator.setRewardLimitAndLowerLimit('foo/bar', 0, 123)
+					).to.be.revertedWith('reword limit is 0.')
+				})
+				it('can not set RewardLowerLimit less than RewardLimit', async () => {
+					const [instance] = await init()
+					await expect(
+						instance.incubator.setRewardLimitAndLowerLimit('foo/bar', 122, 123)
+					).to.be.revertedWith('limit is less than lower limit.')
+				})
+				it('should fail to call when sent from other then operator and owner', async () => {
+					const check = async (incubator: Contract): Promise<void> => {
+						await expect(
+							incubator.setRewardLimitAndLowerLimit('foo/bar', 456, 123)
+						).to.be.revertedWith('operator only.')
+					}
+
+					const [instance] = await init()
+					for (const incubator of instance.otherThanOperatorAndOwner()) {
+						await check(incubator)
+					}
+				})
+			})
+		})
 	})
 })
