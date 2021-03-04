@@ -1072,7 +1072,7 @@ describe('GitHubMarketIncubator', () => {
 						property.address,
 						instance.incubator.address
 					)
-				).to.be.revertedWith('ERC20: transfer to the zero address')
+				).to.be.revertedWith('not the author.')
 			})
 			it('only the administrator can execute the function..', async () => {
 				const check = async (
