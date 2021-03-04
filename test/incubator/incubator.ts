@@ -1113,7 +1113,7 @@ describe('GitHubMarketIncubator', () => {
 			result = await instance.incubator.getReword('user/repository')
 			expect(result.toString()).to.be.equal('10' + DEV_DECIMALS)
 		})
-		it('if the limit is exceeded, the value of the limit is returned2.', async () => {
+		it('If the upper and lower limits of the reward are the same, the reward will not keep increasing or decreasing.', async () => {
 			const [instance, , , provider] = await init()
 			const wallet = provider.createEmptyWallet()
 
