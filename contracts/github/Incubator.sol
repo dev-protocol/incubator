@@ -48,6 +48,7 @@ contract Incubator is IncubatorStorage {
 		string _githubPublicSignature
 	);
 
+	uint120 private constant BASIS_VALUE = 1000000000000000000;
 	bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
 
 	constructor() {
@@ -217,7 +218,9 @@ contract Incubator is IncubatorStorage {
 		uint256 latestPrice = getLastPrice();
 		uint256 startPrice = getStartPrice(_githubRepository);
 		uint256 reword =
-			latestPrice.sub(startPrice).mul(getStaking(_githubRepository));
+			latestPrice.sub(startPrice).div(BASIS_VALUE).mul(
+				getStaking(_githubRepository)
+			);
 		uint256 rewordLimit = getRewardLimit(_githubRepository);
 		if (reword <= rewordLimit) {
 			return reword;
@@ -233,7 +236,7 @@ contract Incubator is IncubatorStorage {
 
 	function getLastPrice() private view returns (uint256) {
 		address lockup = IAddressConfig(getAddressConfigAddress()).lockup();
-		(, , uint256 latestPrice) =
+		(, uint256 latestPrice, ) =
 			ILockup(lockup).calculateCumulativeRewardPrices();
 		return latestPrice;
 	}

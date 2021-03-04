@@ -35,6 +35,6 @@ contract MockLockup {
 			uint256 _interest
 		)
 	{
-		return (0, 0, baseValue * block.number);
+		return (0, baseValue * block.number * 1000000000000000000, 0);
 	}
 }
