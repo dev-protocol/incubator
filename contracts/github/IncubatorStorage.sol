@@ -4,7 +4,7 @@ pragma solidity 0.7.6;
 // prettier-ignore
 import {UsingStorage} from "@devprotocol/util-contracts/contracts/storage/UsingStorage.sol";
 
-contract GitHubMarketIncubatorStorage is UsingStorage {
+contract IncubatorStorage is UsingStorage {
 	// StartPrice
 	function setStartPrice(string memory _githubRepository, uint256 _price)
 		internal

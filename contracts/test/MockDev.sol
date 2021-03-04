@@ -10,9 +10,4 @@ contract MockDev is ERC20, ERC20Burnable {
 	constructor() ERC20("Dev", "DEV") {
 		_mint(msg.sender, 100000000000000000000000000);
 	}
-
-	function deposit(address _to, uint256 _amount) external returns (bool) {
-		require(transfer(_to, _amount), "dev transfer failed");
-		return true;
-	}
 }

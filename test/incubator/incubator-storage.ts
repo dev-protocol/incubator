@@ -1,19 +1,16 @@
 import { expect, use } from 'chai'
 import { Contract, constants } from 'ethers'
 import { deployContract, MockProvider, solidity } from 'ethereum-waffle'
-import GitHubMarketIncubatorStorageTest from '../../build/GitHubMarketIncubatorStorageTest.json'
+import IncubatorStorageTest from '../../build/IncubatorStorageTest.json'
 
 use(solidity)
 
-describe('GitHubMarketIncubatorStorage', () => {
+describe('IncubatorStorage', () => {
 	const provider = new MockProvider()
 	const [deployer] = provider.getWallets()
 	let storageTest: Contract
 	before(async () => {
-		storageTest = await deployContract(
-			deployer,
-			GitHubMarketIncubatorStorageTest
-		)
+		storageTest = await deployContract(deployer, IncubatorStorageTest)
 		await storageTest.createStorage()
 	})
 	describe('setStartPrice, getStartPrice', () => {
