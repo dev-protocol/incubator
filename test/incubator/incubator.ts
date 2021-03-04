@@ -213,12 +213,12 @@ class IncubatorInstance {
 	}
 }
 
-class RewordCalculator {
+class RewardCalculator {
 	private readonly _incubator: Contract
 	private readonly _provider: MockProvider
 	private readonly _repository: string
 	private _increment!: BigNumber
-	private _baseReword!: BigNumber
+	private _baseReward!: BigNumber
 	private _baseBlockNumber!: number
 
 	constructor(
@@ -231,22 +231,22 @@ class RewordCalculator {
 		this._repository = repository
 	}
 
-	public async setOneBlockRewords(): Promise<void> {
-		const before = await this._incubator.getReword(this._repository)
+	public async setOneBlockRewards(): Promise<void> {
+		const before = await this._incubator.getReward(this._repository)
 		await mine(this._provider, 1)
-		const after = await this._incubator.getReword(this._repository)
+		const after = await this._incubator.getReward(this._repository)
 		this._increment = after.sub(before)
 	}
 
-	public async setBaseRewords(): Promise<void> {
-		this._baseReword = await this._incubator.getReword(this._repository)
+	public async setBaseRewards(): Promise<void> {
+		this._baseReward = await this._incubator.getReward(this._repository)
 		this._baseBlockNumber = await this._provider.getBlockNumber()
 	}
 
-	public async getCurrentRewords(): Promise<BigNumber> {
+	public async getCurrentRewards(): Promise<BigNumber> {
 		const currentBlockNumber = await this._provider.getBlockNumber()
 
-		return this._baseReword.add(
+		return this._baseReward.add(
 			this._increment.mul(currentBlockNumber - this._baseBlockNumber)
 		)
 	}
@@ -365,7 +365,7 @@ describe('GitHubMarketIncubator', () => {
 					)
 				).to.be.revertedWith('staking is 0.')
 			})
-			it('An error occurs when reword limit is zero.', async () => {
+			it('An error occurs when reward limit is zero.', async () => {
 				const [instance, , , provider] = await init()
 				const property = provider.createEmptyWallet()
 				await expect(
@@ -379,9 +379,9 @@ describe('GitHubMarketIncubator', () => {
 							gasLimit: 1000000,
 						}
 					)
-				).to.be.revertedWith('reword limit is 0.')
+				).to.be.revertedWith('reward limit is 0.')
 			})
-			it('An error occurs when reword limit is less than the lower limit.', async () => {
+			it('An error occurs when reward limit is less than the lower limit.', async () => {
 				const [instance, , , provider] = await init()
 				const property = provider.createEmptyWallet()
 				await expect(
@@ -760,7 +760,7 @@ describe('GitHubMarketIncubator', () => {
 					instance.incubator.address,
 					'1000000' + DEV_DECIMALS
 				)
-				const caluculator = new RewordCalculator(
+				const caluculator = new RewardCalculator(
 					instance.incubator,
 					provider,
 					repository
@@ -785,7 +785,7 @@ describe('GitHubMarketIncubator', () => {
 						gasLimit: 1000000,
 					}
 				)
-				await caluculator.setOneBlockRewords()
+				await caluculator.setOneBlockRewards()
 				await instance.incubatorUser.authenticate(repository, 'dummy-public', {
 					gasLimit: 1000000,
 				})
@@ -798,14 +798,14 @@ describe('GitHubMarketIncubator', () => {
 						gasLimit: 1000000,
 					}
 				)
-				await caluculator.setBaseRewords()
+				await caluculator.setBaseRewards()
 				await instance.incubatorCallbackKicker.finish(repository, 0, '', {
 					gasLimit: 1000000,
 				})
 				// After check
-				const currentRewords = await caluculator.getCurrentRewords()
+				const currentRewards = await caluculator.getCurrentRewards()
 				userBalance = await mock.dev.balanceOf(wallets.user.address)
-				expect(userBalance.toString()).to.be.equal(currentRewords.toString())
+				expect(userBalance.toString()).to.be.equal(currentRewards.toString())
 				userPropertyBalance = await property.balanceOf(wallets.user.address)
 				const supply = await property.supply()
 				expect(userPropertyBalance.toString()).to.be.equal(supply.toString())
@@ -815,7 +815,7 @@ describe('GitHubMarketIncubator', () => {
 				expect(events[0].args?.[1]).to.be.equal('0')
 				expect(events[0].args?.[2]).to.be.equal(repository)
 				expect(events[0].args?.[3].toString()).to.be.equal(
-					currentRewords.toString()
+					currentRewards.toString()
 				)
 				expect(events[0].args?.[4]).to.be.equal(wallets.user.address)
 				expect(events[0].args?.[5].toString()).to.be.equal(stakingValue)
@@ -837,7 +837,7 @@ describe('GitHubMarketIncubator', () => {
 					instance.incubator.address,
 					'1000000' + DEV_DECIMALS
 				)
-				const caluculator = new RewordCalculator(
+				const caluculator = new RewardCalculator(
 					instance.incubator,
 					provider,
 					repository
@@ -853,7 +853,7 @@ describe('GitHubMarketIncubator', () => {
 						gasLimit: 1000000,
 					}
 				)
-				await caluculator.setOneBlockRewords()
+				await caluculator.setOneBlockRewards()
 				await instance.incubatorUser.authenticate(repository, 'dummy-public', {
 					gasLimit: 1000000,
 				})
@@ -866,7 +866,7 @@ describe('GitHubMarketIncubator', () => {
 						gasLimit: 1000000,
 					}
 				)
-				await caluculator.setBaseRewords()
+				await caluculator.setBaseRewards()
 				await instance.incubatorCallbackKicker.finish(
 					repository,
 					1,
@@ -877,14 +877,14 @@ describe('GitHubMarketIncubator', () => {
 				)
 
 				// After check
-				const currentRewords = await caluculator.getCurrentRewords()
+				const currentRewards = await caluculator.getCurrentRewards()
 				const filterFinish = instance.incubator.filters.Finish(property.address)
 				const events = await instance.incubator.queryFilter(filterFinish)
 				expect(events[0].args?.[0]).to.be.equal(property.address)
 				expect(events[0].args?.[1]).to.be.equal('1')
 				expect(events[0].args?.[2]).to.be.equal(repository)
 				expect(events[0].args?.[3].toString()).to.be.equal(
-					currentRewords.toString()
+					currentRewards.toString()
 				)
 				expect(events[0].args?.[4]).to.be.equal(wallets.user.address)
 				expect(events[0].args?.[5].toString()).to.be.equal(stakingValue)
@@ -908,7 +908,7 @@ describe('GitHubMarketIncubator', () => {
 					instance.incubatorCallbackKicker.finish('hogehoge/rep', 0, {
 						gasLimit: 1000000,
 					})
-				).to.be.revertedWith('reword is 0.')
+				).to.be.revertedWith('reward is 0.')
 			})
 		})
 	})
@@ -1030,11 +1030,11 @@ describe('GitHubMarketIncubator', () => {
 			})
 		})
 	})
-	describe('getReword', () => {
+	describe('getReward', () => {
 		it('if the repository is not registered, it returns 0.', async () => {
 			const [instance] = await init()
-			const reword = await instance.incubator.getReword('hogehoge/hugahuga')
-			expect(reword.toNumber()).to.be.equal(0)
+			const reward = await instance.incubator.getReward('hogehoge/hugahuga')
+			expect(reward.toNumber()).to.be.equal(0)
 		})
 		describe('It returns a value proportional to the difference between the initial value and the staking.', () => {
 			it('10.', async () => {
@@ -1050,7 +1050,7 @@ describe('GitHubMarketIncubator', () => {
 				)
 				for (let i = 0; i < 5; i++) {
 					await mine(provider, 1)
-					const result = await instance.incubator.getReword('user/repository')
+					const result = await instance.incubator.getReward('user/repository')
 					expect(result.toString()).to.be.equal(
 						(i + 1).toString() + '000' + DEV_DECIMALS
 					)
@@ -1069,7 +1069,7 @@ describe('GitHubMarketIncubator', () => {
 				)
 				for (let i = 0; i < 5; i++) {
 					await mine(provider, 1)
-					const result = await instance.incubator.getReword('user/repository')
+					const result = await instance.incubator.getReward('user/repository')
 					expect(result.toString()).to.be.equal(
 						((i + 1) * 2).toString() + '000' + DEV_DECIMALS
 					)
@@ -1088,28 +1088,28 @@ describe('GitHubMarketIncubator', () => {
 				'10' + DEV_DECIMALS
 			)
 			await mine(provider, 9)
-			let result = await instance.incubator.getReword('user/repository')
+			let result = await instance.incubator.getReward('user/repository')
 			expect(result.toString()).to.be.equal('9000' + DEV_DECIMALS)
 			await mine(provider, 1)
-			result = await instance.incubator.getReword('user/repository')
+			result = await instance.incubator.getReward('user/repository')
 			expect(result.toString()).to.be.equal('10000' + DEV_DECIMALS)
 			await mine(provider, 1)
-			result = await instance.incubator.getReword('user/repository')
+			result = await instance.incubator.getReward('user/repository')
 			expect(result.toString()).to.be.equal('9000' + DEV_DECIMALS)
 			await mine(provider, 1)
-			result = await instance.incubator.getReword('user/repository')
+			result = await instance.incubator.getReward('user/repository')
 			expect(result.toString()).to.be.equal('8000' + DEV_DECIMALS)
 			await mine(provider, 7)
-			result = await instance.incubator.getReword('user/repository')
+			result = await instance.incubator.getReward('user/repository')
 			expect(result.toString()).to.be.equal('1000' + DEV_DECIMALS)
 			await mine(provider, 1)
-			result = await instance.incubator.getReword('user/repository')
+			result = await instance.incubator.getReward('user/repository')
 			expect(result.toString()).to.be.equal('10' + DEV_DECIMALS)
 			await mine(provider, 1)
-			result = await instance.incubator.getReword('user/repository')
+			result = await instance.incubator.getReward('user/repository')
 			expect(result.toString()).to.be.equal('10' + DEV_DECIMALS)
 			await mine(provider, 10)
-			result = await instance.incubator.getReword('user/repository')
+			result = await instance.incubator.getReward('user/repository')
 			expect(result.toString()).to.be.equal('10' + DEV_DECIMALS)
 		})
 		it('If the upper and lower limits of the reward are the same, the reward will not keep increasing or decreasing.', async () => {
@@ -1124,19 +1124,19 @@ describe('GitHubMarketIncubator', () => {
 				'10000' + DEV_DECIMALS
 			)
 			await mine(provider, 9)
-			let result = await instance.incubator.getReword('user/repository')
+			let result = await instance.incubator.getReward('user/repository')
 			expect(result.toString()).to.be.equal('9000' + DEV_DECIMALS)
 			await mine(provider, 1)
-			result = await instance.incubator.getReword('user/repository')
+			result = await instance.incubator.getReward('user/repository')
 			expect(result.toString()).to.be.equal('10000' + DEV_DECIMALS)
 			await mine(provider, 1)
-			result = await instance.incubator.getReword('user/repository')
+			result = await instance.incubator.getReward('user/repository')
 			expect(result.toString()).to.be.equal('10000' + DEV_DECIMALS)
 			await mine(provider, 1)
-			result = await instance.incubator.getReword('user/repository')
+			result = await instance.incubator.getReward('user/repository')
 			expect(result.toString()).to.be.equal('10000' + DEV_DECIMALS)
 			await mine(provider, 7)
-			result = await instance.incubator.getReword('user/repository')
+			result = await instance.incubator.getReward('user/repository')
 			expect(result.toString()).to.be.equal('10000' + DEV_DECIMALS)
 		})
 	})
@@ -1259,7 +1259,7 @@ describe('GitHubMarketIncubator', () => {
 					const [instance] = await init()
 					await expect(
 						instance.incubator.setRewardLimitAndLowerLimit('foo/bar', 0, 123)
-					).to.be.revertedWith('reword limit is 0.')
+					).to.be.revertedWith('reward limit is 0.')
 				})
 				it('can not set RewardLowerLimit less than RewardLimit', async () => {
 					const [instance] = await init()
