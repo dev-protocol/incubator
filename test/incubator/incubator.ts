@@ -1051,10 +1051,10 @@ describe('GitHubMarketIncubator', () => {
 		describe('success', () => {
 			it('call changeAuthor', async () => {
 				const [instance, mock, wallets] = await init()
-				const property = await mock.generatePropertyMock(
-					instance.incubator.address
-				)
-				await property.changeAuthor(instance.incubator.address)
+				const property = await mock.generatePropertyMock(wallets.user.address)
+				await property
+					.connect(wallets.user)
+					.changeAuthor(instance.incubator.address)
 				expect(await property.author()).to.be.equal(instance.incubator.address)
 				await instance.incubator.changeAuthor(
 					property.address,
