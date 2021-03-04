@@ -39,7 +39,7 @@ const deploy = async (): Promise<void> => {
 	})
 	const wallet = ethers.Wallet.fromMnemonic(MNEMONIC!).connect(provider)
 	const contract = new ethers.Contract(
-		'0x02d107567020bCE1Eb524D80C44f899Fa9993E5f',
+		'0xb243f335ec73b9a373dc6c377bb974e487bd4b9b',
 		incubator.abi,
 		wallet
 	)
