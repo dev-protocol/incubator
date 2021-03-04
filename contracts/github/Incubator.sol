@@ -226,8 +226,8 @@ contract Incubator is IncubatorStorage {
 		uint256 latestPrice = getLastPrice();
 		uint256 startPrice = getStartPrice(_githubRepository);
 		uint256 reward =
-			latestPrice.sub(startPrice).div(BASIS_VALUE).mul(
-				getStaking(_githubRepository)
+			latestPrice.sub(startPrice).mul(getStaking(_githubRepository)).div(
+				BASIS_VALUE
 			);
 		uint256 rewardLimit = getRewardLimit(_githubRepository);
 		if (reward <= rewardLimit) {
