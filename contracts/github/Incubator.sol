@@ -205,7 +205,11 @@ contract Incubator is IncubatorStorage {
 		);
 	}
 
-	function rescue(address _token, address _to, uint256 _amount) external onlyAdmin {
+	function rescue(
+		address _token,
+		address _to,
+		uint256 _amount
+	) external onlyAdmin {
 		IERC20 token = IERC20(_token);
 		token.safeTransfer(_to, _amount);
 	}
