@@ -2,9 +2,9 @@
 pragma solidity 0.7.6;
 
 // prettier-ignore
-import {GitHubMarketIncubatorStorage} from "contracts/github/GitHubMarketIncubatorStorage.sol";
+import {IncubatorStorage} from "contracts/github/IncubatorStorage.sol";
 
-contract GitHubMarketIncubatorStorageTest is GitHubMarketIncubatorStorage {
+contract IncubatorStorageTest is IncubatorStorage {
 	function setStartPriceTest(string memory _githubRepository, uint256 _price)
 		external
 	{

@@ -17,9 +17,9 @@ import {IAddressConfig} from "@devprotocol/protocol/contracts/interface/IAddress
 import {IDev} from "@devprotocol/protocol/contracts/interface/IDev.sol";
 import {ILockup} from "@devprotocol/protocol/contracts/interface/ILockup.sol";
 // prettier-ignore
-import {GitHubMarketIncubatorStorage} from "contracts/github/GitHubMarketIncubatorStorage.sol";
+import {IncubatorStorage} from "contracts/github/IncubatorStorage.sol";
 
-contract GitHubMarketIncubator is GitHubMarketIncubatorStorage {
+contract Incubator is IncubatorStorage {
 	using SafeMath for uint256;
 	using SafeERC20 for IERC20;
 
@@ -194,10 +194,6 @@ contract GitHubMarketIncubator is GitHubMarketIncubatorStorage {
 		uint256 balance = propertyInstance.balanceOf(address(this));
 		propertyInstance.safeTransfer(account, balance);
 
-		// lockup
-		IDev(devToken).deposit(property, staking);
-		setStaking(_githubRepository, 0);
-
 		// event
 		emit Finish(
 			property,
@@ -208,24 +204,6 @@ contract GitHubMarketIncubator is GitHubMarketIncubatorStorage {
 			staking,
 			_errorMessage
 		);
-	}
-
-	function withdrawLockup(address _property, uint256 _amount)
-		external
-		onlyOperator
-	{
-		IAddressConfig addressConfig =
-			IAddressConfig(getAddressConfigAddress());
-		address lockupAddress = addressConfig.lockup();
-		ILockup lockup = ILockup(lockupAddress);
-		uint256 tmp =
-			lockup.calculateWithdrawableInterestAmount(
-				_property,
-				address(this)
-			);
-		lockup.withdraw(_property, _amount);
-		ERC20Burnable dev = ERC20Burnable(addressConfig.token());
-		dev.burn(tmp);
 	}
 
 	function rescue(address _to, uint256 _amount) external onlyAdmin {

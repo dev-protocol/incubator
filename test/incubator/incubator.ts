@@ -5,7 +5,7 @@ import { expect, use } from 'chai'
 import { Contract, Wallet, constants, BigNumber } from 'ethers'
 import { deployContract, MockProvider, solidity } from 'ethereum-waffle'
 import { mine } from '@devprotocol/util-ts'
-import GitHubMarketIncubator from '../../build/GitHubMarketIncubator.json'
+import Incubator from '../../build/Incubator.json'
 import MockMarket from '../../build/MockMarket.json'
 import MockAddressConfig from '../../build/MockAddressConfig.json'
 import MockMarketBehavior from '../../build/MockMarketBehavior.json'
@@ -188,7 +188,7 @@ class IncubatorInstance {
 	public async generate(): Promise<void> {
 		this._incubator = await deployContract(
 			this._wallets.deployer,
-			GitHubMarketIncubator,
+			Incubator,
 			[],
 			{
 				gasLimit: 6000000,
@@ -770,7 +770,7 @@ describe('GitHubMarketIncubator', () => {
 				// Before check
 				let userBalance = await mock.dev.balanceOf(wallets.user.address)
 				expect(userBalance.toNumber()).to.be.equal(0)
-				let propertyDevBalance = await mock.dev.balanceOf(property.address)
+				const propertyDevBalance = await mock.dev.balanceOf(property.address)
 				expect(propertyDevBalance.toNumber()).to.be.equal(0)
 				let userPropertyBalance = await property.balanceOf(wallets.user.address)
 				expect(userPropertyBalance.toNumber()).to.be.equal(0)
@@ -803,7 +803,6 @@ describe('GitHubMarketIncubator', () => {
 				await instance.incubatorCallbackKicker.finish(repository, 0, '', {
 					gasLimit: 1000000,
 				})
-
 				// After check
 				const currentRewords = await caluculator.getCurrentRewords()
 				userBalance = await mock.dev.balanceOf(wallets.user.address)
@@ -811,12 +810,6 @@ describe('GitHubMarketIncubator', () => {
 				userPropertyBalance = await property.balanceOf(wallets.user.address)
 				const supply = await property.supply()
 				expect(userPropertyBalance.toString()).to.be.equal(supply.toString())
-				const afterStakingValue = await instance.incubatorUser.getStaking(
-					repository
-				)
-				expect(afterStakingValue.toNumber()).to.be.equal(0)
-				propertyDevBalance = await mock.dev.balanceOf(property.address)
-				expect(propertyDevBalance.toString()).to.be.equal(stakingValue)
 				const filterFinish = instance.incubator.filters.Finish(property.address)
 				const events = await instance.incubator.queryFilter(filterFinish)
 				expect(events[0].args?.[0]).to.be.equal(property.address)
@@ -917,126 +910,6 @@ describe('GitHubMarketIncubator', () => {
 						gasLimit: 1000000,
 					})
 				).to.be.revertedWith('reword is 0.')
-			})
-		})
-	})
-
-	describe('withdrawLockup', () => {
-		const prepare = async (): Promise<
-			[IncubatorInstance, string, MockContract]
-		> => {
-			const [instance, mock, , provider] = await init()
-			const property = await mock.generatePropertyMock(
-				instance.incubator.address
-			)
-			const metrics = provider.createEmptyWallet()
-			const repository = 'hogehoge/rep'
-			const stakingValue = '10' + DEV_DECIMALS
-			const limitValue = '10000' + DEV_DECIMALS
-			const lowerLimitValue = '10' + DEV_DECIMALS
-			await mock.marketBehavior.setId(metrics.address, repository)
-			await mock.dev.transfer(
-				instance.incubator.address,
-				'1000000' + DEV_DECIMALS
-			)
-			await mock.dev.transfer(mock.lockup.address, '1000000' + DEV_DECIMALS)
-			// Action
-			await instance.incubatorOperator.start(
-				property.address,
-				repository,
-				stakingValue,
-				limitValue,
-				lowerLimitValue,
-				{
-					gasLimit: 1000000,
-				}
-			)
-			await instance.incubatorUser.authenticate(repository, 'dummy-public', {
-				gasLimit: 1000000,
-			})
-			await instance.incubatorUser.intermediateProcess(
-				repository,
-				metrics.address,
-				'1362570196712497157',
-				'dummy-twitter-public',
-				{
-					gasLimit: 1000000,
-				}
-			)
-			await instance.incubatorCallbackKicker.finish(repository, 0, '', {
-				gasLimit: 1000000,
-			})
-			return [instance, property.address, mock]
-		}
-
-		const check = async (
-			incubator: Contract,
-			propertyAddress: string,
-			mock: MockContract,
-			amount: number
-		): Promise<void> => {
-			const lockupBeforeBalance = BigNumber.from(
-				await mock.dev.balanceOf(mock.lockup.address)
-			)
-			const incubatorBeforeBalance = BigNumber.from(
-				await mock.dev.balanceOf(incubator.address)
-			)
-			const withdrawAmount = BigNumber.from(
-				await mock.lockup.calculateWithdrawableInterestAmount(
-					propertyAddress,
-					incubator.address
-				)
-			)
-			await incubator.withdrawLockup(propertyAddress, amount, {
-				gasLimit: 1000000,
-			})
-			const lockupAfterBalance = BigNumber.from(
-				await mock.dev.balanceOf(mock.lockup.address)
-			)
-			const incubatorAfterBalance = BigNumber.from(
-				await mock.dev.balanceOf(incubator.address)
-			)
-			expect(
-				incubatorBeforeBalance.add(amount).eq(incubatorAfterBalance)
-			).to.be.equal(true)
-			expect(
-				lockupBeforeBalance
-					.sub(withdrawAmount)
-					.sub(amount)
-					.eq(lockupAfterBalance)
-			).to.be.equal(true)
-		}
-
-		describe('success', () => {
-			describe('operator', () => {
-				it('Do not release staking.', async () => {
-					const [instance, propertyAddress, mock] = await prepare()
-					await check(instance.incubatorOperator, propertyAddress, mock, 0)
-				})
-				it('release staking.', async () => {
-					const [instance, propertyAddress, mock] = await prepare()
-					await check(instance.incubatorOperator, propertyAddress, mock, 10)
-				})
-			})
-			describe('owner', () => {
-				it('Do not release staking.', async () => {
-					const [instance, propertyAddress, mock] = await prepare()
-					await check(instance.incubator, propertyAddress, mock, 0)
-				})
-				it('release staking.', async () => {
-					const [instance, propertyAddress, mock] = await prepare()
-					await check(instance.incubator, propertyAddress, mock, 10)
-				})
-			})
-		})
-		describe('fail', () => {
-			it('only administrators and operators are allowed to run it.', async () => {
-				const [instance, propertyAddress] = await prepare()
-				for (const incubator of instance.otherThanOperatorAndOwner()) {
-					await expect(
-						incubator.withdrawLockup(propertyAddress, 10)
-					).to.be.revertedWith('operator only.')
-				}
 			})
 		})
 	})
@@ -1239,6 +1112,33 @@ describe('GitHubMarketIncubator', () => {
 			await mine(provider, 10)
 			result = await instance.incubator.getReword('user/repository')
 			expect(result.toString()).to.be.equal('10' + DEV_DECIMALS)
+		})
+		it('if the limit is exceeded, the value of the limit is returned2.', async () => {
+			const [instance, , , provider] = await init()
+			const wallet = provider.createEmptyWallet()
+
+			await instance.incubator.start(
+				wallet.address,
+				'user/repository',
+				'10' + DEV_DECIMALS,
+				'10000' + DEV_DECIMALS,
+				'10000' + DEV_DECIMALS
+			)
+			await mine(provider, 9)
+			let result = await instance.incubator.getReword('user/repository')
+			expect(result.toString()).to.be.equal('9000' + DEV_DECIMALS)
+			await mine(provider, 1)
+			result = await instance.incubator.getReword('user/repository')
+			expect(result.toString()).to.be.equal('10000' + DEV_DECIMALS)
+			await mine(provider, 1)
+			result = await instance.incubator.getReword('user/repository')
+			expect(result.toString()).to.be.equal('10000' + DEV_DECIMALS)
+			await mine(provider, 1)
+			result = await instance.incubator.getReword('user/repository')
+			expect(result.toString()).to.be.equal('10000' + DEV_DECIMALS)
+			await mine(provider, 7)
+			result = await instance.incubator.getReword('user/repository')
+			expect(result.toString()).to.be.equal('10000' + DEV_DECIMALS)
 		})
 	})
 	describe('setter', () => {

@@ -3,7 +3,7 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 
 import { ethers } from 'ethers'
-import * as gitHubMarketIncubator from './../build/GitHubMarketIncubator.json'
+import * as incubator from './../build/Incubator.json'
 import { ethGasStationFetcher } from '@devprotocol/util-ts'
 require('dotenv').config()
 
@@ -18,8 +18,8 @@ const deploy = async (): Promise<void> => {
 	})
 	const wallet = ethers.Wallet.fromMnemonic(MNEMONIC!).connect(provider)
 	const factory = new ethers.ContractFactory(
-		gitHubMarketIncubator.abi,
-		gitHubMarketIncubator.bytecode,
+		incubator.abi,
+		incubator.bytecode,
 		wallet
 	)
 	const gasPrice = ethGasStationFetcher(ETHGASSTATION_TOKEN!)
