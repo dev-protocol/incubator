@@ -1268,13 +1268,17 @@ describe('GitHubMarketIncubator', () => {
 						instance.incubator.setRewardLimitAndLowerLimit('foo/bar', 122, 123)
 					).to.be.revertedWith('limit is less than lower limit.')
 				})
-				it('should fail to call when sent from user', async () => {
-					const [instance, , wallets] = await init()
-					await expect(
-						instance.incubator
-							.connect(wallets.user)
-							.setRewardLimitAndLowerLimit('foo/bar', 456, 123)
-					).to.be.revertedWith('operator only.')
+				it('should fail to call when sent from other then operator and owner', async () => {
+					const check = async (incubator: Contract): Promise<void> => {
+						await expect(
+							incubator.setRewardLimitAndLowerLimit('foo/bar', 456, 123)
+						).to.be.revertedWith('operator only.')
+					}
+
+					const [instance] = await init()
+					for (const incubator of instance.otherThanOperatorAndOwner()) {
+						await check(incubator)
+					}
 				})
 			})
 		})
