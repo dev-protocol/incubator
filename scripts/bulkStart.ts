@@ -46,7 +46,7 @@ const deploy = async (): Promise<void> => {
 	const fetchPrice = ethGasStationFetcher(ETHGASSTATION_TOKEN!)
 	const run = async (property: string, repos: string) => {
 		const zero = await contract.callStatic
-			.getReword(repos)
+			.getReward(repos)
 			.then((x) => (x as ethers.BigNumber).isZero())
 		if (!zero) {
 			console.log('already started', property, repos)
