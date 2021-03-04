@@ -205,9 +205,13 @@ contract Incubator is IncubatorStorage {
 		);
 	}
 
-	function rescue(address _to, uint256 _amount) external onlyAdmin {
-		IERC20 dev = IERC20(IAddressConfig(getAddressConfigAddress()).token());
-		dev.safeTransfer(_to, _amount);
+	function rescue(address _token, address _to, uint256 _amount) external onlyAdmin {
+		IERC20 token = IERC20(_token);
+		token.safeTransfer(_to, _amount);
+	}
+
+	function changeAuthor(address _token, address _author) external onlyAdmin {
+		IProperty(_token).changeAuthor(_author);
 	}
 
 	function getReward(string memory _githubRepository)

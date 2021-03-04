@@ -973,12 +973,16 @@ describe('GitHubMarketIncubator', () => {
 	})
 	describe('rescue', () => {
 		describe('success', () => {
-			it('can rescue the DEV tokens.', async () => {
+			it('can rescue the passed token.', async () => {
 				const [instance, mock, wallets] = await init()
 				await mock.dev.transfer(instance.incubator.address, 10000)
 				let balance = await mock.dev.balanceOf(instance.incubator.address)
 				expect(balance.toNumber()).to.be.equal(10000)
-				await instance.incubator.rescue(wallets.user.address, 10000)
+				await instance.incubator.rescue(
+					mock.dev.address,
+					wallets.user.address,
+					10000
+				)
 				balance = await mock.dev.balanceOf(instance.incubator.address)
 				expect(balance.toNumber()).to.be.equal(0)
 				balance = await mock.dev.balanceOf(wallets.user.address)
@@ -990,25 +994,39 @@ describe('GitHubMarketIncubator', () => {
 				const [instance, mock] = await init()
 				await mock.dev.transfer(instance.incubator.address, 10000)
 				await expect(
-					instance.incubator.rescue(constants.AddressZero, 10000, {
-						gasLimit: 1000000,
-					})
+					instance.incubator.rescue(
+						mock.dev.address,
+						constants.AddressZero,
+						10000,
+						{
+							gasLimit: 1000000,
+						}
+					)
 				).to.be.revertedWith('ERC20: transfer to the zero address')
 			})
 			it('can not send 0 amount.', async () => {
 				const [instance, mock, wallets] = await init()
 				await mock.dev.transfer(instance.incubator.address, 10000)
-				await instance.incubator.rescue(wallets.user.address, 0, {
-					gasLimit: 1000000,
-				})
+				await instance.incubator.rescue(
+					mock.dev.address,
+					wallets.user.address,
+					0,
+					{
+						gasLimit: 1000000,
+					}
+				)
 			})
-			it('dev tokens that exceed the amount held cannot be rescued.', async () => {
+			it('tokens that exceed the amount held cannot be rescued.', async () => {
 				const [instance, mock, wallets] = await init()
 				await mock.dev.transfer(instance.incubator.address, 10000)
 				const balance = await mock.dev.balanceOf(instance.incubator.address)
 				expect(balance.toNumber()).to.be.equal(10000)
 				await expect(
-					instance.incubator.rescue(wallets.user.address, 20000)
+					instance.incubator.rescue(
+						mock.dev.address,
+						wallets.user.address,
+						20000
+					)
 				).to.be.revertedWith('transfer amount exceeds balance')
 			})
 			it('only the administrator can execute the function..', async () => {
@@ -1017,7 +1035,7 @@ describe('GitHubMarketIncubator', () => {
 					const balance = await mock.dev.balanceOf(incubator.address)
 					expect(balance.toNumber()).to.be.equal(10000)
 					await expect(
-						incubator.rescue(property.address, 10000)
+						incubator.rescue(mock.dev.address, property.address, 10000)
 					).to.be.revertedWith('admin only.')
 				}
 
@@ -1025,6 +1043,53 @@ describe('GitHubMarketIncubator', () => {
 				await mock.dev.transfer(instance.incubator.address, 10000)
 				for (const incubator of instance.otherThanOwner()) {
 					await check(incubator)
+				}
+			})
+		})
+	})
+	describe('changeAuthor', () => {
+		describe('success', () => {
+			it('call changeAuthor', async () => {
+				const [instance, mock, wallets] = await init()
+				const property = await mock.generatePropertyMock(
+					instance.incubator.address
+				)
+				await property.changeAuthor(instance.incubator.address)
+				expect(await property.author()).to.be.equal(instance.incubator.address)
+				await instance.incubator.changeAuthor(
+					property.address,
+					wallets.user.address
+				)
+				expect(await property.author()).to.be.equal(wallets.user.address)
+			})
+		})
+		describe('fail', () => {
+			it('should fail to call when the contract is not author', async () => {
+				const [instance, mock, wallets] = await init()
+				const property = await mock.generatePropertyMock(wallets.user.address)
+				await expect(
+					instance.incubator.changeAuthor(
+						property.address,
+						instance.incubator.address
+					)
+				).to.be.revertedWith('ERC20: transfer to the zero address')
+			})
+			it('only the administrator can execute the function..', async () => {
+				const check = async (
+					incubator: Contract,
+					dest: string
+				): Promise<void> => {
+					const property = await mock.generatePropertyMock(
+						instance.incubator.address
+					)
+					await expect(
+						incubator.changeAuthor(property.address, dest)
+					).to.be.revertedWith('admin only.')
+				}
+
+				const [instance, mock, wallets] = await init()
+				for (const incubator of instance.otherThanOwner()) {
+					await check(incubator, wallets.user.address)
 				}
 			})
 		})
