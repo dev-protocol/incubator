@@ -333,9 +333,8 @@ describe('GitHubMarketIncubator', () => {
 						,
 						lastPrice,
 					] = await mock.lockup.calculateCumulativeRewardPrices()
-					expect(await incubator.getStartPrice(repository)).to.be.equal(
-						lastPrice.toNumber()
-					)
+					const startPrice = await incubator.getStartPrice(repository)
+					expect(startPrice.toString()).to.be.equal(lastPrice.toString())
 					const staking = await incubator.getStaking(repository)
 					expect(staking.toString()).to.be.equal(stakingValue.toString())
 					const limit = await incubator.getRewardLimit(repository)
