@@ -35,7 +35,7 @@ contract Incubator is IncubatorStorage {
 		address indexed _property,
 		uint256 _status,
 		string _githubRepository,
-		uint256 _reword,
+		uint256 _reward,
 		address _account,
 		uint256 _staking,
 		string _errorMessage
@@ -48,6 +48,7 @@ contract Incubator is IncubatorStorage {
 		string _githubPublicSignature
 	);
 
+	uint120 private constant BASIS_VALUE = 1000000000000000000;
 	bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
 
 	constructor() {
@@ -165,8 +166,8 @@ contract Incubator is IncubatorStorage {
 		require(msg.sender == getCallbackKickerAddress(), "illegal access.");
 		address property = getPropertyAddress(_githubRepository);
 		address account = getAccountAddress(property);
-		uint256 reword = getReword(_githubRepository);
-		require(reword != 0, "reword is 0.");
+		uint256 reward = getReward(_githubRepository);
+		require(reward != 0, "reward is 0.");
 		uint256 staking = getStaking(_githubRepository);
 
 		if (_status != 0) {
@@ -174,17 +175,17 @@ contract Incubator is IncubatorStorage {
 				property,
 				_status,
 				_githubRepository,
-				reword,
+				reward,
 				account,
 				staking,
 				_errorMessage
 			);
 			return;
 		}
-		// transfer reword
+		// transfer reward
 		address devToken = IAddressConfig(getAddressConfigAddress()).token();
 		IERC20 dev = IERC20(devToken);
-		dev.safeTransfer(account, reword);
+		dev.safeTransfer(account, reward);
 
 		// change property author
 		IProperty(property).changeAuthor(account);
@@ -197,43 +198,53 @@ contract Incubator is IncubatorStorage {
 			property,
 			_status,
 			_githubRepository,
-			reword,
+			reward,
 			account,
 			staking,
 			_errorMessage
 		);
 	}
 
-	function rescue(address _to, uint256 _amount) external onlyAdmin {
-		IERC20 dev = IERC20(IAddressConfig(getAddressConfigAddress()).token());
-		dev.safeTransfer(_to, _amount);
+	function rescue(
+		address _token,
+		address _to,
+		uint256 _amount
+	) external onlyAdmin {
+		IERC20 token = IERC20(_token);
+		token.safeTransfer(_to, _amount);
 	}
 
-	function getReword(string memory _githubRepository)
+	function changeAuthor(address _token, address _author) external onlyAdmin {
+		IProperty(_token).changeAuthor(_author);
+	}
+
+	function getReward(string memory _githubRepository)
 		public
 		view
 		returns (uint256)
 	{
 		uint256 latestPrice = getLastPrice();
 		uint256 startPrice = getStartPrice(_githubRepository);
-		uint256 reword =
-			latestPrice.sub(startPrice).mul(getStaking(_githubRepository));
-		uint256 rewordLimit = getRewardLimit(_githubRepository);
-		if (reword <= rewordLimit) {
-			return reword;
+		uint256 reward =
+			latestPrice.sub(startPrice).div(BASIS_VALUE).mul(
+				getStaking(_githubRepository)
+			);
+		uint256 rewardLimit = getRewardLimit(_githubRepository);
+		if (reward <= rewardLimit) {
+			return reward;
 		}
-		uint256 over = reword.sub(rewordLimit);
-		uint256 rewordLowerLimit = getRewardLowerLimit(_githubRepository);
-		if (rewordLimit < over) {
-			return rewordLowerLimit;
+		uint256 over = reward.sub(rewardLimit);
+		uint256 rewardLowerLimit = getRewardLowerLimit(_githubRepository);
+		if (rewardLimit < over) {
+			return rewardLowerLimit;
 		}
-		uint256 tmp = rewordLimit.sub(over);
-		return tmp <= rewordLowerLimit ? rewordLowerLimit : tmp;
+		uint256 tmp = rewardLimit.sub(over);
+		return tmp <= rewardLowerLimit ? rewardLowerLimit : tmp;
 	}
 
 	function getLastPrice() private view returns (uint256) {
 		address lockup = IAddressConfig(getAddressConfigAddress()).lockup();
-		(, , uint256 latestPrice) =
+		(, uint256 latestPrice, ) =
 			ILockup(lockup).calculateCumulativeRewardPrices();
 		return latestPrice;
 	}
@@ -271,7 +282,7 @@ contract Incubator is IncubatorStorage {
 		uint256 _rewardLimit,
 		uint256 _rewardLowerLimit
 	) private {
-		require(_rewardLimit != 0, "reword limit is 0.");
+		require(_rewardLimit != 0, "reward limit is 0.");
 		require(
 			_rewardLowerLimit <= _rewardLimit,
 			"limit is less than lower limit."
