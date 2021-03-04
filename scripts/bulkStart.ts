@@ -45,6 +45,14 @@ const deploy = async (): Promise<void> => {
 	)
 	const fetchPrice = ethGasStationFetcher(ETHGASSTATION_TOKEN!)
 	const run = async (property: string, repos: string) => {
+		const zero = await contract.callStatic
+			.getReword(repos)
+			.then((x) => (x as ethers.BigNumber).isZero())
+		if (!zero) {
+			console.log('already started', property, repos)
+			return
+		}
+
 		const gasLimit = await contract.estimateGas.start(
 			property,
 			repos,
@@ -61,7 +69,7 @@ const deploy = async (): Promise<void> => {
 			console.log(message, {
 				property,
 				repos,
-				overrides: { ...overrides, gasLimit: overrides.gasLimit.toString() },
+				overrides: { ...overrides, gasLimit: overrides.gasLimit.toNumber() },
 			})
 		}
 
@@ -82,12 +90,13 @@ const deploy = async (): Promise<void> => {
 	const incubators = await fetchIncubators
 	console.log({ incubators })
 
-	const queue = new PQueue({ concurrency: 2 })
+	const queue = new PQueue({ concurrency: 1 })
 	await queue.addAll(
 		incubators.map(({ property, verifier_id }) => async () =>
 			run(property.address, verifier_id)
 		)
 	)
+	console.log('finish')
 }
 
 void deploy()
