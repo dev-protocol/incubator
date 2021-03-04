@@ -80,18 +80,16 @@ contract Incubator is IncubatorStorage {
 		uint256 _rewardLowerLimit
 	) external onlyOperator {
 		require(_staking != 0, "staking is 0.");
-		require(_rewardLimit != 0, "reword limit is 0.");
-		require(
-			_rewardLowerLimit <= _rewardLimit,
-			"limit is less than lower limit."
-		);
 
 		uint256 lastPrice = getLastPrice();
 		setPropertyAddress(_githubRepository, _property);
 		setStartPrice(_githubRepository, lastPrice);
 		setStaking(_githubRepository, _staking);
-		setRewardLimit(_githubRepository, _rewardLimit);
-		setRewardLowerLimit(_githubRepository, _rewardLowerLimit);
+		_setRewardLimitAndLowerLimit(
+			_githubRepository,
+			_rewardLimit,
+			_rewardLowerLimit
+		);
 	}
 
 	function clearAccountAddress(address _property) external onlyOperator {
@@ -254,5 +252,31 @@ contract Incubator is IncubatorStorage {
 	function setCallbackKicker(address _callbackKicker) external onlyAdmin {
 		require(_callbackKicker != address(0), "address is 0.");
 		setCallbackKickerAddress(_callbackKicker);
+	}
+
+	function setRewardLimitAndLowerLimit(
+		string memory _githubRepository,
+		uint256 _rewardLimit,
+		uint256 _rewardLowerLimit
+	) external onlyOperator {
+		_setRewardLimitAndLowerLimit(
+			_githubRepository,
+			_rewardLimit,
+			_rewardLowerLimit
+		);
+	}
+
+	function _setRewardLimitAndLowerLimit(
+		string memory _githubRepository,
+		uint256 _rewardLimit,
+		uint256 _rewardLowerLimit
+	) private {
+		require(_rewardLimit != 0, "reword limit is 0.");
+		require(
+			_rewardLowerLimit <= _rewardLimit,
+			"limit is less than lower limit."
+		);
+		setRewardLimit(_githubRepository, _rewardLimit);
+		setRewardLowerLimit(_githubRepository, _rewardLowerLimit);
 	}
 }
