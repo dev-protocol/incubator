@@ -220,44 +220,44 @@ class IncubatorInstance {
 	}
 }
 
-class RewardCalculator {
-	private readonly _incubator: Contract
-	private readonly _provider: MockProvider
-	private readonly _repository: string
-	private _increment!: BigNumber
-	private _baseReward!: BigNumber
-	private _baseBlockNumber!: number
+// Class RewardCalculator {
+// 	private readonly _incubator: Contract
+// 	private readonly _provider: MockProvider
+// 	private readonly _repository: string
+// 	private _increment!: BigNumber
+// 	private _baseReward!: BigNumber
+// 	private _baseBlockNumber!: number
 
-	constructor(
-		_incubator: Contract,
-		_provider: MockProvider,
-		repository: string
-	) {
-		this._incubator = _incubator
-		this._provider = _provider
-		this._repository = repository
-	}
+// 	constructor(
+// 		_incubator: Contract,
+// 		_provider: MockProvider,
+// 		repository: string
+// 	) {
+// 		this._incubator = _incubator
+// 		this._provider = _provider
+// 		this._repository = repository
+// 	}
 
-	public async setOneBlockRewards(): Promise<void> {
-		const before = await this._incubator.getReward(this._repository)
-		await mine(this._provider, 1)
-		const after = await this._incubator.getReward(this._repository)
-		this._increment = after.sub(before)
-	}
+// 	public async setOneBlockRewards(): Promise<void> {
+// 		const before = await this._incubator.getReward(this._repository)
+// 		await mine(this._provider, 1)
+// 		const after = await this._incubator.getReward(this._repository)
+// 		this._increment = after.sub(before)
+// 	}
 
-	public async setBaseRewards(): Promise<void> {
-		this._baseReward = await this._incubator.getReward(this._repository)
-		this._baseBlockNumber = await this._provider.getBlockNumber()
-	}
+// 	public async setBaseRewards(): Promise<void> {
+// 		this._baseReward = await this._incubator.getReward(this._repository)
+// 		this._baseBlockNumber = await this._provider.getBlockNumber()
+// 	}
 
-	public async getCurrentRewards(): Promise<BigNumber> {
-		const currentBlockNumber = await this._provider.getBlockNumber()
+// 	public async getCurrentRewards(): Promise<BigNumber> {
+// 		const currentBlockNumber = await this._provider.getBlockNumber()
 
-		return this._baseReward.add(
-			this._increment.mul(currentBlockNumber - this._baseBlockNumber)
-		)
-	}
-}
+// 		return this._baseReward.add(
+// 			this._increment.mul(currentBlockNumber - this._baseBlockNumber)
+// 		)
+// 	}
+// }
 describe('GitHubMarketIncubator', () => {
 	const init = async (): Promise<
 		[IncubatorInstance, MockContract, Wallets, MockProvider]
@@ -1010,7 +1010,7 @@ describe('GitHubMarketIncubator', () => {
 	describe('claimed', () => {
 		describe('success', () => {
 			it('Transfer reward to the author of the passed Property', async () => {
-				const [instance, mock, wallets, provider] = await init()
+				const [instance, mock, wallets] = await init()
 				const property = await mock.generatePropertyMock(
 					instance.incubator.address
 				)
@@ -1018,12 +1018,6 @@ describe('GitHubMarketIncubator', () => {
 				const stakingValue = '10' + DEV_DECIMALS
 				const limitValue = '10000' + DEV_DECIMALS
 				const lowerLimitValue = '10' + DEV_DECIMALS
-
-				const caluculator = new RewardCalculator(
-					instance.incubator,
-					provider,
-					repository
-				)
 
 				// Before check
 				let userBalance = await mock.dev.balanceOf(wallets.user.address)
@@ -1048,7 +1042,6 @@ describe('GitHubMarketIncubator', () => {
 							gasLimit: 1000000,
 						}
 					)
-					await caluculator.setOneBlockRewards()
 					await instance.incubatorUser.authenticate(
 						repository,
 						'dummy-public',
@@ -1071,7 +1064,6 @@ describe('GitHubMarketIncubator', () => {
 							gasLimit: 1000000,
 						}
 					)
-					await caluculator.setBaseRewards()
 				})()
 
 				await instance.incubatorCallbackKicker.claimed(repository, 0, '', {
@@ -1079,7 +1071,7 @@ describe('GitHubMarketIncubator', () => {
 				})
 
 				// After check
-				const currentRewards = await caluculator.getCurrentRewards()
+				const [currentRewards] = await instance.incubator.getReward(repository)
 				userBalance = await mock.dev.balanceOf(wallets.user.address)
 				expect(userBalance.toString()).to.be.equal(currentRewards.toString())
 				const filterClaimed = instance.incubator.filters.Claimed(
@@ -1097,7 +1089,7 @@ describe('GitHubMarketIncubator', () => {
 				expect(events[0].args?.[6].toString()).to.be.equal('')
 			})
 			it('Emit the event without transfering reward when the passed 2nd arg is not 0', async () => {
-				const [instance, mock, wallets, provider] = await init()
+				const [instance, mock, wallets] = await init()
 				const property = await mock.generatePropertyMock(
 					instance.incubator.address
 				)
@@ -1105,12 +1097,6 @@ describe('GitHubMarketIncubator', () => {
 				const stakingValue = '10' + DEV_DECIMALS
 				const limitValue = '10000' + DEV_DECIMALS
 				const lowerLimitValue = '10' + DEV_DECIMALS
-
-				const caluculator = new RewardCalculator(
-					instance.incubator,
-					provider,
-					repository
-				)
 
 				// Before check
 				let userBalance = await mock.dev.balanceOf(wallets.user.address)
@@ -1131,7 +1117,6 @@ describe('GitHubMarketIncubator', () => {
 							gasLimit: 1000000,
 						}
 					)
-					await caluculator.setOneBlockRewards()
 					await instance.incubatorUser.authenticate(
 						repository,
 						'dummy-public',
@@ -1154,7 +1139,6 @@ describe('GitHubMarketIncubator', () => {
 							gasLimit: 1000000,
 						}
 					)
-					await caluculator.setBaseRewards()
 				})()
 
 				await instance.incubatorCallbackKicker.claimed(repository, 1, '', {
@@ -1162,7 +1146,7 @@ describe('GitHubMarketIncubator', () => {
 				})
 
 				// After check
-				const currentRewards = await caluculator.getCurrentRewards()
+				const [currentRewards] = await instance.incubator.getReward(repository)
 				userBalance = await mock.dev.balanceOf(wallets.user.address)
 				expect(userBalance.toNumber()).to.be.equal(0)
 				const filterClaimed = instance.incubator.filters.Claimed(

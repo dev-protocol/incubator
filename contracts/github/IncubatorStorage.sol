@@ -28,6 +28,39 @@ contract IncubatorStorage is UsingStorage {
 		return keccak256(abi.encodePacked("_startPrice", _githubRepository));
 	}
 
+	// LastClaimedReward
+	function setLastClaimedReward(
+		string memory _githubRepository,
+		uint256 _value
+	) internal {
+		eternalStorage().setUint(
+			getLastClaimedRewardKey(_githubRepository),
+			_value
+		);
+	}
+
+	function getLastClaimedReward(string memory _githubRepository)
+		public
+		view
+		returns (uint256)
+	{
+		return
+			eternalStorage().getUint(
+				getLastClaimedRewardKey(_githubRepository)
+			);
+	}
+
+	function getLastClaimedRewardKey(string memory _githubRepository)
+		private
+		pure
+		returns (bytes32)
+	{
+		return
+			keccak256(
+				abi.encodePacked("_LastClaimedReward", _githubRepository)
+			);
+	}
+
 	// Staking
 	function setStaking(string memory _githubRepository, uint256 _staking)
 		internal

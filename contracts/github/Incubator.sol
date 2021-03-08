@@ -188,7 +188,8 @@ contract Incubator is IncubatorStorage {
 		require(msg.sender == getCallbackKickerAddress(), "illegal access.");
 		address property = getPropertyAddress(_githubRepository);
 		address account = IProperty(property).author();
-		(uint256 reward, uint256 latestPrice) = _getReward(_githubRepository);
+		(uint256 reward, uint256 claimableReward) =
+			getReward(_githubRepository);
 		uint256 staking = getStaking(_githubRepository);
 
 		if (_status != 0) {
@@ -196,26 +197,26 @@ contract Incubator is IncubatorStorage {
 				property,
 				_status,
 				_githubRepository,
-				reward,
+				claimableReward,
 				account,
 				staking,
 				_errorMessage
 			);
 			return;
 		}
-		setStartPrice(_githubRepository, latestPrice);
+		setLastClaimedReward(_githubRepository, reward);
 
 		// transfer reward
 		address devToken = IAddressConfig(getAddressConfigAddress()).token();
 		IERC20 dev = IERC20(devToken);
-		dev.safeTransfer(account, reward);
+		dev.safeTransfer(account, claimableReward);
 
 		// event
 		emit Claimed(
 			property,
 			_status,
 			_githubRepository,
-			reward,
+			claimableReward,
 			account,
 			staking,
 			_errorMessage
@@ -238,37 +239,24 @@ contract Incubator is IncubatorStorage {
 	function getReward(string memory _githubRepository)
 		public
 		view
-		returns (uint256)
-	{
-		(uint256 reward, ) = _getReward(_githubRepository);
-		return reward;
-	}
-
-	function _getReward(string memory _githubRepository)
-		private
-		view
-		returns (uint256 _reward, uint256 _latestPrice)
+		returns (uint256 _reward, uint256 _claimable)
 	{
 		uint256 latestPrice = getLastPrice();
+		uint256 lastReward = getLastClaimedReward(_githubRepository);
 		uint256 startPrice = getStartPrice(_githubRepository);
 		uint256 reward =
 			latestPrice.sub(startPrice).mul(getStaking(_githubRepository)).div(
 				BASIS_VALUE
 			);
 		uint256 rewardLimit = getRewardLimit(_githubRepository);
-		if (reward <= rewardLimit) {
-			return (reward, latestPrice);
+		if (reward < rewardLimit) {
+			return (reward, reward.sub(lastReward));
 		}
+		uint256 lowerLimit = getRewardLowerLimit(_githubRepository);
 		uint256 over = reward.sub(rewardLimit);
-		uint256 rewardLowerLimit = getRewardLowerLimit(_githubRepository);
-		if (rewardLimit < over) {
-			return (rewardLowerLimit, latestPrice);
-		}
-		uint256 remained = rewardLimit.sub(over);
-		return (
-			remained > rewardLowerLimit ? remained : rewardLowerLimit,
-			latestPrice
-		);
+		uint256 cutted = reward > over ? reward.sub(over) : 0;
+		reward = lowerLimit > cutted ? lowerLimit : cutted;
+		return (reward, reward > lastReward ? reward.sub(lastReward) : 0);
 	}
 
 	function getLastPrice() private view returns (uint256) {

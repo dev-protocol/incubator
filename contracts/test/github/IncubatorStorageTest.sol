@@ -73,4 +73,11 @@ contract IncubatorStorageTest is IncubatorStorage {
 	function setUsedTwitterIdTest(string memory _twitterId) external {
 		setUsedTwitterId(_twitterId);
 	}
+
+	function setLastClaimedRewardTest(
+		string memory _githubRepository,
+		uint256 _value
+	) external {
+		setLastClaimedReward(_githubRepository, _value);
+	}
 }
