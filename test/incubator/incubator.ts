@@ -510,8 +510,8 @@ describe('GitHubMarketIncubator', () => {
 
 				// Prepare
 				await (async () => {
-					const metrics = provider.createEmptyWallet()
-					await mock.marketBehavior.setId(metrics.address, repository)
+					await mock.marketBehavior.setId(mock.metrics.address, repository)
+					await mock.metrics.setProperty(property.address)
 					await instance.incubator.start(
 						property.address,
 						repository,
@@ -532,7 +532,7 @@ describe('GitHubMarketIncubator', () => {
 					)
 					await instance.incubator.claimAuthorship(
 						'dummy-public',
-						metrics.address,
+						mock.metrics.address,
 						{
 							gasLimit: 1000000,
 						}
