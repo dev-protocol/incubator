@@ -1120,9 +1120,7 @@ describe('GitHubMarketIncubator', () => {
 				const storedLastClaimedReward = await instance.incubator.getLastClaimedReward(
 					repository
 				)
-				expect(storedLastClaimedReward.toString()).to.be.equal(
-					currentRewards.toString()
-				)
+				expect(storedLastClaimedReward.toString()).to.be.equal('0')
 				const filterClaimed = instance.incubator.filters.Claimed(
 					property.address
 				)
