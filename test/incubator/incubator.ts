@@ -220,44 +220,6 @@ class IncubatorInstance {
 	}
 }
 
-// Class RewardCalculator {
-// 	private readonly _incubator: Contract
-// 	private readonly _provider: MockProvider
-// 	private readonly _repository: string
-// 	private _increment!: BigNumber
-// 	private _baseReward!: BigNumber
-// 	private _baseBlockNumber!: number
-
-// 	constructor(
-// 		_incubator: Contract,
-// 		_provider: MockProvider,
-// 		repository: string
-// 	) {
-// 		this._incubator = _incubator
-// 		this._provider = _provider
-// 		this._repository = repository
-// 	}
-
-// 	public async setOneBlockRewards(): Promise<void> {
-// 		const before = await this._incubator.getReward(this._repository)
-// 		await mine(this._provider, 1)
-// 		const after = await this._incubator.getReward(this._repository)
-// 		this._increment = after.sub(before)
-// 	}
-
-// 	public async setBaseRewards(): Promise<void> {
-// 		this._baseReward = await this._incubator.getReward(this._repository)
-// 		this._baseBlockNumber = await this._provider.getBlockNumber()
-// 	}
-
-// 	public async getCurrentRewards(): Promise<BigNumber> {
-// 		const currentBlockNumber = await this._provider.getBlockNumber()
-
-// 		return this._baseReward.add(
-// 			this._increment.mul(currentBlockNumber - this._baseBlockNumber)
-// 		)
-// 	}
-// }
 describe('GitHubMarketIncubator', () => {
 	const init = async (): Promise<
 		[IncubatorInstance, MockContract, Wallets, MockProvider]
