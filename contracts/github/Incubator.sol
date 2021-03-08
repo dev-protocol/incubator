@@ -31,7 +31,13 @@ contract Incubator is IncubatorStorage {
 		string _publicSignature
 	);
 
-	event Finish(
+	event Authenticated(
+		address indexed _property,
+		string _githubRepository,
+		address _account
+	);
+
+	event Claimed(
 		address indexed _property,
 		uint256 _status,
 		string _githubRepository,
@@ -78,13 +84,16 @@ contract Incubator is IncubatorStorage {
 		string memory _githubRepository,
 		uint256 _staking,
 		uint256 _rewardLimit,
-		uint256 _rewardLowerLimit
+		uint256 _rewardLowerLimit,
+		uint256 _initialPrice
 	) external onlyOperator {
 		require(_staking != 0, "staking is 0.");
 
-		uint256 lastPrice = getLastPrice();
 		setPropertyAddress(_githubRepository, _property);
-		setStartPrice(_githubRepository, lastPrice);
+		setStartPrice(
+			_githubRepository,
+			_initialPrice > 0 ? _initialPrice : getLastPrice()
+		);
 		setStaking(_githubRepository, _staking);
 		_setRewardLimitAndLowerLimit(
 			_githubRepository,
@@ -129,17 +138,13 @@ contract Incubator is IncubatorStorage {
 		);
 	}
 
-	function intermediateProcess(
-		string memory _githubRepository,
-		address _metrics,
-		string memory _twitterId,
-		string memory _twitterPublicSignature
-	) external {
+	function claimAuthorship(string memory _githubRepository, address _metrics)
+		external
+	{
 		address property = getPropertyAddress(_githubRepository);
-		require(property != address(0), "illegal repository.");
 		address account = getAccountAddress(property);
-		require(account != address(0), "no authenticate yet.");
-		require(account == msg.sender, "illegal user.");
+		bool authenticated = getIsAuthenticated(_githubRepository);
+		require(!authenticated, "already authenticated.");
 
 		address marketBehavior = IMarket(getMarketAddress()).behavior();
 		string memory id = IMarketBehavior(marketBehavior).getId(_metrics);
@@ -148,6 +153,30 @@ contract Incubator is IncubatorStorage {
 				keccak256(abi.encodePacked(_githubRepository)),
 			"illegal metrics."
 		);
+
+		// change property author
+		IProperty(property).changeAuthor(account);
+		IERC20 propertyInstance = IERC20(property);
+		uint256 balance = propertyInstance.balanceOf(address(this));
+		propertyInstance.safeTransfer(account, balance);
+
+		// event
+		emit Authenticated(property, _githubRepository, account);
+	}
+
+	function claim(
+		string memory _githubRepository,
+		string memory _twitterId,
+		string memory _twitterPublicSignature
+	) external {
+		address property = getPropertyAddress(_githubRepository);
+		require(property != address(0), "illegal repository.");
+		bool authenticated = getIsAuthenticated(_githubRepository);
+		require(authenticated, "not authenticated.");
+		bool used = getUsedTwitterId(_twitterId);
+		require(!used, "already used twitter id.");
+		setUsedTwitterId(_twitterId);
+
 		string memory githubPublicSignatur =
 			getPublicSignature(_githubRepository);
 		emit Twitter(
@@ -158,7 +187,7 @@ contract Incubator is IncubatorStorage {
 		);
 	}
 
-	function finish(
+	function claimed(
 		string memory _githubRepository,
 		uint256 _status,
 		string memory _errorMessage
@@ -166,12 +195,12 @@ contract Incubator is IncubatorStorage {
 		require(msg.sender == getCallbackKickerAddress(), "illegal access.");
 		address property = getPropertyAddress(_githubRepository);
 		address account = getAccountAddress(property);
-		uint256 reward = getReward(_githubRepository);
+		(uint256 reward, uint256 latestPrice) = _getReward(_githubRepository);
 		require(reward != 0, "reward is 0.");
 		uint256 staking = getStaking(_githubRepository);
 
 		if (_status != 0) {
-			emit Finish(
+			emit Claimed(
 				property,
 				_status,
 				_githubRepository,
@@ -182,19 +211,15 @@ contract Incubator is IncubatorStorage {
 			);
 			return;
 		}
+		setStartPrice(_githubRepository, latestPrice);
+
 		// transfer reward
 		address devToken = IAddressConfig(getAddressConfigAddress()).token();
 		IERC20 dev = IERC20(devToken);
 		dev.safeTransfer(account, reward);
 
-		// change property author
-		IProperty(property).changeAuthor(account);
-		IERC20 propertyInstance = IERC20(property);
-		uint256 balance = propertyInstance.balanceOf(address(this));
-		propertyInstance.safeTransfer(account, balance);
-
 		// event
-		emit Finish(
+		emit Claimed(
 			property,
 			_status,
 			_githubRepository,
@@ -223,6 +248,15 @@ contract Incubator is IncubatorStorage {
 		view
 		returns (uint256)
 	{
+		(uint256 reward, ) = _getReward(_githubRepository);
+		return reward;
+	}
+
+	function _getReward(string memory _githubRepository)
+		private
+		view
+		returns (uint256 _reward, uint256 _latestPrice)
+	{
 		uint256 latestPrice = getLastPrice();
 		uint256 startPrice = getStartPrice(_githubRepository);
 		uint256 reward =
@@ -231,15 +265,18 @@ contract Incubator is IncubatorStorage {
 			);
 		uint256 rewardLimit = getRewardLimit(_githubRepository);
 		if (reward <= rewardLimit) {
-			return reward;
+			return (reward, latestPrice);
 		}
 		uint256 over = reward.sub(rewardLimit);
 		uint256 rewardLowerLimit = getRewardLowerLimit(_githubRepository);
 		if (rewardLimit < over) {
-			return rewardLowerLimit;
+			return (rewardLowerLimit, latestPrice);
 		}
-		uint256 tmp = rewardLimit.sub(over);
-		return tmp <= rewardLowerLimit ? rewardLowerLimit : tmp;
+		uint256 remained = rewardLimit.sub(over);
+		return (
+			remained > rewardLowerLimit ? remained : rewardLowerLimit,
+			latestPrice
+		);
 	}
 
 	function getLastPrice() private view returns (uint256) {

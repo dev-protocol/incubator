@@ -315,6 +315,7 @@ describe('GitHubMarketIncubator', () => {
 					const stakingValue = '10000' + DEV_DECIMALS
 					const limitValue = '1000' + DEV_DECIMALS
 					const lowerLimitValue = '10' + DEV_DECIMALS
+					const initialPriceValue = '10' + DEV_DECIMALS
 
 					await incubator.start(
 						property.address,
@@ -322,6 +323,44 @@ describe('GitHubMarketIncubator', () => {
 						stakingValue,
 						limitValue,
 						lowerLimitValue,
+						initialPriceValue,
+						{
+							gasLimit: 1000000,
+						}
+					)
+					expect(await incubator.getPropertyAddress(repository)).to.be.equal(
+						property.address
+					)
+					const startPrice = await incubator.getStartPrice(repository)
+					expect(startPrice.toString()).to.be.equal(
+						initialPriceValue.toString()
+					)
+					const staking = await incubator.getStaking(repository)
+					expect(staking.toString()).to.be.equal(stakingValue.toString())
+					const limit = await incubator.getRewardLimit(repository)
+					expect(limit.toString()).to.be.equal(limitValue.toString())
+				}
+
+				const [instance, , , provider] = await init()
+				for (const incubator of instance.operatorAndOwner()) {
+					await check(incubator)
+				}
+			})
+			it('Get and store the value of `calculateCumulativeRewardPrices` when the passed 6th args is 0', async () => {
+				const check = async (incubator: Contract): Promise<void> => {
+					const property = provider.createEmptyWallet()
+					const repository = 'hogehoge/rep'
+					const stakingValue = '10000' + DEV_DECIMALS
+					const limitValue = '1000' + DEV_DECIMALS
+					const lowerLimitValue = '10' + DEV_DECIMALS
+
+					await incubator.start(
+						property.address,
+						repository,
+						stakingValue,
+						limitValue,
+						lowerLimitValue,
+						0,
 						{
 							gasLimit: 1000000,
 						}
@@ -523,7 +562,174 @@ describe('GitHubMarketIncubator', () => {
 		})
 	})
 
-	describe('intermediateProcess', () => {
+	describe('claimAuthorship', () => {
+		describe('success', () => {
+			it('Transfer the property amount and the authority', async () => {
+				const [instance, mock, wallets, provider] = await init()
+				const property = await mock.generatePropertyMock(
+					instance.incubator.address
+				)
+				const metrics = provider.createEmptyWallet()
+				const repository = 'hogehoge/rep'
+				await mock.marketBehavior.setId(metrics.address, repository)
+				await property.transfer(
+					instance.incubator.address,
+					'1000000' + DEV_DECIMALS
+				)
+
+				// Before check
+				let userPropertyBalance = await property.balanceOf(wallets.user.address)
+				let userPropertyAuthor = await property.author()
+				expect(userPropertyBalance.toNumber()).to.be.equal(0)
+				expect(userPropertyAuthor).to.be.equal(instance.incubator.address)
+
+				await instance.incubatorOperator.start(
+					property.address,
+					repository,
+					1,
+					1,
+					0,
+					0,
+					{
+						gasLimit: 1000000,
+					}
+				)
+
+				// Action
+				await instance.incubatorUser.authenticate(repository, 'dummy-public', {
+					gasLimit: 1000000,
+				})
+				await instance.incubatorUser.claimAuthorship(
+					repository,
+					metrics.address,
+					{
+						gasLimit: 1000000,
+					}
+				)
+
+				// After check
+				userPropertyBalance = await property.balanceOf(wallets.user.address)
+				const supply = await property.supply()
+				expect(userPropertyBalance.toString()).to.be.equal(supply.toString())
+				userPropertyAuthor = await property.author()
+				expect(userPropertyAuthor).to.be.equal(wallets.user.address)
+				const filterAuthenticated = instance.incubator.filters.Authenticated(
+					property.address
+				)
+				const events = await instance.incubator.queryFilter(filterAuthenticated)
+				expect(events[0].args?.[0]).to.be.equal(property.address)
+				expect(events[0].args?.[1]).to.be.equal(repository)
+				expect(events[0].args?.[2]).to.be.equal(wallets.user.address)
+				expect(
+					await instance.incubator.getIsAuthenticated(repository)
+				).to.be.equal(true)
+			})
+		})
+		describe('fail', () => {
+			it('Should fail to call when the passed metrics address is invalid address', async () => {
+				const [instance, mock, wallets, provider] = await init()
+				const property = await mock.generatePropertyMock(
+					instance.incubator.address
+				)
+				const metrics = provider.createEmptyWallet()
+				const repository = 'hogehoge/rep'
+				await mock.marketBehavior.setId(metrics.address, 'foo/bar')
+				await property.transfer(
+					instance.incubator.address,
+					'1000000' + DEV_DECIMALS
+				)
+
+				// Before check
+				let userPropertyBalance = await property.balanceOf(wallets.user.address)
+				let userPropertyAuthor = await property.author()
+				expect(userPropertyBalance.toNumber()).to.be.equal(0)
+				expect(userPropertyAuthor).to.be.equal(instance.incubator.address)
+
+				await instance.incubatorOperator.start(
+					property.address,
+					repository,
+					1,
+					1,
+					0,
+					0,
+					{
+						gasLimit: 1000000,
+					}
+				)
+
+				// Action
+				await instance.incubatorUser.authenticate(repository, 'dummy-public', {
+					gasLimit: 1000000,
+				})
+				await expect(
+					instance.incubatorUser.claimAuthorship(repository, metrics.address, {
+						gasLimit: 1000000,
+					})
+				).to.be.revertedWith('illegal metrics.')
+
+				// After check
+				userPropertyBalance = await property.balanceOf(wallets.user.address)
+				expect(userPropertyBalance.toNumber()).to.be.equal(0)
+				userPropertyAuthor = await property.author()
+				expect(userPropertyAuthor).to.be.equal(instance.incubator.address)
+				expect(
+					await instance.incubator.getIsAuthenticated(repository)
+				).to.be.equal(false)
+			})
+			it('Should fail to call when already authenticated', async () => {
+				const [instance, mock, wallets, provider] = await init()
+				const property = await mock.generatePropertyMock(
+					instance.incubator.address
+				)
+				const metrics = provider.createEmptyWallet()
+				const repository = 'hogehoge/rep'
+				await mock.marketBehavior.setId(metrics.address, repository)
+				await property.transfer(
+					instance.incubator.address,
+					'1000000' + DEV_DECIMALS
+				)
+
+				// Before check
+				const userPropertyBalance = await property.balanceOf(
+					wallets.user.address
+				)
+				const userPropertyAuthor = await property.author()
+				expect(userPropertyBalance.toNumber()).to.be.equal(0)
+				expect(userPropertyAuthor).to.be.equal(instance.incubator.address)
+
+				await instance.incubatorOperator.start(
+					property.address,
+					repository,
+					1,
+					1,
+					0,
+					0,
+					{
+						gasLimit: 1000000,
+					}
+				)
+
+				// Action
+				await instance.incubatorUser.authenticate(repository, 'dummy-public', {
+					gasLimit: 1000000,
+				})
+				await instance.incubatorUser.claimAuthorship(
+					repository,
+					metrics.address,
+					{
+						gasLimit: 1000000,
+					}
+				)
+				await expect(
+					instance.incubatorUser.claimAuthorship(repository, metrics.address, {
+						gasLimit: 1000000,
+					})
+				).to.be.revertedWith('already authenticated.')
+			})
+		})
+	})
+
+	describe('claim', () => {
 		describe('success', () => {
 			it('Twitter-related events will occur.', async () => {
 				// Prepare
@@ -552,9 +758,15 @@ describe('GitHubMarketIncubator', () => {
 				await instance.incubatorUser.authenticate(repository, 'dummy-public', {
 					gasLimit: 1000000,
 				})
-				await instance.incubatorUser.intermediateProcess(
+				await instance.incubatorUser.claimAuthorship(
 					repository,
 					metrics.address,
+					{
+						gasLimit: 1000000,
+					}
+				)
+				await instance.incubatorUser.claim(
+					repository,
 					'1362570196712497157',
 					'public-twitter-sig',
 					{
@@ -597,19 +809,24 @@ describe('GitHubMarketIncubator', () => {
 				await instance.incubatorUser.authenticate(repository, 'dummy-public', {
 					gasLimit: 1000000,
 				})
-				await instance.incubatorUser.intermediateProcess(
+				await instance.incubatorUser.claimAuthorship(
 					repository,
 					metrics.address,
+					{
+						gasLimit: 1000000,
+					}
+				)
+				await instance.incubatorUser.claim(
+					repository,
 					'1362570196712497157',
 					'public-twitter-sig',
 					{
 						gasLimit: 1000000,
 					}
 				)
-				await instance.incubatorUser.intermediateProcess(
+				await instance.incubatorUser.claim(
 					repository,
-					metrics.address,
-					'1362570196712497157',
+					'01362570196712497157',
 					'public-twitter-sig',
 					{
 						gasLimit: 1000000,
@@ -619,12 +836,10 @@ describe('GitHubMarketIncubator', () => {
 		})
 		describe('fail', () => {
 			it('if the repository is not configured, an error occurs.', async () => {
-				const [instance, , , provider] = await init()
-				const metrics = provider.createEmptyWallet()
+				const [instance] = await init()
 				await expect(
-					instance.incubatorUser.intermediateProcess(
+					instance.incubatorUser.claim(
 						'hogehoge/rep',
-						metrics.address,
 						'1362570196712497157',
 						'public-twitter-sig',
 						{
@@ -633,45 +848,11 @@ describe('GitHubMarketIncubator', () => {
 					)
 				).to.be.revertedWith('illegal repository.')
 			})
-			it('if no account is set up, an error occurs.', async () => {
-				const [instance, mock, , provider] = await init()
+			it('Should fail to call when not authenticated', async () => {
+				const [instance, mock] = await init()
 				const property = await mock.generatePropertyMock(
 					instance.incubator.address
 				)
-				const metrics = provider.createEmptyWallet()
-				const repository = 'hogehoge/rep'
-				const stakingValue = '10' + DEV_DECIMALS
-				const limitValue = '10000' + DEV_DECIMALS
-				const lowerLimitValue = '10' + DEV_DECIMALS
-
-				await instance.incubatorOperator.start(
-					property.address,
-					repository,
-					stakingValue,
-					limitValue,
-					lowerLimitValue,
-					{
-						gasLimit: 1000000,
-					}
-				)
-				await expect(
-					instance.incubatorUser.intermediateProcess(
-						repository,
-						metrics.address,
-						'1362570196712497157',
-						'public-twitter-sig',
-						{
-							gasLimit: 1000000,
-						}
-					)
-				).to.be.revertedWith('no authenticate yet.')
-			})
-			it('If the executors of authenticate and intermediateProcess are different, an error will occur..', async () => {
-				const [instance, mock, , provider] = await init()
-				const property = await mock.generatePropertyMock(
-					instance.incubator.address
-				)
-				const metrics = provider.createEmptyWallet()
 				const repository = 'hogehoge/rep'
 				const stakingValue = '10' + DEV_DECIMALS
 				const limitValue = '10000' + DEV_DECIMALS
@@ -691,18 +872,18 @@ describe('GitHubMarketIncubator', () => {
 					gasLimit: 1000000,
 				})
 				await expect(
-					instance.incubator.intermediateProcess(
+					instance.incubatorUser.claim(
 						repository,
-						metrics.address,
 						'1362570196712497157',
 						'public-twitter-sig',
 						{
 							gasLimit: 1000000,
 						}
 					)
-				).to.be.revertedWith('illegal user.')
+				).to.be.revertedWith('not authenticated.')
 			})
-			it('If you do not have the correct metrics set, you will get an error.', async () => {
+			it('Should fail to call when the passed twitter id is already used', async () => {
+				// Prepare
 				const [instance, mock, , provider] = await init()
 				const property = await mock.generatePropertyMock(
 					instance.incubator.address
@@ -712,7 +893,9 @@ describe('GitHubMarketIncubator', () => {
 				const stakingValue = '10' + DEV_DECIMALS
 				const limitValue = '10000' + DEV_DECIMALS
 				const lowerLimitValue = '10' + DEV_DECIMALS
+				await mock.marketBehavior.setId(metrics.address, repository)
 
+				// Action
 				await instance.incubatorOperator.start(
 					property.address,
 					repository,
@@ -726,22 +909,36 @@ describe('GitHubMarketIncubator', () => {
 				await instance.incubatorUser.authenticate(repository, 'dummy-public', {
 					gasLimit: 1000000,
 				})
+				await instance.incubatorUser.claimAuthorship(
+					repository,
+					metrics.address,
+					{
+						gasLimit: 1000000,
+					}
+				)
+				await instance.incubatorUser.claim(
+					repository,
+					'1362570196712497157',
+					'public-twitter-sig',
+					{
+						gasLimit: 1000000,
+					}
+				)
 				await expect(
-					instance.incubatorUser.intermediateProcess(
+					instance.incubatorUser.claim(
 						repository,
-						metrics.address,
 						'1362570196712497157',
 						'public-twitter-sig',
 						{
 							gasLimit: 1000000,
 						}
 					)
-				).to.be.revertedWith('illegal metrics.')
+				).to.be.revertedWith('already used twitter id.')
 			})
 		})
 	})
 
-	describe('finish', () => {
+	describe('claimed', () => {
 		describe('success', () => {
 			it('The termination process is executed and the property contract is staked to the property contract.', async () => {
 				// Prepare
@@ -768,10 +965,6 @@ describe('GitHubMarketIncubator', () => {
 				// Before check
 				let userBalance = await mock.dev.balanceOf(wallets.user.address)
 				expect(userBalance.toNumber()).to.be.equal(0)
-				const propertyDevBalance = await mock.dev.balanceOf(property.address)
-				expect(propertyDevBalance.toNumber()).to.be.equal(0)
-				let userPropertyBalance = await property.balanceOf(wallets.user.address)
-				expect(userPropertyBalance.toNumber()).to.be.equal(0)
 
 				// Action
 				await instance.incubatorOperator.start(
@@ -788,9 +981,15 @@ describe('GitHubMarketIncubator', () => {
 				await instance.incubatorUser.authenticate(repository, 'dummy-public', {
 					gasLimit: 1000000,
 				})
-				await instance.incubatorUser.intermediateProcess(
+				await instance.incubatorUser.claimAuthorship(
 					repository,
 					metrics.address,
+					{
+						gasLimit: 1000000,
+					}
+				)
+				await instance.incubatorUser.claim(
+					repository,
 					'1362570196712497157',
 					'dummy-twitter-public',
 					{
@@ -798,18 +997,17 @@ describe('GitHubMarketIncubator', () => {
 					}
 				)
 				await caluculator.setBaseRewards()
-				await instance.incubatorCallbackKicker.finish(repository, 0, '', {
+				await instance.incubatorCallbackKicker.claimed(repository, 0, '', {
 					gasLimit: 1000000,
 				})
 				// After check
 				const currentRewards = await caluculator.getCurrentRewards()
 				userBalance = await mock.dev.balanceOf(wallets.user.address)
 				expect(userBalance.toString()).to.be.equal(currentRewards.toString())
-				userPropertyBalance = await property.balanceOf(wallets.user.address)
-				const supply = await property.supply()
-				expect(userPropertyBalance.toString()).to.be.equal(supply.toString())
-				const filterFinish = instance.incubator.filters.Finish(property.address)
-				const events = await instance.incubator.queryFilter(filterFinish)
+				const filterClaimed = instance.incubator.filters.Claimed(
+					property.address
+				)
+				const events = await instance.incubator.queryFilter(filterClaimed)
 				expect(events[0].args?.[0]).to.be.equal(property.address)
 				expect(events[0].args?.[1]).to.be.equal('0')
 				expect(events[0].args?.[2]).to.be.equal(repository)
@@ -856,9 +1054,15 @@ describe('GitHubMarketIncubator', () => {
 				await instance.incubatorUser.authenticate(repository, 'dummy-public', {
 					gasLimit: 1000000,
 				})
-				await instance.incubatorUser.intermediateProcess(
+				await instance.incubatorUser.claimAuthorship(
 					repository,
 					metrics.address,
+					{
+						gasLimit: 1000000,
+					}
+				)
+				await instance.incubatorUser.claim(
+					repository,
 					'1362570196712497157',
 					'dummy-twitter-public',
 					{
@@ -866,7 +1070,7 @@ describe('GitHubMarketIncubator', () => {
 					}
 				)
 				await caluculator.setBaseRewards()
-				await instance.incubatorCallbackKicker.finish(
+				await instance.incubatorCallbackKicker.claimed(
 					repository,
 					1,
 					'error-message',

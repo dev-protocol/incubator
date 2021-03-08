@@ -130,4 +130,26 @@ describe('IncubatorStorage', () => {
 			expect(result).to.be.equal(tmp.address)
 		})
 	})
+	describe('setIsAuthenticated, getIsAuthenticated', () => {
+		it('Initial value is false', async () => {
+			const result = await storageTest.getIsAuthenticated('dummy_repo')
+			expect(result).to.be.equal(false)
+		})
+		it('The set value can be taken as it is.', async () => {
+			await storageTest.setIsAuthenticated('dummy_repo', true)
+			const result = await storageTest.getIsAuthenticated('dummy_repo')
+			expect(result).to.be.equal(true)
+		})
+	})
+	describe('setUsedTwitterId, getUsedTwitterId', () => {
+		it('Initial value is false', async () => {
+			const result = await storageTest.getUsedTwitterId('dummy_twitter_id')
+			expect(result).to.be.equal(false)
+		})
+		it('The set value can be taken as it is.', async () => {
+			await storageTest.setUsedTwitterId('dummy_twitter_id')
+			const result = await storageTest.getUsedTwitterId('dummy_twitter_id')
+			expect(result).to.be.equal(true)
+		})
+	})
 })
