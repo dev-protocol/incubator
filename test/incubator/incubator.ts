@@ -716,7 +716,9 @@ describe('GitHubMarketIncubator', () => {
 				const repository = 'hogehoge/rep'
 
 				// Before check
-				const userPropertyBalance = await property.balanceOf(wallets.user.address)
+				const userPropertyBalance = await property.balanceOf(
+					wallets.user.address
+				)
 				const userPropertyAuthor = await property.author()
 				expect(userPropertyBalance.toNumber()).to.be.equal(0)
 				expect(userPropertyAuthor).to.be.equal(instance.incubator.address)
@@ -1012,7 +1014,6 @@ describe('GitHubMarketIncubator', () => {
 				const property = await mock.generatePropertyMock(
 					instance.incubator.address
 				)
-				const metrics = provider.createEmptyWallet()
 				const repository = 'hogehoge/rep'
 				const stakingValue = '10' + DEV_DECIMALS
 				const limitValue = '10000' + DEV_DECIMALS
@@ -1030,10 +1031,11 @@ describe('GitHubMarketIncubator', () => {
 
 				// Prepare
 				await (async () => {
-					await mock.marketBehavior.setId(metrics.address, repository)
+					await mock.marketBehavior.setId(mock.metrics.address, repository)
+					await mock.metrics.setProperty(property.address)
 					await mock.dev.transfer(
 						instance.incubator.address,
-						'1000000' + DEV_DECIMALS
+						'10000' + DEV_DECIMALS
 					)
 					await instance.incubatorOperator.start(
 						property.address,
@@ -1041,6 +1043,7 @@ describe('GitHubMarketIncubator', () => {
 						stakingValue,
 						limitValue,
 						lowerLimitValue,
+						0,
 						{
 							gasLimit: 1000000,
 						}
@@ -1054,8 +1057,8 @@ describe('GitHubMarketIncubator', () => {
 						}
 					)
 					await instance.incubatorUser.claimAuthorship(
-						repository,
-						metrics.address,
+						'dummy-public',
+						mock.metrics.address,
 						{
 							gasLimit: 1000000,
 						}
@@ -1098,7 +1101,6 @@ describe('GitHubMarketIncubator', () => {
 				const property = await mock.generatePropertyMock(
 					instance.incubator.address
 				)
-				const metrics = provider.createEmptyWallet()
 				const repository = 'hogehoge/rep'
 				const stakingValue = '10' + DEV_DECIMALS
 				const limitValue = '10000' + DEV_DECIMALS
@@ -1116,17 +1118,15 @@ describe('GitHubMarketIncubator', () => {
 
 				// Prepare
 				await (async () => {
-					await mock.marketBehavior.setId(metrics.address, repository)
-					await mock.dev.transfer(
-						instance.incubator.address,
-						'1000000' + DEV_DECIMALS
-					)
+					await mock.marketBehavior.setId(mock.metrics.address, repository)
+					await mock.metrics.setProperty(property.address)
 					await instance.incubatorOperator.start(
 						property.address,
 						repository,
 						stakingValue,
 						limitValue,
 						lowerLimitValue,
+						0,
 						{
 							gasLimit: 1000000,
 						}
@@ -1140,8 +1140,8 @@ describe('GitHubMarketIncubator', () => {
 						}
 					)
 					await instance.incubatorUser.claimAuthorship(
-						repository,
-						metrics.address,
+						'dummy-public',
+						mock.metrics.address,
 						{
 							gasLimit: 1000000,
 						}
@@ -1190,14 +1190,6 @@ describe('GitHubMarketIncubator', () => {
 						})
 					).to.be.revertedWith('illegal access.')
 				}
-			})
-			it('When the reward is zero, an error occurs.', async () => {
-				const [instance] = await init()
-				await expect(
-					instance.incubatorCallbackKicker.claimed('hogehoge/rep', 0, {
-						gasLimit: 1000000,
-					})
-				).to.be.revertedWith('reward is 0.')
 			})
 		})
 	})

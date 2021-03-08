@@ -189,7 +189,6 @@ contract Incubator is IncubatorStorage {
 		address property = getPropertyAddress(_githubRepository);
 		address account = IProperty(property).author();
 		(uint256 reward, uint256 latestPrice) = _getReward(_githubRepository);
-		require(reward != 0, "reward is 0.");
 		uint256 staking = getStaking(_githubRepository);
 
 		if (_status != 0) {
