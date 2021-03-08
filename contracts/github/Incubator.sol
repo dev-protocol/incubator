@@ -32,7 +32,7 @@ contract Incubator is IncubatorStorage {
 		string _publicSignature
 	);
 
-	event Authenticated(
+	event ClaimedAuthorship(
 		address indexed _property,
 		string _githubRepository,
 		address _account
@@ -154,7 +154,7 @@ contract Incubator is IncubatorStorage {
 		propertyInstance.safeTransfer(account, balance);
 
 		// event
-		emit Authenticated(property, githubRepository, account);
+		emit ClaimedAuthorship(property, githubRepository, account);
 	}
 
 	function claim(

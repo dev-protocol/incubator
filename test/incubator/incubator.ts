@@ -601,7 +601,7 @@ describe('GitHubMarketIncubator', () => {
 				expect(userPropertyBalance.toString()).to.be.equal(supply.toString())
 				userPropertyAuthor = await property.author()
 				expect(userPropertyAuthor).to.be.equal(wallets.user.address)
-				const filterAuthenticated = instance.incubator.filters.Authenticated(
+				const filterAuthenticated = instance.incubator.filters.ClaimedAuthorship(
 					property.address
 				)
 				const events = await instance.incubator.queryFilter(filterAuthenticated)
