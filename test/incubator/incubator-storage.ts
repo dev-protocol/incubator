@@ -71,16 +71,14 @@ describe('IncubatorStorage', () => {
 	})
 	describe('setAccountAddress, getAccountAddress', () => {
 		it('Initial value is 0x0000........', async () => {
-			const tmp = provider.createEmptyWallet()
-			const result = await storageTest.getAccountAddress(tmp.address)
+			const result = await storageTest.getAccountAddress('pubsig')
 			expect(result).to.be.equal(constants.AddressZero)
 		})
 		it('The set value can be taken as it is.', async () => {
 			const tmp1 = provider.createEmptyWallet()
-			const tmp2 = provider.createEmptyWallet()
-			await storageTest.setAccountAddressTest(tmp1.address, tmp2.address)
-			const result = await storageTest.getAccountAddress(tmp1.address)
-			expect(result).to.be.equal(tmp2.address)
+			await storageTest.setAccountAddressTest('pubsig', tmp1.address)
+			const result = await storageTest.getAccountAddress('pubsig')
+			expect(result).to.be.equal(tmp1.address)
 		})
 	})
 	describe('setMarketAddress, getMarketAddress', () => {
