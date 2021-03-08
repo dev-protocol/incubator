@@ -1307,14 +1307,48 @@ describe('GitHubMarketIncubator', () => {
 			string
 		] => [x.toString(), y.toString()]
 
-		it('if the repository is not registered, it returns 0.', async () => {
+		it('Returns 0 when the passed project is not configured', async () => {
 			const [instance] = await init()
 			const reward = await instance.incubator
 				.getReward('hogehoge/hugahuga')
 				.then(toStringArray)
 			expect(reward).to.be.deep.equal(['0', '0'])
 		})
-		describe('It returns a value proportional to the difference between the initial value and the staking.', () => {
+		it('Returns the difference amount between the startPrice and the latest value and the last claimed amount', async () => {
+			const [instance, , , provider] = await init()
+			const wallet = provider.createEmptyWallet()
+
+			await instance.incubator.start(
+				wallet.address,
+				'user/repository',
+				'10' + DEV_DECIMALS,
+				'100000' + DEV_DECIMALS,
+				'100000' + DEV_DECIMALS,
+				0
+			)
+
+			// Prepare
+			await (async () => {
+				await mine(provider, 10)
+				const [result] = await instance.incubator
+					.getReward('user/repository')
+					.then(toStringArray)
+				await instance.incubator.setLastClaimedRewardTest(
+					'user/repository',
+					result
+				)
+				await mine(provider, 5)
+			})()
+
+			const reward = await instance.incubator
+				.getReward('user/repository')
+				.then(toStringArray)
+			expect(reward).to.be.deep.equal([
+				'16000' + DEV_DECIMALS,
+				'6000' + DEV_DECIMALS,
+			])
+		})
+		describe('Returns the difference amount between the startPrice and the latest value', () => {
 			it('10.', async () => {
 				const [instance, , , provider] = await init()
 				const wallet = provider.createEmptyWallet()
@@ -1358,7 +1392,7 @@ describe('GitHubMarketIncubator', () => {
 				}
 			})
 		})
-		it('if the limit is exceeded, the value of the limit is returned.', async () => {
+		it('Returns the rewardLimit amount when the limit is exceeded', async () => {
 			const [instance, , , provider] = await init()
 			const wallet = provider.createEmptyWallet()
 
@@ -1435,7 +1469,7 @@ describe('GitHubMarketIncubator', () => {
 				'10' + DEV_DECIMALS,
 			])
 		})
-		it('If the upper and lower limits of the reward are the same, the reward will not keep increasing or decreasing.', async () => {
+		it('Returns the rewardLowerLimit amount when the rewardLowerLimit is exceeded', async () => {
 			const [instance, , , provider] = await init()
 			const wallet = provider.createEmptyWallet()
 
