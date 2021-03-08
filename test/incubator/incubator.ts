@@ -1036,6 +1036,12 @@ describe('GitHubMarketIncubator', () => {
 				const [currentRewards] = await instance.incubator.getReward(repository)
 				userBalance = await mock.dev.balanceOf(wallets.user.address)
 				expect(userBalance.toString()).to.be.equal(currentRewards.toString())
+				const storedLastClaimedReward = await instance.incubator.getLastClaimedReward(
+					repository
+				)
+				expect(storedLastClaimedReward.toString()).to.be.equal(
+					currentRewards.toString()
+				)
 				const filterClaimed = instance.incubator.filters.Claimed(
 					property.address
 				)
@@ -1111,6 +1117,12 @@ describe('GitHubMarketIncubator', () => {
 				const [currentRewards] = await instance.incubator.getReward(repository)
 				userBalance = await mock.dev.balanceOf(wallets.user.address)
 				expect(userBalance.toNumber()).to.be.equal(0)
+				const storedLastClaimedReward = await instance.incubator.getLastClaimedReward(
+					repository
+				)
+				expect(storedLastClaimedReward.toString()).to.be.equal(
+					currentRewards.toString()
+				)
 				const filterClaimed = instance.incubator.filters.Claimed(
 					property.address
 				)
