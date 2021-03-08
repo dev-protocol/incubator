@@ -769,25 +769,23 @@ describe('GitHubMarketIncubator', () => {
 	describe('claim', () => {
 		describe('success', () => {
 			it('Emit `Twitter` event', async () => {
-				const [instance, mock, , provider] = await init()
+				const [instance, mock] = await init()
 				const property = await mock.generatePropertyMock(
 					instance.incubator.address
 				)
-				const metrics = provider.createEmptyWallet()
 				const repository = 'hogehoge/rep'
-				const stakingValue = '10' + DEV_DECIMALS
-				const limitValue = '10000' + DEV_DECIMALS
-				const lowerLimitValue = '10' + DEV_DECIMALS
-				await mock.marketBehavior.setId(metrics.address, repository)
 
 				// Prepare
 				await (async () => {
+					await mock.marketBehavior.setId(mock.metrics.address, repository)
+					await mock.metrics.setProperty(property.address)
 					await instance.incubatorOperator.start(
 						property.address,
 						repository,
-						stakingValue,
-						limitValue,
-						lowerLimitValue,
+						1,
+						1,
+						0,
+						0,
 						{
 							gasLimit: 1000000,
 						}
@@ -801,7 +799,7 @@ describe('GitHubMarketIncubator', () => {
 					)
 					await instance.incubatorUser.claimAuthorship(
 						'dummy-public',
-						metrics.address,
+						mock.metrics.address,
 						{
 							gasLimit: 1000000,
 						}
@@ -826,25 +824,27 @@ describe('GitHubMarketIncubator', () => {
 				expect(events[0].args?.[3]).to.be.equal('dummy-public')
 			})
 			it('Can be run multiple times.', async () => {
-				const [instance, mock, , provider] = await init()
+				const [instance, mock] = await init()
 				const property = await mock.generatePropertyMock(
 					instance.incubator.address
 				)
-				const metrics = provider.createEmptyWallet()
 				const repository = 'hogehoge/rep'
 				const stakingValue = '10' + DEV_DECIMALS
 				const limitValue = '10000' + DEV_DECIMALS
 				const lowerLimitValue = '10' + DEV_DECIMALS
-				await mock.marketBehavior.setId(metrics.address, repository)
+				await mock.marketBehavior.setId(mock.metrics.address, repository)
 
 				// Prepare
 				await (async () => {
+					await mock.marketBehavior.setId(mock.metrics.address, repository)
+					await mock.metrics.setProperty(property.address)
 					await instance.incubatorOperator.start(
 						property.address,
 						repository,
 						stakingValue,
 						limitValue,
 						lowerLimitValue,
+						0,
 						{
 							gasLimit: 1000000,
 						}
@@ -858,7 +858,7 @@ describe('GitHubMarketIncubator', () => {
 					)
 					await instance.incubatorUser.claimAuthorship(
 						'dummy-public',
-						metrics.address,
+						mock.metrics.address,
 						{
 							gasLimit: 1000000,
 						}
@@ -909,12 +909,15 @@ describe('GitHubMarketIncubator', () => {
 
 				// Prepare
 				await (async () => {
+					await mock.marketBehavior.setId(mock.metrics.address, repository)
+					await mock.metrics.setProperty(property.address)
 					await instance.incubatorOperator.start(
 						property.address,
 						repository,
 						stakingValue,
 						limitValue,
 						lowerLimitValue,
+						0,
 						{
 							gasLimit: 1000000,
 						}
@@ -940,25 +943,27 @@ describe('GitHubMarketIncubator', () => {
 				).to.be.revertedWith('not authenticated.')
 			})
 			it('Should fail to call when the passed twitter id is already used', async () => {
-				const [instance, mock, , provider] = await init()
+				const [instance, mock] = await init()
 				const property = await mock.generatePropertyMock(
 					instance.incubator.address
 				)
-				const metrics = provider.createEmptyWallet()
 				const repository = 'hogehoge/rep'
 				const stakingValue = '10' + DEV_DECIMALS
 				const limitValue = '10000' + DEV_DECIMALS
 				const lowerLimitValue = '10' + DEV_DECIMALS
-				await mock.marketBehavior.setId(metrics.address, repository)
+				await mock.marketBehavior.setId(mock.metrics.address, repository)
 
 				// Prepare
 				await (async () => {
+					await mock.marketBehavior.setId(mock.metrics.address, repository)
+					await mock.metrics.setProperty(property.address)
 					await instance.incubatorOperator.start(
 						property.address,
 						repository,
 						stakingValue,
 						limitValue,
 						lowerLimitValue,
+						0,
 						{
 							gasLimit: 1000000,
 						}
@@ -972,7 +977,7 @@ describe('GitHubMarketIncubator', () => {
 					)
 					await instance.incubatorUser.claimAuthorship(
 						'dummy-public',
-						metrics.address,
+						mock.metrics.address,
 						{
 							gasLimit: 1000000,
 						}
