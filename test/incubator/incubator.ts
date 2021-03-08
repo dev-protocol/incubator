@@ -308,7 +308,7 @@ describe('GitHubMarketIncubator', () => {
 
 	describe('start', () => {
 		describe('success', () => {
-			it('Parameters are stored in storage.', async () => {
+			it('Store the passed parameters', async () => {
 				const check = async (incubator: Contract): Promise<void> => {
 					const property = provider.createEmptyWallet()
 					const repository = 'hogehoge/rep'
@@ -387,7 +387,7 @@ describe('GitHubMarketIncubator', () => {
 			})
 		})
 		describe('fail', () => {
-			it('An error occurs when staking is zero.', async () => {
+			it('Should fail to call when the passed 3rd arg is 0', async () => {
 				const [instance, , , provider] = await init()
 				const property = provider.createEmptyWallet()
 				await expect(
@@ -397,13 +397,14 @@ describe('GitHubMarketIncubator', () => {
 						0,
 						1000,
 						10,
+						0,
 						{
 							gasLimit: 1000000,
 						}
 					)
 				).to.be.revertedWith('staking is 0.')
 			})
-			it('An error occurs when reward limit is zero.', async () => {
+			it('Should fail to call when the passed 4rd arg is 0', async () => {
 				const [instance, , , provider] = await init()
 				const property = provider.createEmptyWallet()
 				await expect(
@@ -413,13 +414,14 @@ describe('GitHubMarketIncubator', () => {
 						10,
 						0,
 						0,
+						0,
 						{
 							gasLimit: 1000000,
 						}
 					)
 				).to.be.revertedWith('reward limit is 0.')
 			})
-			it('An error occurs when reward limit is less than the lower limit.', async () => {
+			it('Should fail to call when the passed 4rd arg is less than 5th args', async () => {
 				const [instance, , , provider] = await init()
 				const property = provider.createEmptyWallet()
 				await expect(
@@ -429,13 +431,14 @@ describe('GitHubMarketIncubator', () => {
 						10,
 						10,
 						15,
+						0,
 						{
 							gasLimit: 1000000,
 						}
 					)
 				).to.be.revertedWith('limit is less than lower limit.')
 			})
-			it('only administrators and operators can do this.', async () => {
+			it('Should fail to call when the sender is not admins or operators', async () => {
 				const check = async (incubator: Contract): Promise<void> => {
 					const property = provider.createEmptyWallet()
 					const tmp = incubator.start(
@@ -444,6 +447,7 @@ describe('GitHubMarketIncubator', () => {
 						10000,
 						1000,
 						10,
+						0,
 						{
 							gasLimit: 1000000,
 						}
