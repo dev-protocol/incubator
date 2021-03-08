@@ -185,7 +185,7 @@ contract Incubator is IncubatorStorage {
 		uint256 _status,
 		string memory _errorMessage
 	) external {
-		require(msg.sender == getCallbackKickerAddress(), "illegal access.");
+		require(_msgSender() == getCallbackKickerAddress(), "illegal access.");
 		address property = getPropertyAddress(_githubRepository);
 		address account = IProperty(property).author();
 		(uint256 reward, uint256 claimableReward) =
