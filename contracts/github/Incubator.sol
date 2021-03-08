@@ -254,7 +254,7 @@ contract Incubator is IncubatorStorage {
 		}
 		uint256 lowerLimit = getRewardLowerLimit(_githubRepository);
 		uint256 over = reward.sub(rewardLimit);
-		uint256 cutted = reward > over ? reward.sub(over) : 0;
+		uint256 cutted = rewardLimit > over ? rewardLimit.sub(over) : 0;
 		reward = lowerLimit > cutted ? lowerLimit : cutted;
 		return (reward, reward > lastReward ? reward.sub(lastReward) : 0);
 	}

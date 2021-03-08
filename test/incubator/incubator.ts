@@ -5,7 +5,7 @@ import { expect, use } from 'chai'
 import { Contract, Wallet, constants, BigNumber } from 'ethers'
 import { deployContract, MockProvider, solidity } from 'ethereum-waffle'
 import { mine } from '@devprotocol/util-ts'
-import Incubator from '../../build/Incubator.json'
+import Incubator from '../../build/IncubatorTest.json'
 import MockMarket from '../../build/MockMarket.json'
 import MockAddressConfig from '../../build/MockAddressConfig.json'
 import MockMarketBehavior from '../../build/MockMarketBehavior.json'
@@ -1180,7 +1180,7 @@ describe('GitHubMarketIncubator', () => {
 
 	describe('rescue', () => {
 		describe('success', () => {
-			it('can rescue the passed token.', async () => {
+			it('Transfer the passed token from the contract', async () => {
 				const [instance, mock, wallets] = await init()
 				await mock.dev.transfer(instance.incubator.address, 10000)
 				let balance = await mock.dev.balanceOf(instance.incubator.address)
@@ -1197,7 +1197,7 @@ describe('GitHubMarketIncubator', () => {
 			})
 		})
 		describe('fail', () => {
-			it('can not send to a zero address.', async () => {
+			it('Should fail to call when the passed destination is zero', async () => {
 				const [instance, mock] = await init()
 				await mock.dev.transfer(instance.incubator.address, 10000)
 				await expect(
@@ -1211,7 +1211,7 @@ describe('GitHubMarketIncubator', () => {
 					)
 				).to.be.revertedWith('ERC20: transfer to the zero address')
 			})
-			it('can not send 0 amount.', async () => {
+			it('Transfer 0 token', async () => {
 				const [instance, mock, wallets] = await init()
 				await mock.dev.transfer(instance.incubator.address, 10000)
 				await instance.incubator.rescue(
@@ -1223,7 +1223,7 @@ describe('GitHubMarketIncubator', () => {
 					}
 				)
 			})
-			it('tokens that exceed the amount held cannot be rescued.', async () => {
+			it('Should fail to call when the contract has not the passed amount', async () => {
 				const [instance, mock, wallets] = await init()
 				await mock.dev.transfer(instance.incubator.address, 10000)
 				const balance = await mock.dev.balanceOf(instance.incubator.address)
@@ -1236,7 +1236,7 @@ describe('GitHubMarketIncubator', () => {
 					)
 				).to.be.revertedWith('ERC20: transfer amount exceeds balance')
 			})
-			it('only the administrator can execute the function..', async () => {
+			it('Should fail to call when the sender is not admins', async () => {
 				const check = async (incubator: Contract): Promise<void> => {
 					const property = provider.createEmptyWallet()
 					const balance = await mock.dev.balanceOf(incubator.address)
@@ -1281,7 +1281,7 @@ describe('GitHubMarketIncubator', () => {
 					)
 				).to.be.revertedWith('not the author.')
 			})
-			it('only the administrator can execute the function..', async () => {
+			it('Should fail to call when the sender is not admins', async () => {
 				const check = async (
 					incubator: Contract,
 					dest: string
@@ -1302,10 +1302,17 @@ describe('GitHubMarketIncubator', () => {
 		})
 	})
 	describe('getReward', () => {
+		const toStringArray = ([x, y]: [BigNumber, BigNumber]): [
+			string,
+			string
+		] => [x.toString(), y.toString()]
+
 		it('if the repository is not registered, it returns 0.', async () => {
 			const [instance] = await init()
-			const reward = await instance.incubator.getReward('hogehoge/hugahuga')
-			expect(reward.toNumber()).to.be.equal(0)
+			const reward = await instance.incubator
+				.getReward('hogehoge/hugahuga')
+				.then(toStringArray)
+			expect(reward).to.be.deep.equal(['0', '0'])
 		})
 		describe('It returns a value proportional to the difference between the initial value and the staking.', () => {
 			it('10.', async () => {
@@ -1317,14 +1324,16 @@ describe('GitHubMarketIncubator', () => {
 					'user/repository',
 					'10' + DEV_DECIMALS,
 					'10000' + DEV_DECIMALS,
-					'10' + DEV_DECIMALS
+					'10' + DEV_DECIMALS,
+					0
 				)
 				for (let i = 0; i < 5; i++) {
 					await mine(provider, 1)
-					const result = await instance.incubator.getReward('user/repository')
-					expect(result.toString()).to.be.equal(
-						(i + 1).toString() + '000' + DEV_DECIMALS
-					)
+					const result = await instance.incubator
+						.getReward('user/repository')
+						.then(toStringArray)
+					const expected = (i + 1).toString() + '000' + DEV_DECIMALS
+					expect(result).to.be.deep.equal([expected, expected])
 				}
 			})
 			it('20.', async () => {
@@ -1336,14 +1345,16 @@ describe('GitHubMarketIncubator', () => {
 					'user/repository',
 					'20' + DEV_DECIMALS,
 					'10000' + DEV_DECIMALS,
-					'10' + DEV_DECIMALS
+					'10' + DEV_DECIMALS,
+					0
 				)
 				for (let i = 0; i < 5; i++) {
 					await mine(provider, 1)
-					const result = await instance.incubator.getReward('user/repository')
-					expect(result.toString()).to.be.equal(
-						((i + 1) * 2).toString() + '000' + DEV_DECIMALS
-					)
+					const result = await instance.incubator
+						.getReward('user/repository')
+						.then(toStringArray)
+					const expected = ((i + 1) * 2).toString() + '000' + DEV_DECIMALS
+					expect(result).to.be.deep.equal([expected, expected])
 				}
 			})
 		})
@@ -1356,32 +1367,73 @@ describe('GitHubMarketIncubator', () => {
 				'user/repository',
 				'10' + DEV_DECIMALS,
 				'10000' + DEV_DECIMALS,
-				'10' + DEV_DECIMALS
+				'10' + DEV_DECIMALS,
+				0
 			)
 			await mine(provider, 9)
-			let result = await instance.incubator.getReward('user/repository')
-			expect(result.toString()).to.be.equal('9000' + DEV_DECIMALS)
+			let result = await instance.incubator
+				.getReward('user/repository')
+				.then(toStringArray)
+			expect(result).to.be.deep.equal([
+				'9000' + DEV_DECIMALS,
+				'9000' + DEV_DECIMALS,
+			])
 			await mine(provider, 1)
-			result = await instance.incubator.getReward('user/repository')
-			expect(result.toString()).to.be.equal('10000' + DEV_DECIMALS)
+			result = await instance.incubator
+				.getReward('user/repository')
+				.then(toStringArray)
+			expect(result).to.be.deep.equal([
+				'10000' + DEV_DECIMALS,
+				'10000' + DEV_DECIMALS,
+			])
 			await mine(provider, 1)
-			result = await instance.incubator.getReward('user/repository')
-			expect(result.toString()).to.be.equal('9000' + DEV_DECIMALS)
+			result = await instance.incubator
+				.getReward('user/repository')
+				.then(toStringArray)
+			expect(result).to.be.deep.equal([
+				'9000' + DEV_DECIMALS,
+				'9000' + DEV_DECIMALS,
+			])
 			await mine(provider, 1)
-			result = await instance.incubator.getReward('user/repository')
-			expect(result.toString()).to.be.equal('8000' + DEV_DECIMALS)
+			result = await instance.incubator
+				.getReward('user/repository')
+				.then(toStringArray)
+			expect(result).to.be.deep.equal([
+				'8000' + DEV_DECIMALS,
+				'8000' + DEV_DECIMALS,
+			])
 			await mine(provider, 7)
-			result = await instance.incubator.getReward('user/repository')
-			expect(result.toString()).to.be.equal('1000' + DEV_DECIMALS)
+			result = await instance.incubator
+				.getReward('user/repository')
+				.then(toStringArray)
+			expect(result).to.be.deep.equal([
+				'1000' + DEV_DECIMALS,
+				'1000' + DEV_DECIMALS,
+			])
 			await mine(provider, 1)
-			result = await instance.incubator.getReward('user/repository')
-			expect(result.toString()).to.be.equal('10' + DEV_DECIMALS)
+			result = await instance.incubator
+				.getReward('user/repository')
+				.then(toStringArray)
+			expect(result).to.be.deep.equal([
+				'10' + DEV_DECIMALS,
+				'10' + DEV_DECIMALS,
+			])
 			await mine(provider, 1)
-			result = await instance.incubator.getReward('user/repository')
-			expect(result.toString()).to.be.equal('10' + DEV_DECIMALS)
+			result = await instance.incubator
+				.getReward('user/repository')
+				.then(toStringArray)
+			expect(result).to.be.deep.equal([
+				'10' + DEV_DECIMALS,
+				'10' + DEV_DECIMALS,
+			])
 			await mine(provider, 10)
-			result = await instance.incubator.getReward('user/repository')
-			expect(result.toString()).to.be.equal('10' + DEV_DECIMALS)
+			result = await instance.incubator
+				.getReward('user/repository')
+				.then(toStringArray)
+			expect(result).to.be.deep.equal([
+				'10' + DEV_DECIMALS,
+				'10' + DEV_DECIMALS,
+			])
 		})
 		it('If the upper and lower limits of the reward are the same, the reward will not keep increasing or decreasing.', async () => {
 			const [instance, , , provider] = await init()
@@ -1392,23 +1444,49 @@ describe('GitHubMarketIncubator', () => {
 				'user/repository',
 				'10' + DEV_DECIMALS,
 				'10000' + DEV_DECIMALS,
-				'10000' + DEV_DECIMALS
+				'10000' + DEV_DECIMALS,
+				0
 			)
 			await mine(provider, 9)
-			let result = await instance.incubator.getReward('user/repository')
-			expect(result.toString()).to.be.equal('9000' + DEV_DECIMALS)
+			let result = await instance.incubator
+				.getReward('user/repository')
+				.then(toStringArray)
+			expect(result).to.be.deep.equal([
+				'9000' + DEV_DECIMALS,
+				'9000' + DEV_DECIMALS,
+			])
 			await mine(provider, 1)
-			result = await instance.incubator.getReward('user/repository')
-			expect(result.toString()).to.be.equal('10000' + DEV_DECIMALS)
+			result = await instance.incubator
+				.getReward('user/repository')
+				.then(toStringArray)
+			expect(result).to.be.deep.equal([
+				'10000' + DEV_DECIMALS,
+				'10000' + DEV_DECIMALS,
+			])
 			await mine(provider, 1)
-			result = await instance.incubator.getReward('user/repository')
-			expect(result.toString()).to.be.equal('10000' + DEV_DECIMALS)
+			result = await instance.incubator
+				.getReward('user/repository')
+				.then(toStringArray)
+			expect(result).to.be.deep.equal([
+				'10000' + DEV_DECIMALS,
+				'10000' + DEV_DECIMALS,
+			])
 			await mine(provider, 1)
-			result = await instance.incubator.getReward('user/repository')
-			expect(result.toString()).to.be.equal('10000' + DEV_DECIMALS)
+			result = await instance.incubator
+				.getReward('user/repository')
+				.then(toStringArray)
+			expect(result).to.be.deep.equal([
+				'10000' + DEV_DECIMALS,
+				'10000' + DEV_DECIMALS,
+			])
 			await mine(provider, 7)
-			result = await instance.incubator.getReward('user/repository')
-			expect(result.toString()).to.be.equal('10000' + DEV_DECIMALS)
+			result = await instance.incubator
+				.getReward('user/repository')
+				.then(toStringArray)
+			expect(result).to.be.deep.equal([
+				'10000' + DEV_DECIMALS,
+				'10000' + DEV_DECIMALS,
+			])
 		})
 	})
 	describe('setter', () => {
