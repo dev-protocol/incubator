@@ -501,36 +501,35 @@ describe('GitHubMarketIncubator', () => {
 				).to.be.revertedWith('illegal user.')
 			})
 			it('Should fail to call when the passed project is already authenticated', async () => {
-				const [instance, mock, , provider] = await init()
-				const property = provider.createEmptyWallet()
+				const [instance, mock] = await init()
+				const property = await mock.generatePropertyMock(
+					instance.incubator.address
+				)
 				const repository = 'hogehoge/rep'
-				const stakingValue = '10' + DEV_DECIMALS
-				const limitValue = '10000' + DEV_DECIMALS
-				const lowerLimitValue = '10' + DEV_DECIMALS
 
 				// Prepare
 				await (async () => {
 					await mock.marketBehavior.setId(mock.metrics.address, repository)
 					await mock.metrics.setProperty(property.address)
-					await instance.incubator.start(
+					await instance.incubatorOperator.start(
 						property.address,
 						repository,
-						stakingValue,
-						limitValue,
-						lowerLimitValue,
+						1,
+						1,
+						0,
 						0,
 						{
 							gasLimit: 1000000,
 						}
 					)
-					await instance.incubator.authenticate(
-						'hogehoge/rep',
+					await instance.incubatorUser.authenticate(
+						repository,
 						'dummy-public',
 						{
 							gasLimit: 1000000,
 						}
 					)
-					await instance.incubator.claimAuthorship(
+					await instance.incubatorUser.claimAuthorship(
 						'dummy-public',
 						mock.metrics.address,
 						{
@@ -540,7 +539,7 @@ describe('GitHubMarketIncubator', () => {
 				})()
 
 				await expect(
-					instance.incubatorUser.authenticate('hogehoge/rep', 'dummy-public', {
+					instance.incubatorUser.authenticate(repository, 'dummy-public', {
 						gasLimit: 1000000,
 					})
 				).to.be.revertedWith('already authenticated.')
