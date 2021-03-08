@@ -1027,7 +1027,7 @@ describe('GitHubMarketIncubator', () => {
 						wallets.user.address,
 						20000
 					)
-				).to.be.revertedWith('transfer amount exceeds balance')
+				).to.be.revertedWith('ERC20: transfer amount exceeds balance')
 			})
 			it('only the administrator can execute the function..', async () => {
 				const check = async (incubator: Contract): Promise<void> => {
