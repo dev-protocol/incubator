@@ -49,6 +49,12 @@ contract Incubator is IncubatorStorage {
 		string _githubPublicSignature
 	);
 
+	event Claimed(
+		string _githubRepository,
+		uint256 _reward,
+		uint256 _maxReward
+	);
+
 	uint120 private constant BASIS_VALUE = 1000000000000000000;
 	bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
 
@@ -190,6 +196,8 @@ contract Incubator is IncubatorStorage {
 		uint256 balance = propertyInstance.balanceOf(address(this));
 		propertyInstance.safeTransfer(account, balance);
 
+		setFinished(_githubRepository, true);
+
 		// event
 		emit Finish(
 			property,
@@ -199,6 +207,23 @@ contract Incubator is IncubatorStorage {
 			staking,
 			_errorMessage
 		);
+	}
+
+	function claim(string memory _githubRepository) external {
+		bool finished = getFinished(_githubRepository);
+		require(finished, "not finished.");
+
+		(uint256 reward, uint256 maxReward) = getReward(_githubRepository);
+		require(reward < maxReward, "time-locked.");
+
+		address property = getPropertyAddress(_githubRepository);
+		address author = IProperty(property).author();
+
+		address devToken = IAddressConfig(getAddressConfigAddress()).token();
+		IERC20 dev = IERC20(devToken);
+		dev.safeTransfer(author, reward);
+
+		emit Claimed(_githubRepository, reward, maxReward);
 	}
 
 	function rescue(

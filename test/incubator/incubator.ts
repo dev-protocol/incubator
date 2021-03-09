@@ -14,6 +14,7 @@ import MockLockup from '../../build/MockLockup.json'
 import MockProperty from '../../build/MockProperty.json'
 import MockMetrics from '../../build/MockMetrics.json'
 import MockMetricsGroup from '../../build/MockMetricsGroup.json'
+import { describe } from 'mocha'
 
 use(solidity)
 
@@ -731,7 +732,7 @@ describe('GitHubMarketIncubator', () => {
 	})
 	describe('finish', () => {
 		describe('success', () => {
-			it('Transfer reward to the author of the passed Property', async () => {
+			it('Transfer authorship to the author of the passed Property', async () => {
 				const [instance, mock, wallets] = await init()
 				const property = await mock.generatePropertyMock(
 					instance.incubator.address
@@ -918,6 +919,155 @@ describe('GitHubMarketIncubator', () => {
 						gasLimit: 1000000,
 					})
 				).to.be.revertedWith('not the author.')
+			})
+		})
+	})
+	describe('claim', () => {
+		describe('success', () => {
+			it('Transfer reward to the author of the passed Property', async () => {
+				const [instance, mock, wallets, provider] = await init()
+				const property = await mock.generatePropertyMock(
+					instance.incubator.address
+				)
+				const repository = 'hogehoge/rep'
+				const stakingValue = '10' + DEV_DECIMALS
+				const limitValue = '5' + DEV_DECIMALS
+				const lowerLimitValue = '5' + DEV_DECIMALS
+
+				// Before check
+				let userDevBalance = await mock.dev.balanceOf(wallets.user.address)
+				expect(userDevBalance.toNumber()).to.be.equal(0)
+
+				// Prepare
+				await (async () => {
+					await mock.dev.transfer(
+						instance.incubator.address,
+						'1000000' + DEV_DECIMALS
+					)
+					await instance.incubatorOperator.start(
+						property.address,
+						repository,
+						stakingValue,
+						limitValue,
+						lowerLimitValue,
+						0,
+						{
+							gasLimit: 1000000,
+						}
+					)
+					await instance.incubatorUser.authenticate(
+						repository,
+						'dummy-public',
+						{
+							gasLimit: 1000000,
+						}
+					)
+					await mock.marketBehavior.setId(mock.metrics.address, repository)
+					await instance.incubatorUser.intermediateProcess(
+						repository,
+						mock.metrics.address,
+						'1362570196712497157',
+						'dummy-twitter-public',
+						{
+							gasLimit: 1000000,
+						}
+					)
+					await instance.incubatorCallbackKicker.finish(repository, 0, '', {
+						gasLimit: 1000000,
+					})
+					await mine(provider, 10)
+				})()
+
+				await instance.incubatorUser.claim(repository, {
+					gasLimit: 1000000,
+				})
+
+				// After check
+				const rewards = await instance.incubator.getReward(repository)
+				userDevBalance = await mock.dev.balanceOf(wallets.user.address)
+				expect(userDevBalance.toString()).to.be.equal(rewards[0].toString())
+				const filterClaimed = instance.incubator.filters.Claimed()
+				const events = await instance.incubator.queryFilter(filterClaimed)
+				expect(events[0].args?.[0]).to.be.equal(repository)
+				expect(events[0].args?.[1]).to.be.equal(rewards[0].toString())
+				expect(events[0].args?.[2]).to.be.equal(rewards[1].toString())
+			})
+		})
+		describe('fail', () => {
+			it('Should fail to call when the passed project is not finished', async () => {
+				const [instance, mock] = await init()
+				const property = await mock.generatePropertyMock(
+					instance.incubator.address
+				)
+				const repository = 'hogehoge/rep'
+
+				// Prepare
+				await (async () => {
+					await instance.incubatorOperator.start(
+						property.address,
+						repository,
+						1,
+						1,
+						0,
+						0,
+						{
+							gasLimit: 1000000,
+						}
+					)
+				})()
+
+				await expect(
+					instance.incubatorUser.claim(repository)
+				).to.be.revertedWith('not finished.')
+			})
+			it('Should fail to call when the passed project is not reached the reward limit', async () => {
+				const [instance, mock] = await init()
+				const property = await mock.generatePropertyMock(
+					instance.incubator.address
+				)
+				const repository = 'hogehoge/rep'
+				const stakingValue = '10' + DEV_DECIMALS
+				const limitValue = '10000' + DEV_DECIMALS
+				const lowerLimitValue = '10000' + DEV_DECIMALS
+
+				// Prepare
+				await (async () => {
+					await instance.incubatorOperator.start(
+						property.address,
+						repository,
+						stakingValue,
+						limitValue,
+						lowerLimitValue,
+						0,
+						{
+							gasLimit: 1000000,
+						}
+					)
+					await instance.incubatorUser.authenticate(
+						repository,
+						'dummy-public',
+						{
+							gasLimit: 1000000,
+						}
+					)
+					await mock.marketBehavior.setId(mock.metrics.address, repository)
+					await instance.incubatorUser.intermediateProcess(
+						repository,
+						mock.metrics.address,
+						'1362570196712497157',
+						'dummy-twitter-public',
+						{
+							gasLimit: 1000000,
+						}
+					)
+					await instance.incubatorCallbackKicker.finish(repository, 0, '', {
+						gasLimit: 1000000,
+					})
+				})()
+
+				await expect(
+					instance.incubatorUser.claim(repository)
+				).to.be.revertedWith('time-locked.')
 			})
 		})
 	})
