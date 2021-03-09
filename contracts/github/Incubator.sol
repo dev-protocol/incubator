@@ -16,7 +16,9 @@ import {IProperty} from "@devprotocol/protocol/contracts/interface/IProperty.sol
 import {IAddressConfig} from "@devprotocol/protocol/contracts/interface/IAddressConfig.sol";
 import {IDev} from "@devprotocol/protocol/contracts/interface/IDev.sol";
 import {ILockup} from "@devprotocol/protocol/contracts/interface/ILockup.sol";
-import {IMetrics} from "@devprotocol/protocol/contracts/interface/IMetrics.sol";
+import {
+	IMetricsGroup
+} from "@devprotocol/protocol/contracts/interface/IMetricsGroup.sol";
 // prettier-ignore
 import {IncubatorStorage} from "contracts/github/IncubatorStorage.sol";
 
@@ -32,17 +34,10 @@ contract Incubator is IncubatorStorage {
 		string _publicSignature
 	);
 
-	event ClaimedAuthorship(
-		address indexed _property,
-		string _githubRepository,
-		address _account
-	);
-
-	event Claimed(
+	event Finish(
 		address indexed _property,
 		uint256 _status,
 		string _githubRepository,
-		uint256 _reward,
 		address _account,
 		uint256 _staking,
 		string _errorMessage
@@ -101,14 +96,22 @@ contract Incubator is IncubatorStorage {
 		);
 	}
 
+	function clearAccountAddress(address _property) external onlyOperator {
+		setAccountAddress(_property, address(0));
+	}
+
 	function authenticate(
 		string memory _githubRepository,
 		string memory _publicSignature
 	) external {
 		address property = getPropertyAddress(_githubRepository);
 		require(property != address(0), "illegal user.");
-		bool authenticated = getIsAuthenticated(_githubRepository);
-		require(!authenticated, "already authenticated.");
+		IMetricsGroup mg =
+			IMetricsGroup(
+				IAddressConfig(getAddressConfigAddress()).metricsGroup()
+			);
+		uint256 metricsCount = mg.getMetricsCountPerProperty(property);
+		require(metricsCount == 0, "already authenticated.");
 
 		address market = getMarketAddress();
 		bool result =
@@ -121,7 +124,7 @@ contract Incubator is IncubatorStorage {
 				""
 			);
 		require(result, "failed to authenticate.");
-		setAccountAddress(_publicSignature, _msgSender());
+		setAccountAddress(property, _msgSender());
 		setPublicSignature(_githubRepository, _publicSignature);
 		emit Authenticate(
 			_msgSender(),
@@ -132,44 +135,25 @@ contract Incubator is IncubatorStorage {
 		);
 	}
 
-	function claimAuthorship(string memory _publicSignature, address _metrics)
-		external
-	{
-		address account = getAccountAddress(_publicSignature);
-		address marketBehavior = IMarket(getMarketAddress()).behavior();
-		string memory githubRepository =
-			IMarketBehavior(marketBehavior).getId(_metrics);
-		address property = IMetrics(_metrics).property();
-		require(
-			getPropertyAddress(githubRepository) == property,
-			"illegal property."
-		);
-
-		setIsAuthenticated(githubRepository, true);
-
-		// change property author
-		IProperty(property).changeAuthor(account);
-		IERC20 propertyInstance = IERC20(property);
-		uint256 balance = propertyInstance.balanceOf(address(this));
-		propertyInstance.safeTransfer(account, balance);
-
-		// event
-		emit ClaimedAuthorship(property, githubRepository, account);
-	}
-
-	function claim(
+	function intermediateProcess(
 		string memory _githubRepository,
+		address _metrics,
 		string memory _twitterId,
 		string memory _twitterPublicSignature
 	) external {
 		address property = getPropertyAddress(_githubRepository);
 		require(property != address(0), "illegal repository.");
-		bool authenticated = getIsAuthenticated(_githubRepository);
-		require(authenticated, "not authenticated.");
-		bool used = getUsedTwitterId(_twitterId);
-		require(!used, "already used twitter id.");
-		setUsedTwitterId(_twitterId);
+		address account = getAccountAddress(property);
+		require(account != address(0), "no authenticate yet.");
+		require(account == _msgSender(), "illegal user.");
 
+		address marketBehavior = IMarket(getMarketAddress()).behavior();
+		string memory id = IMarketBehavior(marketBehavior).getId(_metrics);
+		require(
+			keccak256(abi.encodePacked(id)) ==
+				keccak256(abi.encodePacked(_githubRepository)),
+			"illegal metrics."
+		);
 		string memory githubPublicSignatur =
 			getPublicSignature(_githubRepository);
 		emit Twitter(
@@ -180,43 +164,38 @@ contract Incubator is IncubatorStorage {
 		);
 	}
 
-	function claimed(
+	function finish(
 		string memory _githubRepository,
 		uint256 _status,
 		string memory _errorMessage
 	) external {
 		require(_msgSender() == getCallbackKickerAddress(), "illegal access.");
 		address property = getPropertyAddress(_githubRepository);
-		address account = IProperty(property).author();
-		(uint256 reward, uint256 claimableReward) =
-			getReward(_githubRepository);
+		address account = getAccountAddress(property);
 		uint256 staking = getStaking(_githubRepository);
 
 		if (_status != 0) {
-			emit Claimed(
+			emit Finish(
 				property,
 				_status,
 				_githubRepository,
-				claimableReward,
 				account,
 				staking,
 				_errorMessage
 			);
 			return;
 		}
-		setLastClaimedReward(_githubRepository, reward);
-
-		// transfer reward
-		address devToken = IAddressConfig(getAddressConfigAddress()).token();
-		IERC20 dev = IERC20(devToken);
-		dev.safeTransfer(account, claimableReward);
+		// change property author
+		IProperty(property).changeAuthor(account);
+		IERC20 propertyInstance = IERC20(property);
+		uint256 balance = propertyInstance.balanceOf(address(this));
+		propertyInstance.safeTransfer(account, balance);
 
 		// event
-		emit Claimed(
+		emit Finish(
 			property,
 			_status,
 			_githubRepository,
-			claimableReward,
 			account,
 			staking,
 			_errorMessage

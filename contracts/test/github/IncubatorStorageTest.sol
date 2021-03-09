@@ -38,11 +38,10 @@ contract IncubatorStorageTest is IncubatorStorage {
 		setPropertyAddress(_githubRepository, _property);
 	}
 
-	function setAccountAddressTest(
-		string memory _publicSignature,
-		address _account
-	) external {
-		setAccountAddress(_publicSignature, _account);
+	function setAccountAddressTest(address _property, address _account)
+		external
+	{
+		setAccountAddress(_property, _account);
 	}
 
 	function setMarketAddressTest(address _market) external {

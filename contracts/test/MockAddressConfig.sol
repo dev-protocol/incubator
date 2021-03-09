@@ -5,9 +5,15 @@ pragma solidity 0.7.6;
 contract MockAddressConfig {
 	address public token;
 	address public lockup;
+	address public metricsGroup;
 
-	constructor(address _token, address _lockup) {
+	constructor(
+		address _token,
+		address _lockup,
+		address _metricsGroup
+	) {
 		token = _token;
 		lockup = _lockup;
+		metricsGroup = _metricsGroup;
 	}
 }

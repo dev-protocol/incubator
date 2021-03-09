@@ -172,30 +172,24 @@ contract IncubatorStorage is UsingStorage {
 	}
 
 	// AccountAddress
-	function setAccountAddress(string memory _publicSignature, address _account)
-		internal
-	{
-		eternalStorage().setAddress(
-			getAccountAddressKey(_publicSignature),
-			_account
-		);
+	function setAccountAddress(address _property, address _account) internal {
+		eternalStorage().setAddress(getAccountAddressKey(_property), _account);
 	}
 
-	function getAccountAddress(string memory _publicSignature)
+	function getAccountAddress(address _property)
 		public
 		view
 		returns (address)
 	{
-		return
-			eternalStorage().getAddress(getAccountAddressKey(_publicSignature));
+		return eternalStorage().getAddress(getAccountAddressKey(_property));
 	}
 
-	function getAccountAddressKey(string memory _publicSignature)
+	function getAccountAddressKey(address _property)
 		private
 		pure
 		returns (bytes32)
 	{
-		return keccak256(abi.encodePacked("_accountAddress", _publicSignature));
+		return keccak256(abi.encodePacked("_accountAddress", _property));
 	}
 
 	// Market
