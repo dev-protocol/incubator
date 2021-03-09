@@ -16,9 +16,8 @@ import {IProperty} from "@devprotocol/protocol/contracts/interface/IProperty.sol
 import {IAddressConfig} from "@devprotocol/protocol/contracts/interface/IAddressConfig.sol";
 import {IDev} from "@devprotocol/protocol/contracts/interface/IDev.sol";
 import {ILockup} from "@devprotocol/protocol/contracts/interface/ILockup.sol";
-import {
-	IMetricsGroup
-} from "@devprotocol/protocol/contracts/interface/IMetricsGroup.sol";
+// prettier-ignore
+import {IMetricsGroup} from "@devprotocol/protocol/contracts/interface/IMetricsGroup.sol";
 // prettier-ignore
 import {IncubatorStorage} from "contracts/github/IncubatorStorage.sol";
 
