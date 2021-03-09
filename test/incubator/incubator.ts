@@ -728,6 +728,60 @@ describe('GitHubMarketIncubator', () => {
 					)
 				).to.be.revertedWith('illegal metrics.')
 			})
+			it('Should fail to call when the passed project is already finished', async () => {
+				const [instance, mock] = await init()
+				const property = await mock.generatePropertyMock(
+					instance.incubator.address
+				)
+				const repository = 'hogehoge/rep'
+
+				// Prepare
+				await (async () => {
+					await instance.incubatorOperator.start(
+						property.address,
+						repository,
+						1,
+						1,
+						0,
+						0,
+						{
+							gasLimit: 1000000,
+						}
+					)
+					await instance.incubatorUser.authenticate(
+						repository,
+						'dummy-public',
+						{
+							gasLimit: 1000000,
+						}
+					)
+					await mock.marketBehavior.setId(mock.metrics.address, repository)
+					await instance.incubatorUser.intermediateProcess(
+						repository,
+						mock.metrics.address,
+						'1362570196712497157',
+						'public-twitter-sig',
+						{
+							gasLimit: 1000000,
+						}
+					)
+					await instance.incubatorCallbackKicker.finish(repository, 0, '', {
+						gasLimit: 1000000,
+					})
+				})()
+
+				await expect(
+					instance.incubatorUser.intermediateProcess(
+						repository,
+						mock.metrics.address,
+						'1362570196712497157',
+						'public-twitter-sig',
+						{
+							gasLimit: 1000000,
+						}
+					)
+				).to.be.revertedWith('already finished.')
+			})
 		})
 	})
 	describe('finish', () => {

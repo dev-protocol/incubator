@@ -147,6 +147,8 @@ contract Incubator is IncubatorStorage {
 		address account = getAccountAddress(property);
 		require(account != address(0), "no authenticate yet.");
 		require(account == _msgSender(), "illegal user.");
+		bool finished = getFinished(_githubRepository);
+		require(finished == false, "already finished.");
 
 		address marketBehavior = IMarket(getMarketAddress()).behavior();
 		string memory id = IMarketBehavior(marketBehavior).getId(_metrics);
