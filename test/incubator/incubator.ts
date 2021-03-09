@@ -929,11 +929,11 @@ describe('GitHubMarketIncubator', () => {
 					property: string
 				): Promise<void> => {
 					await incubator.setAccountAddressTest(property, mock.metrics.address)
-					expect(await incubator.getAccountAddress(property)).to.be(
+					expect(await incubator.getAccountAddress(property)).to.be.equal(
 						mock.metrics.address
 					)
 					await incubator.clearAccountAddress(property)
-					expect(await incubator.getAccountAddress(property)).to.be(
+					expect(await incubator.getAccountAddress(property)).to.be.equal(
 						constants.AddressZero
 					)
 				}

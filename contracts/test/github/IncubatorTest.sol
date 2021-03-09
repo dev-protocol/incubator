@@ -6,10 +6,7 @@ import {Incubator} from "contracts/github/Incubator.sol";
 contract IncubatorTest is Incubator {
 	constructor() public Incubator() {}
 
-	function setLastClaimedRewardTest(
-		string memory _githubRepository,
-		uint256 _value
-	) external {
-		setLastClaimedReward(_githubRepository, _value);
+	function setAccountAddressTest(address _a, address _b) external {
+		setAccountAddress(_a, _b);
 	}
 }
