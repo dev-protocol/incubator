@@ -68,4 +68,10 @@ contract IncubatorStorageTest is IncubatorStorage {
 	{
 		setFinished(_githubRepository, _flag);
 	}
+
+	function setClaimedTest(string memory _githubRepository, bool _flag)
+		external
+	{
+		setClaimed(_githubRepository, _flag);
+	}
 }

@@ -139,4 +139,15 @@ describe('IncubatorStorage', () => {
 			expect(result).to.be.equal(true)
 		})
 	})
+	describe('setClaimed, getClaimed', () => {
+		it('Initial value is false', async () => {
+			const result = await storageTest.getClaimed('dummy_repo')
+			expect(result).to.be.equal(false)
+		})
+		it('The set value can be taken as it is.', async () => {
+			await storageTest.setClaimedTest('dummy_repo', true)
+			const result = await storageTest.getClaimed('dummy_repo')
+			expect(result).to.be.equal(true)
+		})
+	})
 })

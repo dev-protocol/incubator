@@ -985,12 +985,11 @@ describe('GitHubMarketIncubator', () => {
 				// After check
 				const rewards = await instance.incubator.getReward(repository)
 				userDevBalance = await mock.dev.balanceOf(wallets.user.address)
-				expect(userDevBalance.toString()).to.be.equal(rewards[0].toString())
+				expect(userDevBalance.toString()).to.be.equal(rewards.toString())
 				const filterClaimed = instance.incubator.filters.Claimed()
 				const events = await instance.incubator.queryFilter(filterClaimed)
 				expect(events[0].args?.[0]).to.be.equal(repository)
-				expect(events[0].args?.[1]).to.be.equal(rewards[0].toString())
-				expect(events[0].args?.[2]).to.be.equal(rewards[1].toString())
+				expect(events[0].args?.[1]).to.be.equal(rewards.toString())
 			})
 		})
 		describe('fail', () => {
@@ -1067,7 +1066,60 @@ describe('GitHubMarketIncubator', () => {
 
 				await expect(
 					instance.incubatorUser.claim(repository)
-				).to.be.revertedWith('time-locked.')
+				).to.be.revertedWith('not fulfilled.')
+			})
+			it('Should fail to call when the passed project is already claimed', async () => {
+				const [instance, mock] = await init()
+				const property = await mock.generatePropertyMock(
+					instance.incubator.address
+				)
+				const repository = 'hogehoge/rep'
+
+				// Prepare
+				await (async () => {
+					await mock.dev.transfer(
+						instance.incubator.address,
+						'1000000' + DEV_DECIMALS
+					)
+					await instance.incubatorOperator.start(
+						property.address,
+						repository,
+						1,
+						1,
+						0,
+						0,
+						{
+							gasLimit: 1000000,
+						}
+					)
+					await instance.incubatorUser.authenticate(
+						repository,
+						'dummy-public',
+						{
+							gasLimit: 1000000,
+						}
+					)
+					await mock.marketBehavior.setId(mock.metrics.address, repository)
+					await instance.incubatorUser.intermediateProcess(
+						repository,
+						mock.metrics.address,
+						'1362570196712497157',
+						'dummy-twitter-public',
+						{
+							gasLimit: 1000000,
+						}
+					)
+					await instance.incubatorCallbackKicker.finish(repository, 0, '', {
+						gasLimit: 1000000,
+					})
+					await instance.incubatorUser.claim(repository, {
+						gasLimit: 1000000,
+					})
+				})()
+
+				await expect(
+					instance.incubatorUser.claim(repository)
+				).to.be.revertedWith('already claimed.')
 			})
 		})
 	})
@@ -1240,17 +1292,14 @@ describe('GitHubMarketIncubator', () => {
 		})
 	})
 	describe('getReward', () => {
-		const toStringArray = ([x, y]: [BigNumber, BigNumber]): [
-			string,
-			string
-		] => [x.toString(), y.toString()]
+		const toString = (x: BigNumber): string => x.toString()
 
 		it('Returns 0 when the passed project is not configured', async () => {
 			const [instance] = await init()
 			const reward = await instance.incubator
 				.getReward('hogehoge/hugahuga')
-				.then(toStringArray)
-			expect(reward).to.be.deep.equal(['0', '0'])
+				.then(toString)
+			expect(reward).to.be.equal('0')
 		})
 		describe('Returns the difference amount between the startPrice and the latest value', () => {
 			it('10.', async () => {
@@ -1269,9 +1318,9 @@ describe('GitHubMarketIncubator', () => {
 					await mine(provider, 1)
 					const result = await instance.incubator
 						.getReward('user/repository')
-						.then(toStringArray)
+						.then(toString)
 					const expected = (i + 1).toString() + '000' + DEV_DECIMALS
-					expect(result).to.be.deep.equal([expected, expected])
+					expect(result).to.be.equal(expected)
 				}
 			})
 			it('20.', async () => {
@@ -1290,9 +1339,9 @@ describe('GitHubMarketIncubator', () => {
 					await mine(provider, 1)
 					const result = await instance.incubator
 						.getReward('user/repository')
-						.then(toStringArray)
+						.then(toString)
 					const expected = ((i + 1) * 2).toString() + '000' + DEV_DECIMALS
-					expect(result).to.be.deep.equal([expected, expected])
+					expect(result).to.be.equal(expected)
 				}
 			})
 		})
@@ -1311,67 +1360,43 @@ describe('GitHubMarketIncubator', () => {
 			await mine(provider, 9)
 			let result = await instance.incubator
 				.getReward('user/repository')
-				.then(toStringArray)
-			expect(result).to.be.deep.equal([
-				'9000' + DEV_DECIMALS,
-				'9000' + DEV_DECIMALS,
-			])
+				.then(toString)
+			expect(result).to.be.equal('9000' + DEV_DECIMALS)
 			await mine(provider, 1)
 			result = await instance.incubator
 				.getReward('user/repository')
-				.then(toStringArray)
-			expect(result).to.be.deep.equal([
-				'10000' + DEV_DECIMALS,
-				'10000' + DEV_DECIMALS,
-			])
+				.then(toString)
+			expect(result).to.be.equal('10000' + DEV_DECIMALS)
 			await mine(provider, 1)
 			result = await instance.incubator
 				.getReward('user/repository')
-				.then(toStringArray)
-			expect(result).to.be.deep.equal([
-				'9000' + DEV_DECIMALS,
-				'11000' + DEV_DECIMALS,
-			])
+				.then(toString)
+			expect(result).to.be.equal('9000' + DEV_DECIMALS)
 			await mine(provider, 1)
 			result = await instance.incubator
 				.getReward('user/repository')
-				.then(toStringArray)
-			expect(result).to.be.deep.equal([
-				'8000' + DEV_DECIMALS,
-				'12000' + DEV_DECIMALS,
-			])
+				.then(toString)
+			expect(result).to.be.equal('8000' + DEV_DECIMALS)
 			await mine(provider, 7)
 			result = await instance.incubator
 				.getReward('user/repository')
-				.then(toStringArray)
-			expect(result).to.be.deep.equal([
-				'1000' + DEV_DECIMALS,
-				'19000' + DEV_DECIMALS,
-			])
+				.then(toString)
+			expect(result).to.be.equal('1000' + DEV_DECIMALS)
 			await mine(provider, 1)
 			result = await instance.incubator
 				.getReward('user/repository')
-				.then(toStringArray)
-			expect(result).to.be.deep.equal([
-				'10' + DEV_DECIMALS,
-				'20000' + DEV_DECIMALS,
-			])
+				.then(toString)
+			expect(result).to.be.equal('10' + DEV_DECIMALS)
 			await mine(provider, 1)
 			result = await instance.incubator
 				.getReward('user/repository')
-				.then(toStringArray)
-			expect(result).to.be.deep.equal([
-				'10' + DEV_DECIMALS,
-				'21000' + DEV_DECIMALS,
-			])
+				.then(toString)
+			expect(result).to.be.equal('10' + DEV_DECIMALS)
 			await mine(provider, 10)
 			result = await instance.incubator
 				.getReward('user/repository')
-				.then(toStringArray)
-			expect(result).to.be.deep.equal([
-				'10' + DEV_DECIMALS,
-				'31000' + DEV_DECIMALS,
-			])
+				.then(toString)
+			expect(result).to.be.equal('10' + DEV_DECIMALS)
 		})
 		it('Returns the rewardLowerLimit amount when the rewardLowerLimit is exceeded', async () => {
 			const [instance, , , provider] = await init()
@@ -1388,43 +1413,28 @@ describe('GitHubMarketIncubator', () => {
 			await mine(provider, 9)
 			let result = await instance.incubator
 				.getReward('user/repository')
-				.then(toStringArray)
-			expect(result).to.be.deep.equal([
-				'9000' + DEV_DECIMALS,
-				'9000' + DEV_DECIMALS,
-			])
+				.then(toString)
+			expect(result).to.be.equal('9000' + DEV_DECIMALS)
 			await mine(provider, 1)
 			result = await instance.incubator
 				.getReward('user/repository')
-				.then(toStringArray)
-			expect(result).to.be.deep.equal([
-				'10000' + DEV_DECIMALS,
-				'10000' + DEV_DECIMALS,
-			])
+				.then(toString)
+			expect(result).to.be.equal('10000' + DEV_DECIMALS)
 			await mine(provider, 1)
 			result = await instance.incubator
 				.getReward('user/repository')
-				.then(toStringArray)
-			expect(result).to.be.deep.equal([
-				'10000' + DEV_DECIMALS,
-				'11000' + DEV_DECIMALS,
-			])
+				.then(toString)
+			expect(result).to.be.equal('10000' + DEV_DECIMALS)
 			await mine(provider, 1)
 			result = await instance.incubator
 				.getReward('user/repository')
-				.then(toStringArray)
-			expect(result).to.be.deep.equal([
-				'10000' + DEV_DECIMALS,
-				'12000' + DEV_DECIMALS,
-			])
+				.then(toString)
+			expect(result).to.be.equal('10000' + DEV_DECIMALS)
 			await mine(provider, 7)
 			result = await instance.incubator
 				.getReward('user/repository')
-				.then(toStringArray)
-			expect(result).to.be.deep.equal([
-				'10000' + DEV_DECIMALS,
-				'19000' + DEV_DECIMALS,
-			])
+				.then(toString)
+			expect(result).to.be.equal('10000' + DEV_DECIMALS)
 		})
 	})
 	describe('setter', () => {

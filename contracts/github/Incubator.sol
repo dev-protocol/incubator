@@ -49,11 +49,7 @@ contract Incubator is IncubatorStorage {
 		string _githubPublicSignature
 	);
 
-	event Claimed(
-		string _githubRepository,
-		uint256 _reward,
-		uint256 _maxReward
-	);
+	event Claimed(string _githubRepository, uint256 _reward);
 
 	uint120 private constant BASIS_VALUE = 1000000000000000000;
 	bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
@@ -213,8 +209,11 @@ contract Incubator is IncubatorStorage {
 		bool finished = getFinished(_githubRepository);
 		require(finished, "not finished.");
 
-		(uint256 reward, uint256 maxReward) = getReward(_githubRepository);
-		require(reward < maxReward, "time-locked.");
+		(uint256 reward, uint256 maxReward) = _getReward(_githubRepository);
+		require(reward < maxReward, "not fulfilled.");
+
+		bool claimed = getClaimed(_githubRepository);
+		require(claimed == false, "already claimed.");
 
 		address property = getPropertyAddress(_githubRepository);
 		address author = IProperty(property).author();
@@ -222,8 +221,9 @@ contract Incubator is IncubatorStorage {
 		address devToken = IAddressConfig(getAddressConfigAddress()).token();
 		IERC20 dev = IERC20(devToken);
 		dev.safeTransfer(author, reward);
+		setClaimed(_githubRepository, true);
 
-		emit Claimed(_githubRepository, reward, maxReward);
+		emit Claimed(_githubRepository, reward);
 	}
 
 	function rescue(
@@ -241,6 +241,15 @@ contract Incubator is IncubatorStorage {
 
 	function getReward(string memory _githubRepository)
 		public
+		view
+		returns (uint256)
+	{
+		(uint256 reward, ) = _getReward(_githubRepository);
+		return reward;
+	}
+
+	function _getReward(string memory _githubRepository)
+		private
 		view
 		returns (uint256 _reward, uint256 _maxReward)
 	{
