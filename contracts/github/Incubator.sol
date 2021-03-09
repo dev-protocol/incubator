@@ -217,24 +217,23 @@ contract Incubator is IncubatorStorage {
 	function getReward(string memory _githubRepository)
 		public
 		view
-		returns (uint256 _reward, uint256 _claimable)
+		returns (uint256 _reward, uint256 _maxReward)
 	{
 		uint256 latestPrice = getLastPrice();
-		uint256 lastReward = getLastClaimedReward(_githubRepository);
 		uint256 startPrice = getStartPrice(_githubRepository);
-		uint256 reward =
+		uint256 maxReward =
 			latestPrice.sub(startPrice).mul(getStaking(_githubRepository)).div(
 				BASIS_VALUE
 			);
 		uint256 rewardLimit = getRewardLimit(_githubRepository);
-		if (reward < rewardLimit) {
-			return (reward, reward.sub(lastReward));
+		if (maxReward < rewardLimit) {
+			return (maxReward, maxReward);
 		}
 		uint256 lowerLimit = getRewardLowerLimit(_githubRepository);
-		uint256 over = reward.sub(rewardLimit);
+		uint256 over = maxReward.sub(rewardLimit);
 		uint256 cutted = rewardLimit > over ? rewardLimit.sub(over) : 0;
-		reward = lowerLimit > cutted ? lowerLimit : cutted;
-		return (reward, reward > lastReward ? reward.sub(lastReward) : 0);
+		uint256 reward = lowerLimit > cutted ? lowerLimit : cutted;
+		return (reward, maxReward);
 	}
 
 	function getLastPrice() private view returns (uint256) {

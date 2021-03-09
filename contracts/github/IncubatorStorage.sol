@@ -28,39 +28,6 @@ contract IncubatorStorage is UsingStorage {
 		return keccak256(abi.encodePacked("_startPrice", _githubRepository));
 	}
 
-	// LastClaimedReward
-	function setLastClaimedReward(
-		string memory _githubRepository,
-		uint256 _value
-	) internal {
-		eternalStorage().setUint(
-			getLastClaimedRewardKey(_githubRepository),
-			_value
-		);
-	}
-
-	function getLastClaimedReward(string memory _githubRepository)
-		public
-		view
-		returns (uint256)
-	{
-		return
-			eternalStorage().getUint(
-				getLastClaimedRewardKey(_githubRepository)
-			);
-	}
-
-	function getLastClaimedRewardKey(string memory _githubRepository)
-		private
-		pure
-		returns (bytes32)
-	{
-		return
-			keccak256(
-				abi.encodePacked("_LastClaimedReward", _githubRepository)
-			);
-	}
-
 	// Staking
 	function setStaking(string memory _githubRepository, uint256 _staking)
 		internal
@@ -266,54 +233,5 @@ contract IncubatorStorage is UsingStorage {
 
 	function getCallbackKickerAddressKey() private pure returns (bytes32) {
 		return keccak256(abi.encodePacked("_callbackKicker"));
-	}
-
-	// IsAuthenticated
-	function setIsAuthenticated(string memory _githubRepository, bool _flag)
-		internal
-	{
-		eternalStorage().setBool(
-			getIsAuthenticatedKey(_githubRepository),
-			_flag
-		);
-	}
-
-	function getIsAuthenticated(string memory _githubRepository)
-		public
-		view
-		returns (bool)
-	{
-		return
-			eternalStorage().getBool(getIsAuthenticatedKey(_githubRepository));
-	}
-
-	function getIsAuthenticatedKey(string memory _githubRepository)
-		private
-		pure
-		returns (bytes32)
-	{
-		return
-			keccak256(abi.encodePacked("_isAuthenticated", _githubRepository));
-	}
-
-	// Used Twitter Id
-	function setUsedTwitterId(string memory _twitterId) internal {
-		eternalStorage().setBool(getUsedTwitterIdKey(_twitterId), true);
-	}
-
-	function getUsedTwitterId(string memory _twitterId)
-		public
-		view
-		returns (bool)
-	{
-		return eternalStorage().getBool(getUsedTwitterIdKey(_twitterId));
-	}
-
-	function getUsedTwitterIdKey(string memory _twitterId)
-		private
-		pure
-		returns (bytes32)
-	{
-		return keccak256(abi.encodePacked("_usedTwitterId", _twitterId));
 	}
 }

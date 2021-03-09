@@ -1102,40 +1102,6 @@ describe('GitHubMarketIncubator', () => {
 				.then(toStringArray)
 			expect(reward).to.be.deep.equal(['0', '0'])
 		})
-		it('Returns the difference amount between the startPrice and the latest value and the last claimed amount', async () => {
-			const [instance, , , provider] = await init()
-			const wallet = provider.createEmptyWallet()
-
-			await instance.incubator.start(
-				wallet.address,
-				'user/repository',
-				'10' + DEV_DECIMALS,
-				'100000' + DEV_DECIMALS,
-				'100000' + DEV_DECIMALS,
-				0
-			)
-
-			// Prepare
-			await (async () => {
-				await mine(provider, 10)
-				const [result] = await instance.incubator
-					.getReward('user/repository')
-					.then(toStringArray)
-				await instance.incubator.setLastClaimedRewardTest(
-					'user/repository',
-					result
-				)
-				await mine(provider, 5)
-			})()
-
-			const reward = await instance.incubator
-				.getReward('user/repository')
-				.then(toStringArray)
-			expect(reward).to.be.deep.equal([
-				'16000' + DEV_DECIMALS,
-				'6000' + DEV_DECIMALS,
-			])
-		})
 		describe('Returns the difference amount between the startPrice and the latest value', () => {
 			it('10.', async () => {
 				const [instance, , , provider] = await init()
@@ -1214,7 +1180,7 @@ describe('GitHubMarketIncubator', () => {
 				.then(toStringArray)
 			expect(result).to.be.deep.equal([
 				'9000' + DEV_DECIMALS,
-				'9000' + DEV_DECIMALS,
+				'11000' + DEV_DECIMALS,
 			])
 			await mine(provider, 1)
 			result = await instance.incubator
@@ -1222,7 +1188,7 @@ describe('GitHubMarketIncubator', () => {
 				.then(toStringArray)
 			expect(result).to.be.deep.equal([
 				'8000' + DEV_DECIMALS,
-				'8000' + DEV_DECIMALS,
+				'12000' + DEV_DECIMALS,
 			])
 			await mine(provider, 7)
 			result = await instance.incubator
@@ -1230,7 +1196,7 @@ describe('GitHubMarketIncubator', () => {
 				.then(toStringArray)
 			expect(result).to.be.deep.equal([
 				'1000' + DEV_DECIMALS,
-				'1000' + DEV_DECIMALS,
+				'19000' + DEV_DECIMALS,
 			])
 			await mine(provider, 1)
 			result = await instance.incubator
@@ -1238,7 +1204,7 @@ describe('GitHubMarketIncubator', () => {
 				.then(toStringArray)
 			expect(result).to.be.deep.equal([
 				'10' + DEV_DECIMALS,
-				'10' + DEV_DECIMALS,
+				'20000' + DEV_DECIMALS,
 			])
 			await mine(provider, 1)
 			result = await instance.incubator
@@ -1246,7 +1212,7 @@ describe('GitHubMarketIncubator', () => {
 				.then(toStringArray)
 			expect(result).to.be.deep.equal([
 				'10' + DEV_DECIMALS,
-				'10' + DEV_DECIMALS,
+				'21000' + DEV_DECIMALS,
 			])
 			await mine(provider, 10)
 			result = await instance.incubator
@@ -1254,7 +1220,7 @@ describe('GitHubMarketIncubator', () => {
 				.then(toStringArray)
 			expect(result).to.be.deep.equal([
 				'10' + DEV_DECIMALS,
-				'10' + DEV_DECIMALS,
+				'31000' + DEV_DECIMALS,
 			])
 		})
 		it('Returns the rewardLowerLimit amount when the rewardLowerLimit is exceeded', async () => {
@@ -1291,7 +1257,7 @@ describe('GitHubMarketIncubator', () => {
 				.then(toStringArray)
 			expect(result).to.be.deep.equal([
 				'10000' + DEV_DECIMALS,
-				'10000' + DEV_DECIMALS,
+				'11000' + DEV_DECIMALS,
 			])
 			await mine(provider, 1)
 			result = await instance.incubator
@@ -1299,7 +1265,7 @@ describe('GitHubMarketIncubator', () => {
 				.then(toStringArray)
 			expect(result).to.be.deep.equal([
 				'10000' + DEV_DECIMALS,
-				'10000' + DEV_DECIMALS,
+				'12000' + DEV_DECIMALS,
 			])
 			await mine(provider, 7)
 			result = await instance.incubator
@@ -1307,7 +1273,7 @@ describe('GitHubMarketIncubator', () => {
 				.then(toStringArray)
 			expect(result).to.be.deep.equal([
 				'10000' + DEV_DECIMALS,
-				'10000' + DEV_DECIMALS,
+				'19000' + DEV_DECIMALS,
 			])
 		})
 	})

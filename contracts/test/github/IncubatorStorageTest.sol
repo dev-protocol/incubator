@@ -62,21 +62,4 @@ contract IncubatorStorageTest is IncubatorStorage {
 	function setCallbackKickerAddressTest(address _callback) external {
 		setCallbackKickerAddress(_callback);
 	}
-
-	function setIsAuthenticatedTest(string memory _githubRepository, bool _flag)
-		external
-	{
-		setIsAuthenticated(_githubRepository, _flag);
-	}
-
-	function setUsedTwitterIdTest(string memory _twitterId) external {
-		setUsedTwitterId(_twitterId);
-	}
-
-	function setLastClaimedRewardTest(
-		string memory _githubRepository,
-		uint256 _value
-	) external {
-		setLastClaimedReward(_githubRepository, _value);
-	}
 }
