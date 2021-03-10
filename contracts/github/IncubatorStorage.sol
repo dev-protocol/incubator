@@ -234,4 +234,46 @@ contract IncubatorStorage is UsingStorage {
 	function getCallbackKickerAddressKey() private pure returns (bytes32) {
 		return keccak256(abi.encodePacked("_callbackKicker"));
 	}
+
+	// Finished
+	function setFinished(string memory _githubRepository, bool _flag) internal {
+		eternalStorage().setBool(getFinishedKey(_githubRepository), _flag);
+	}
+
+	function getFinished(string memory _githubRepository)
+		public
+		view
+		returns (bool)
+	{
+		return eternalStorage().getBool(getFinishedKey(_githubRepository));
+	}
+
+	function getFinishedKey(string memory _githubRepository)
+		private
+		pure
+		returns (bytes32)
+	{
+		return keccak256(abi.encodePacked("_finished", _githubRepository));
+	}
+
+	// Claimed
+	function setClaimed(string memory _githubRepository, bool _flag) internal {
+		eternalStorage().setBool(getClaimedKey(_githubRepository), _flag);
+	}
+
+	function getClaimed(string memory _githubRepository)
+		public
+		view
+		returns (bool)
+	{
+		return eternalStorage().getBool(getClaimedKey(_githubRepository));
+	}
+
+	function getClaimedKey(string memory _githubRepository)
+		private
+		pure
+		returns (bytes32)
+	{
+		return keccak256(abi.encodePacked("_claimed", _githubRepository));
+	}
 }

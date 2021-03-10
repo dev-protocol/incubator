@@ -17,6 +17,8 @@ import {IAddressConfig} from "@devprotocol/protocol/contracts/interface/IAddress
 import {IDev} from "@devprotocol/protocol/contracts/interface/IDev.sol";
 import {ILockup} from "@devprotocol/protocol/contracts/interface/ILockup.sol";
 // prettier-ignore
+import {IMetricsGroup} from "@devprotocol/protocol/contracts/interface/IMetricsGroup.sol";
+// prettier-ignore
 import {IncubatorStorage} from "contracts/github/IncubatorStorage.sol";
 
 contract Incubator is IncubatorStorage {
@@ -35,7 +37,6 @@ contract Incubator is IncubatorStorage {
 		address indexed _property,
 		uint256 _status,
 		string _githubRepository,
-		uint256 _reward,
 		address _account,
 		uint256 _staking,
 		string _errorMessage
@@ -47,6 +48,8 @@ contract Incubator is IncubatorStorage {
 		string _twitterPublicSignature,
 		string _githubPublicSignature
 	);
+
+	event Claimed(string _githubRepository, uint256 _reward);
 
 	uint120 private constant BASIS_VALUE = 1000000000000000000;
 	bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
@@ -78,13 +81,14 @@ contract Incubator is IncubatorStorage {
 		string memory _githubRepository,
 		uint256 _staking,
 		uint256 _rewardLimit,
-		uint256 _rewardLowerLimit
+		uint256 _rewardLowerLimit,
+		uint256 _initialPrice
 	) external onlyOperator {
-		require(_staking != 0, "staking is 0.");
-
-		uint256 lastPrice = getLastPrice();
 		setPropertyAddress(_githubRepository, _property);
-		setStartPrice(_githubRepository, lastPrice);
+		setStartPrice(
+			_githubRepository,
+			_initialPrice > 0 ? _initialPrice : getLastPrice()
+		);
 		setStaking(_githubRepository, _staking);
 		_setRewardLimitAndLowerLimit(
 			_githubRepository,
@@ -103,10 +107,13 @@ contract Incubator is IncubatorStorage {
 	) external {
 		address property = getPropertyAddress(_githubRepository);
 		require(property != address(0), "illegal user.");
-		address account = getAccountAddress(property);
-		if (account != address(0)) {
-			require(account == _msgSender(), "authentication processed.");
-		}
+		IMetricsGroup mg =
+			IMetricsGroup(
+				IAddressConfig(getAddressConfigAddress()).metricsGroup()
+			);
+		uint256 metricsCount = mg.getMetricsCountPerProperty(property);
+		require(metricsCount == 0, "already authenticated.");
+
 		address market = getMarketAddress();
 		bool result =
 			IMarket(market).authenticate(
@@ -139,7 +146,9 @@ contract Incubator is IncubatorStorage {
 		require(property != address(0), "illegal repository.");
 		address account = getAccountAddress(property);
 		require(account != address(0), "no authenticate yet.");
-		require(account == msg.sender, "illegal user.");
+		require(account == _msgSender(), "illegal user.");
+		bool finished = getFinished(_githubRepository);
+		require(finished == false, "already finished.");
 
 		address marketBehavior = IMarket(getMarketAddress()).behavior();
 		string memory id = IMarketBehavior(marketBehavior).getId(_metrics);
@@ -163,11 +172,9 @@ contract Incubator is IncubatorStorage {
 		uint256 _status,
 		string memory _errorMessage
 	) external {
-		require(msg.sender == getCallbackKickerAddress(), "illegal access.");
+		require(_msgSender() == getCallbackKickerAddress(), "illegal access.");
 		address property = getPropertyAddress(_githubRepository);
 		address account = getAccountAddress(property);
-		uint256 reward = getReward(_githubRepository);
-		require(reward != 0, "reward is 0.");
 		uint256 staking = getStaking(_githubRepository);
 
 		if (_status != 0) {
@@ -175,34 +182,50 @@ contract Incubator is IncubatorStorage {
 				property,
 				_status,
 				_githubRepository,
-				reward,
 				account,
 				staking,
 				_errorMessage
 			);
 			return;
 		}
-		// transfer reward
-		address devToken = IAddressConfig(getAddressConfigAddress()).token();
-		IERC20 dev = IERC20(devToken);
-		dev.safeTransfer(account, reward);
-
 		// change property author
 		IProperty(property).changeAuthor(account);
 		IERC20 propertyInstance = IERC20(property);
 		uint256 balance = propertyInstance.balanceOf(address(this));
 		propertyInstance.safeTransfer(account, balance);
 
+		setFinished(_githubRepository, true);
+
 		// event
 		emit Finish(
 			property,
 			_status,
 			_githubRepository,
-			reward,
 			account,
 			staking,
 			_errorMessage
 		);
+	}
+
+	function claim(string memory _githubRepository) external {
+		bool finished = getFinished(_githubRepository);
+		require(finished, "not finished.");
+
+		(uint256 reward, uint256 maxReward) = _getReward(_githubRepository);
+		require(reward < maxReward, "not fulfilled.");
+
+		bool claimed = getClaimed(_githubRepository);
+		require(claimed == false, "already claimed.");
+
+		address property = getPropertyAddress(_githubRepository);
+		address author = IProperty(property).author();
+
+		address devToken = IAddressConfig(getAddressConfigAddress()).token();
+		IERC20 dev = IERC20(devToken);
+		dev.safeTransfer(author, reward);
+		setClaimed(_githubRepository, true);
+
+		emit Claimed(_githubRepository, reward);
 	}
 
 	function rescue(
@@ -223,23 +246,30 @@ contract Incubator is IncubatorStorage {
 		view
 		returns (uint256)
 	{
+		(uint256 reward, ) = _getReward(_githubRepository);
+		return reward;
+	}
+
+	function _getReward(string memory _githubRepository)
+		private
+		view
+		returns (uint256 _reward, uint256 _maxReward)
+	{
 		uint256 latestPrice = getLastPrice();
 		uint256 startPrice = getStartPrice(_githubRepository);
-		uint256 reward =
+		uint256 maxReward =
 			latestPrice.sub(startPrice).mul(getStaking(_githubRepository)).div(
 				BASIS_VALUE
 			);
 		uint256 rewardLimit = getRewardLimit(_githubRepository);
-		if (reward <= rewardLimit) {
-			return reward;
+		if (maxReward < rewardLimit) {
+			return (maxReward, maxReward);
 		}
-		uint256 over = reward.sub(rewardLimit);
-		uint256 rewardLowerLimit = getRewardLowerLimit(_githubRepository);
-		if (rewardLimit < over) {
-			return rewardLowerLimit;
-		}
-		uint256 tmp = rewardLimit.sub(over);
-		return tmp <= rewardLowerLimit ? rewardLowerLimit : tmp;
+		uint256 lowerLimit = getRewardLowerLimit(_githubRepository);
+		uint256 over = maxReward.sub(rewardLimit);
+		uint256 cutted = rewardLimit > over ? rewardLimit.sub(over) : 0;
+		uint256 reward = lowerLimit > cutted ? lowerLimit : cutted;
+		return (reward, maxReward);
 	}
 
 	function getLastPrice() private view returns (uint256) {
