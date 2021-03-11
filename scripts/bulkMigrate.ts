@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/prefer-readonly-parameter-types */
 /* eslint-disable capitalized-comments */
 /* eslint-disable @typescript-eslint/restrict-template-expressions */
 /* eslint-disable @typescript-eslint/no-var-requires */
@@ -41,6 +42,7 @@ const deploy = async (): Promise<void> => {
 	})
 	const wallet = ethers.Wallet.fromMnemonic(MNEMONIC!).connect(provider)
 	const contract = new ethers.Contract(PREV_INCUBATOR, incubator.abi, wallet)
+	const nextContract = new ethers.Contract(NEXT_INCUBATOR, incubator.abi, wallet)
 	const createErc20 = (address: string) =>
 		new ethers.Contract(address, erc20.abi, wallet)
 	const fetchPrice = ethGasStationFetcher(ETHGASSTATION_TOKEN!)
@@ -98,6 +100,19 @@ const deploy = async (): Promise<void> => {
 		logger('done')
 	}
 
+	console.log('set authority')
+	if (await nextContract.isAdmin(wallet.address) === false) {
+		await nextContract.addAdmin(wallet.address)
+	}
+
+	if (await nextContract.isStorageOwner(wallet.address) === false) {
+		await nextContract.addStorageOwner(wallet.address)
+	}
+
+	if (await nextContract.isOperator(wallet.address) === false) {
+		await nextContract.addOperator(wallet.address)
+	}
+
 	const incubators = await fetchIncubators
 	console.log({ incubators })
 
@@ -107,6 +122,11 @@ const deploy = async (): Promise<void> => {
 			run(property.address, verifier_id)
 		)
 	)
+	console.log('change storage')
+	const storageAddress = await contract.getStorageAddress()
+	console.log(`storage address:${storageAddress}`)
+	await nextContract.setStorage(storageAddress)
+	await contract.changeOwner(nextContract.address)
 	console.log('finish')
 }
 
