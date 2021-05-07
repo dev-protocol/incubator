@@ -23,14 +23,12 @@
     chalk "^2.0.0"
     js-tokens "^4.0.0"
 
-"@devprotocol/protocol@3.0.7":
-  version "3.0.7"
-  resolved "https://registry.yarnpkg.com/@devprotocol/protocol/-/protocol-3.0.7.tgz#1eb0c5e25a85571395ce5cdac860a444e435b58f"
-  integrity sha512-7hbwwIgT36TwTC6GJOL/L21iXM+2sq7b/VGvmLQzdMgqDguUnthINTGpV/Siycg4P+i90WJLoid6YEw3dAOEzQ==
+"@devprotocol/protocol@3.0.10":
+  version "3.0.10"
+  resolved "https://registry.yarnpkg.com/@devprotocol/protocol/-/protocol-3.0.10.tgz#9611b8001c7c2a184d5db47d99ae124d71cb298e"
+  integrity sha512-Mf0DahpI8dRBdCteeViFWhzCTbKMe6przLyN/ajR4KbhieuLBok+sEjLg/JI4rSitEQKQiHo3D+kWS9+bGUWQQ==
   dependencies:
-    "@openzeppelin/contracts" "^2.5.0"
-    commander "^6.0.0"
-    shelljs "^0.8.3"
+    "@openzeppelin/contracts" "2.5.1"
 
 "@devprotocol/protocol@^3.0.3":
   version "3.0.5"
@@ -853,6 +851,11 @@
     "@nodelib/fs.scandir" "2.1.3"
     fastq "^1.6.0"
 
+"@openzeppelin/contracts@2.5.1", "@openzeppelin/contracts@^2.5.0":
+  version "2.5.1"
+  resolved "https://registry.yarnpkg.com/@openzeppelin/contracts/-/contracts-2.5.1.tgz#c76e3fc57aa224da3718ec351812a4251289db31"
+  integrity sha512-qIy6tLx8rtybEsIOAlrM4J/85s2q2nPkDqj/Rx46VakBZ0LwtFhXIVub96LXHczQX0vaqmAueDqNPXtbSXSaYQ==
+
 "@openzeppelin/contracts@3.3.0":
   version "3.3.0"
   resolved "https://registry.yarnpkg.com/@openzeppelin/contracts/-/contracts-3.3.0.tgz#ffdb693c5c349fc33bba420248dd3ac0a2d7c408"
@@ -862,11 +865,6 @@
   version "3.4.1"
   resolved "https://registry.yarnpkg.com/@openzeppelin/contracts/-/contracts-3.4.1.tgz#03c891fec7f93be0ae44ed74e57a122a38732ce7"
   integrity sha512-cUriqMauq1ylzP2TxePNdPqkwI7Le3Annh4K9rrpvKfSBB/bdW+Iu1ihBaTIABTAAJ85LmKL5SSPPL9ry8d1gQ==
-
-"@openzeppelin/contracts@^2.5.0":
-  version "2.5.1"
-  resolved "https://registry.yarnpkg.com/@openzeppelin/contracts/-/contracts-2.5.1.tgz#c76e3fc57aa224da3718ec351812a4251289db31"
-  integrity sha512-qIy6tLx8rtybEsIOAlrM4J/85s2q2nPkDqj/Rx46VakBZ0LwtFhXIVub96LXHczQX0vaqmAueDqNPXtbSXSaYQ==
 
 "@resolver-engine/core@^0.3.3":
   version "0.3.3"
