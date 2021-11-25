@@ -44,22 +44,12 @@
     commander "^6.0.0"
     shelljs "^0.8.3"
 
-"@devprotocol/protocol@^3.0.3":
-  version "3.0.5"
-  resolved "https://registry.yarnpkg.com/@devprotocol/protocol/-/protocol-3.0.5.tgz#0bc932c4e736c263970ea9cb792c894831463ca5"
-  integrity sha512-5stWuua+0t6QezNpBSS8hca9nAHs5CLyRnA71Bcu/NadG8SnHNAwwdvpkVK8RAs88Zxtip7IdTBQHH7WzrVAJw==
+"@devprotocol/util-contracts@3.3.0":
+  version "3.3.0"
+  resolved "https://registry.yarnpkg.com/@devprotocol/util-contracts/-/util-contracts-3.3.0.tgz#56978e832f12b1796d937b20e57be307f2fcbc07"
+  integrity sha512-5KgaYUcp7tbPIjSzoxE/40pMYqfFdqHsMraKy+ATDWVEy1D7gfdQEvOyx2nMwE/a5pjSO+UDgZP1hclEbnyTRQ==
   dependencies:
-    "@openzeppelin/contracts" "^2.5.0"
-    commander "^6.0.0"
-    shelljs "^0.8.3"
-
-"@devprotocol/util-contracts@2.1.5":
-  version "2.1.5"
-  resolved "https://registry.yarnpkg.com/@devprotocol/util-contracts/-/util-contracts-2.1.5.tgz#91f2e2ab2dfd19593917ad296f83e3ee75265ba5"
-  integrity sha512-CjNJ7Er/J70wRdETEVF10bQzIyu/+1vXCHgke1lLidiDHXPv6IZBOW8F8qfsb2U1iqHDshblyopLF/LO7PGXRw==
-  dependencies:
-    "@devprotocol/protocol" "^3.0.3"
-    "@openzeppelin/contracts" "3.3.0"
+    "@openzeppelin/contracts" "4.3.0"
 
 "@devprotocol/util-ts@2.2.1":
   version "2.2.1"
@@ -932,15 +922,15 @@
     "@nodelib/fs.scandir" "2.1.3"
     fastq "^1.6.0"
 
-"@openzeppelin/contracts@3.3.0":
-  version "3.3.0"
-  resolved "https://registry.yarnpkg.com/@openzeppelin/contracts/-/contracts-3.3.0.tgz#ffdb693c5c349fc33bba420248dd3ac0a2d7c408"
-  integrity sha512-AemZEsQYtUp1WRkcmZm1div5ORfTpLquLaziCIrSagjxyKdmObxuaY1yjQ5SHFMctR8rLwp706NXTbiIRJg7pw==
-
 "@openzeppelin/contracts@3.4.2":
   version "3.4.2"
   resolved "https://registry.yarnpkg.com/@openzeppelin/contracts/-/contracts-3.4.2.tgz#d81f786fda2871d1eb8a8c5a73e455753ba53527"
   integrity sha512-z0zMCjyhhp4y7XKAcDAi3Vgms4T2PstwBdahiO0+9NaGICQKjynK3wduSRplTgk4LXmoO1yfDGO5RbjKYxtuxA==
+
+"@openzeppelin/contracts@4.3.0":
+  version "4.3.0"
+  resolved "https://registry.yarnpkg.com/@openzeppelin/contracts/-/contracts-4.3.0.tgz#345236d4ec73ef381ab4907c6ef66fd55e5dedad"
+  integrity sha512-+uBDl/TrmR0Kch6mq3tuxMex/fK7huR6+fQMae+zJk1K5T+dp0pFl12Hbc+1L6oYMXoyDSBJ8zqhRIntrREDFA==
 
 "@openzeppelin/contracts@^2.5.0":
   version "2.5.1"
